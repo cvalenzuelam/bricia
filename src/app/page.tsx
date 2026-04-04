@@ -15,8 +15,8 @@ export default function Home() {
       <FeaturedRecipe />
 
       {/* 3. Recipe Grid */}
-      <section className="py-28">
-        <div className="max-w-7xl mx-auto px-6 text-center mb-20">
+      <section className="py-12 md:py-28">
+        <div className="max-w-7xl mx-auto px-6 text-center mb-10 md:mb-20">
           <span className="editorial-spacing text-brand-accent block mb-4">EXPLORA</span>
           <h2 className="text-4xl md:text-6xl font-serif text-brand-primary tracking-tight">
             Recetas de <span className="italic text-brand-accent">Temporada</span>
@@ -37,7 +37,7 @@ export default function Home() {
       <ProductSection />
 
       {/* 6. Final Quote */}
-      <section className="py-32 px-6 bg-brand-secondary text-center">
+      <section className="py-16 md:py-32 px-6 bg-brand-secondary text-center">
         <div className="max-w-3xl mx-auto space-y-8">
           <div className="text-6xl text-brand-accent/20 font-serif">"</div>
           <h3 className="text-3xl md:text-4xl font-serif italic text-brand-primary leading-relaxed">
