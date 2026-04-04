@@ -19,11 +19,11 @@ export default function ProductosPage() {
       {/* Editorial Header */}
       <div className="max-w-7xl mx-auto px-6 mb-24 flex flex-col items-center text-center space-y-8">
         <h1 className="text-6xl md:text-8xl font-serif text-brand-primary lowercase tracking-tighter">
-          nuestra <span className="italic text-brand-accent">boutique</span>
+          nuestra <span className="italic text-brand-accent">alacena</span>
         </h1>
         <div className="w-24 h-px bg-brand-accent opacity-30"></div>
-        <p className="editorial-spacing text-brand-muted max-w-lg leading-relaxed">
-          OBJETOS QUE ENVEJECEN CON NOSOTROS, LLENOS DE HISTORIA Y CALIDEZ.
+        <p className="editorial-spacing text-brand-muted max-w-xl leading-relaxed">
+          HERRAMIENTAS Y UTENSILIOS ESENCIALES PARA INSPIRAR TU DÍA A DÍA EN LA COCINA.
         </p>
       </div>
 
