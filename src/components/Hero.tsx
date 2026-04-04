@@ -92,7 +92,7 @@ export default function Hero() {
             >
               {config.tagline}
             </p>
-            <p className="text-sm font-sans text-brand-muted leading-relaxed">
+            <p className="hidden md:block text-sm font-sans text-brand-muted leading-relaxed">
               {config.description}
             </p>
             <p className="text-xs font-sans text-brand-accent tracking-widest uppercase font-medium">

@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 export default function FeaturedRecipe() {
   return (
     <section className="bg-[#8B7355] py-0 overflow-hidden">
-      <div className="max-w-[1600px] mx-auto flex flex-col md:flex-row items-stretch min-h-[70vh]">
+      <div className="max-w-[1600px] mx-auto flex flex-col-reverse md:flex-row items-stretch min-h-[70vh]">
         
         {/* Left: Full-bleed image */}
         <motion.div
