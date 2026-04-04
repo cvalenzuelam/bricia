@@ -3,7 +3,7 @@
     "slug": "tiradito-atun-salsa-serrano",
     "title": "Tiradito de Atún",
     "subtitle": "en Salsa Serrano",
-    "category": "RECETA ESTRELLA",
+    "category": "VERANO",
     "image": "/images/tiradito.png",
     "history": "De verdad... si amas los mariscos tanto como yo, tienes que prepararlo. Para la salsa necesitas el jugo de una naranja, el jugo de cinco limones, un chile serrano, un diente de ajo, salsa de soya y salsa inglesa. Lo licuas todo, y lo usas como cama para el atún. Yo lo corté en láminas delgadas, y lo coroné con cebolla morada, más chile serrano, un toque de aceite de ajonjolí —que te prometo hace magia— y un poco de ajonjolí negro. Y listo. Fresco, intenso, y simplemente irresistible.",
     "ingredients": [
@@ -59,6 +59,31 @@
     "servings": "2 PERSONAS"
   },
   {
+    "slug": "gazpacho-verano-fresco",
+    "title": "Gazpacho Andaluz",
+    "subtitle": "Fresco y Vibrante",
+    "category": "VERANO",
+    "image": "/images/verano.png",
+    "history": "El gazpacho es la esencia del verano en un tazón. Esta versión es ultra cremosa sin llevar pan, resaltando solo el frescor de los tomates maduros y el aceite de oliva de primera prensa.",
+    "ingredients": [
+      "1kg de tomates maduros",
+      "1 pimiento verde",
+      "1 pepino",
+      "1 diente de ajo",
+      "1/2 taza de aceite de oliva virgen extra",
+      "Vinagre de jerez",
+      "Sal de mar"
+    ],
+    "steps": [
+      "Limpia y trocea todos los vegetales.",
+      "Licúa a máxima potencia hasta que la mezcla sea suave y emulsionada.",
+      "Pasa por un colador fino para una textura más elegante.",
+      "Enfría por al menos 2 horas antes de servir."
+    ],
+    "prepTime": "20 MIN",
+    "servings": "4 PERSONAS"
+  },
+  {
     "slug": "volcan-chocolate-decadente",
     "title": "Volcán de Chocolate",
     "subtitle": "con Corazón Líquido",
@@ -111,5 +136,29 @@
     ],
     "prepTime": "45 MIN",
     "servings": "6 PERSONAS"
+  },
+  {
+    "slug": "estofado-res-invierno",
+    "title": "Estofado de Res",
+    "subtitle": "Lento y Reconfortante",
+    "category": "INVIERNO",
+    "image": "/images/invierno.png",
+    "history": "Esta receta es herencia de mi abuela. Se cocina tan lento que la carne se deshace con el tenedor. Es el abrazo que todos necesitamos cuando afuera el viento sopla fuerte.",
+    "ingredients": [
+      "1kg de carne de res para estofado",
+      "3 zanahorias en rodajas",
+      "2 papas grandes",
+      "1 taza de vino tinto",
+      "Hierbas de olor (tomillo, laurel)",
+      "Caldo de res"
+    ],
+    "steps": [
+      "Sella la carne en una olla pesada hasta que esté bien dorada.",
+      "Agrega los vegetales y el vino tinto para desglasar el fondo.",
+      "Cubre con el caldo y las hierbas.",
+      "Cocina a fuego muy bajo por 3 horas o hasta que la carne esté tierna."
+    ],
+    "prepTime": "3 HORAS",
+    "servings": "4 PERSONAS"
   }
 ]

@@ -6,7 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, Upload, Plus, X, Loader2 } from "lucide-react";
 
-const CATEGORIES = ["RECETA ESTRELLA", "PRIMAVERA", "VERANO", "OTOÑO", "INVIERNO", "POSTRES", "SOPAS", "ENSALADAS"];
+const CATEGORIES = ["PRIMAVERA", "VERANO", "OTOÑO", "INVIERNO", "POSTRES"];
 
 export default function NuevaRecetaPage() {
   const router = useRouter();
@@ -20,7 +20,7 @@ export default function NuevaRecetaPage() {
   const [form, setForm] = useState({
     title: "",
     subtitle: "",
-    category: "RECETA ESTRELLA",
+    category: "PRIMAVERA",
     history: "",
     prepTime: "",
     servings: "",

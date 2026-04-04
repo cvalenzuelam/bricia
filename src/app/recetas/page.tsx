@@ -1,12 +1,12 @@
-import { getRecipes } from "@/data/recipes";
-import RecipeCard from "@/components/RecipeCard";
+"use client";
+
+import RecipeGrid from "@/components/RecipeGrid";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
 export default function RecetasPage() {
-  const recipes = getRecipes();
 
   return (
     <article className="min-h-screen bg-brand-secondary pt-32 pb-20">
@@ -21,12 +21,8 @@ export default function RecetasPage() {
         </p>
       </div>
 
-      {/* Full Grid */}
-      <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-32">
-        {recipes.map((recipe) => (
-          <RecipeCard key={recipe.slug} {...recipe} />
-        ))}
-      </div>
+      {/* Full Filterable Grid */}
+      <RecipeGrid />
 
       {/* Back link */}
       <div className="text-center">
