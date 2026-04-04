@@ -1,0 +1,450 @@
+"use client";
+
+import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
+import { ArrowLeft, Save, Upload, Loader2, Plus, Trash2, Eye } from "lucide-react";
+
+const FONT_OPTIONS = [
+  { value: "serif", label: "Playfair Display (Serif)" },
+  { value: "sans", label: "Inter (Sans)" },
+  { value: "aboreto", label: "Aboreto (Logo)" },
+];
+
+interface CollageImage {
+  src: string;
+  alt: string;
+}
+
+interface ProductItem {
+  name: string;
+  price: string;
+  image: string;
+  link: string;
+}
+
+interface HeroConfig {
+  title: string;
+  titleColor: string;
+  titleFont: string;
+  logo: string;
+  logoColor: string;
+  logoFont: string;
+  tagline: string;
+  taglineItalic: boolean;
+  description: string;
+  ctaText: string;
+  collageImages: CollageImage[];
+  instagramImages: { src: string }[];
+  products: ProductItem[];
+  backgroundColor: string;
+}
+
+export default function AdminInicioPage() {
+  const router = useRouter();
+  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saved, setSaved] = useState(false);
+  const fileInputRefs = useRef<Record<number, HTMLInputElement | null>>({});
+  const igInputRefs = useRef<Record<number, HTMLInputElement | null>>({});
+  const productInputRefs = useRef<Record<number, HTMLInputElement | null>>({});
+
+  const [config, setConfig] = useState<HeroConfig>({
+    title: "",
+    titleColor: "#5C3D2E",
+    titleFont: "serif",
+    logo: "|BRICIA|",
+    logoColor: "#1D1D1B",
+    logoFont: "aboreto",
+    tagline: "",
+    taglineItalic: true,
+    description: "",
+    ctaText: "",
+    collageImages: [],
+    instagramImages: [],
+    products: [],
+    backgroundColor: "#FAF9F4",
+  });
+
+  useEffect(() => {
+    const session = sessionStorage.getItem("bricia_admin");
+    if (session !== "true") { router.push("/admin"); return; }
+
+    fetch("/api/hero")
+      .then((res) => res.json())
+      .then((data) => { setConfig(data); setLoading(false); });
+  }, [router]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    await fetch("/api/hero", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(config),
+    });
+    setSaving(false);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 3000);
+  };
+
+  const handleImageUpload = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await fetch("/api/upload", { method: "POST", body: formData });
+    const data = await res.json();
+
+    if (data.path) {
+      const updated = [...config.collageImages];
+      updated[index] = { ...updated[index], src: data.path };
+      setConfig({ ...config, collageImages: updated });
+    }
+  };
+
+  const addImage = () => {
+    setConfig({
+      ...config,
+      collageImages: [...config.collageImages, { src: "", alt: "Nueva imagen" }],
+    });
+  };
+
+  const handleIgUpload = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await fetch("/api/upload", { method: "POST", body: formData });
+    const data = await res.json();
+
+    if (data.path) {
+      const updated = [...(config.instagramImages || [])];
+      updated[index] = { src: data.path };
+      setConfig({ ...config, instagramImages: updated });
+    }
+  };
+
+  const handleProductUpload = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await fetch("/api/upload", { method: "POST", body: formData });
+    const data = await res.json();
+
+    if (data.path) {
+      const updated = [...(config.products || [])];
+      updated[index] = { ...updated[index], image: data.path };
+      setConfig({ ...config, products: updated });
+    }
+  };
+
+  const updateProduct = (index: number, field: keyof ProductItem, value: string) => {
+    const updated = [...(config.products || [])];
+    updated[index] = { ...updated[index], [field]: value };
+    setConfig({ ...config, products: updated });
+  };
+
+  const removeImage = (i: number) => {
+    setConfig({
+      ...config,
+      collageImages: config.collageImages.filter((_, idx) => idx !== i),
+    });
+  };
+
+  const updateImageAlt = (i: number, alt: string) => {
+    const updated = [...config.collageImages];
+    updated[i] = { ...updated[i], alt };
+    setConfig({ ...config, collageImages: updated });
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-brand-secondary flex items-center justify-center">
+        <Loader2 size={32} className="animate-spin text-brand-accent" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-brand-secondary pt-20">
+      <div className="max-w-4xl mx-auto px-6 py-12">
+        {/* Top nav */}
+        <Link href="/admin" className="inline-flex items-center gap-2 text-xs font-sans text-brand-muted hover:text-brand-accent transition-colors mb-8">
+          <ArrowLeft size={14} /> Volver al panel
+        </Link>
+
+        <div className="flex items-center justify-between mb-10">
+          <h1 className="text-3xl font-serif text-brand-primary">Personalizar Inicio</h1>
+          <Link href="/" target="_blank" className="flex items-center gap-2 text-xs font-sans text-brand-accent hover:text-brand-primary transition-colors">
+            <Eye size={14} /> Ver sitio
+          </Link>
+        </div>
+
+        <div className="space-y-12">
+
+          {/* ─── TEXTOS ──────────────────────────── */}
+          <div className="bg-white rounded-2xl p-8 border border-brand-primary/5 space-y-6">
+            <h2 className="text-lg font-serif text-brand-primary border-b border-brand-primary/5 pb-4">📝 Textos</h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-[10px] font-sans font-bold tracking-[0.25em] text-brand-muted uppercase">Título Principal</label>
+                <input value={config.title} onChange={(e) => setConfig({ ...config, title: e.target.value })}
+                  className="w-full px-4 py-3 border border-brand-primary/10 rounded-lg bg-brand-secondary text-brand-primary font-serif focus:outline-none focus:border-brand-accent transition-colors" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-sans font-bold tracking-[0.25em] text-brand-muted uppercase">Logo</label>
+                <input value={config.logo} onChange={(e) => setConfig({ ...config, logo: e.target.value })}
+                  className="w-full px-4 py-3 border border-brand-primary/10 rounded-lg bg-brand-secondary text-brand-primary text-center text-xl tracking-[0.2em] focus:outline-none focus:border-brand-accent transition-colors"
+                  style={{ fontFamily: 'var(--font-aboreto)' }} />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[10px] font-sans font-bold tracking-[0.25em] text-brand-muted uppercase">Frase Principal (Tagline)</label>
+              <div className="flex gap-3 items-center">
+                <input value={config.tagline} onChange={(e) => setConfig({ ...config, tagline: e.target.value })}
+                  className="flex-1 px-4 py-3 border border-brand-primary/10 rounded-lg bg-brand-secondary text-brand-primary font-serif focus:outline-none focus:border-brand-accent transition-colors" />
+                <label className="flex items-center gap-2 text-xs font-sans text-brand-muted cursor-pointer shrink-0">
+                  <input type="checkbox" checked={config.taglineItalic} onChange={(e) => setConfig({ ...config, taglineItalic: e.target.checked })}
+                    className="accent-brand-accent" /> Cursiva
+                </label>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[10px] font-sans font-bold tracking-[0.25em] text-brand-muted uppercase">Descripción</label>
+              <textarea value={config.description} onChange={(e) => setConfig({ ...config, description: e.target.value })} rows={3}
+                className="w-full px-4 py-3 border border-brand-primary/10 rounded-lg bg-brand-secondary text-brand-primary font-sans text-sm leading-relaxed focus:outline-none focus:border-brand-accent transition-colors resize-none" />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[10px] font-sans font-bold tracking-[0.25em] text-brand-muted uppercase">Texto del CTA</label>
+              <input value={config.ctaText} onChange={(e) => setConfig({ ...config, ctaText: e.target.value })}
+                className="w-full px-4 py-3 border border-brand-primary/10 rounded-lg bg-brand-secondary text-brand-primary font-sans text-sm focus:outline-none focus:border-brand-accent transition-colors" />
+            </div>
+          </div>
+
+          {/* ─── COLORES & FUENTES ────────────────── */}
+          <div className="bg-white rounded-2xl p-8 border border-brand-primary/5 space-y-6">
+            <h2 className="text-lg font-serif text-brand-primary border-b border-brand-primary/5 pb-4">🎨 Colores y Fuentes</h2>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+              {/* Title Color */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-sans font-bold tracking-[0.25em] text-brand-muted uppercase">Color del Título</label>
+                <div className="flex items-center gap-3">
+                  <input type="color" value={config.titleColor} onChange={(e) => setConfig({ ...config, titleColor: e.target.value })}
+                    className="w-10 h-10 rounded-lg cursor-pointer border border-brand-primary/10" />
+                  <input value={config.titleColor} onChange={(e) => setConfig({ ...config, titleColor: e.target.value })}
+                    className="flex-1 px-3 py-2 border border-brand-primary/10 rounded-lg bg-brand-secondary text-brand-primary font-mono text-xs focus:outline-none focus:border-brand-accent" />
+                </div>
+              </div>
+
+              {/* Logo Color */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-sans font-bold tracking-[0.25em] text-brand-muted uppercase">Color del Logo</label>
+                <div className="flex items-center gap-3">
+                  <input type="color" value={config.logoColor} onChange={(e) => setConfig({ ...config, logoColor: e.target.value })}
+                    className="w-10 h-10 rounded-lg cursor-pointer border border-brand-primary/10" />
+                  <input value={config.logoColor} onChange={(e) => setConfig({ ...config, logoColor: e.target.value })}
+                    className="flex-1 px-3 py-2 border border-brand-primary/10 rounded-lg bg-brand-secondary text-brand-primary font-mono text-xs focus:outline-none focus:border-brand-accent" />
+                </div>
+              </div>
+
+              {/* Background Color */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-sans font-bold tracking-[0.25em] text-brand-muted uppercase">Fondo</label>
+                <div className="flex items-center gap-3">
+                  <input type="color" value={config.backgroundColor} onChange={(e) => setConfig({ ...config, backgroundColor: e.target.value })}
+                    className="w-10 h-10 rounded-lg cursor-pointer border border-brand-primary/10" />
+                  <input value={config.backgroundColor} onChange={(e) => setConfig({ ...config, backgroundColor: e.target.value })}
+                    className="flex-1 px-3 py-2 border border-brand-primary/10 rounded-lg bg-brand-secondary text-brand-primary font-mono text-xs focus:outline-none focus:border-brand-accent" />
+                </div>
+              </div>
+
+              {/* Title Font */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-sans font-bold tracking-[0.25em] text-brand-muted uppercase">Fuente del Título</label>
+                <select value={config.titleFont} onChange={(e) => setConfig({ ...config, titleFont: e.target.value })}
+                  className="w-full px-3 py-2.5 border border-brand-primary/10 rounded-lg bg-brand-secondary text-brand-primary font-sans text-sm focus:outline-none focus:border-brand-accent">
+                  {FONT_OPTIONS.map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}
+                </select>
+              </div>
+
+              {/* Logo Font */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-sans font-bold tracking-[0.25em] text-brand-muted uppercase">Fuente del Logo</label>
+                <select value={config.logoFont} onChange={(e) => setConfig({ ...config, logoFont: e.target.value })}
+                  className="w-full px-3 py-2.5 border border-brand-primary/10 rounded-lg bg-brand-secondary text-brand-primary font-sans text-sm focus:outline-none focus:border-brand-accent">
+                  {FONT_OPTIONS.map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* ─── FOTOS DEL MOSAICO ────────────────── */}
+          <div className="bg-white rounded-2xl p-8 border border-brand-primary/5 space-y-6">
+            <div className="flex items-center justify-between border-b border-brand-primary/5 pb-4">
+              <h2 className="text-lg font-serif text-brand-primary">📸 Fotos del Mosaico</h2>
+              <button onClick={addImage} className="flex items-center gap-1.5 text-xs font-sans text-brand-accent hover:text-brand-primary transition-colors">
+                <Plus size={14} /> Agregar Foto
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {config.collageImages.map((img, i) => (
+                <div key={i} className="space-y-2">
+                  <div
+                    className="relative aspect-square rounded-xl overflow-hidden border-2 border-dashed border-brand-primary/10 hover:border-brand-accent/40 transition-colors cursor-pointer bg-brand-secondary group"
+                    onClick={() => fileInputRefs.current[i]?.click()}
+                  >
+                    {img.src ? (
+                      <Image src={img.src} alt={img.alt} fill className="object-cover" />
+                    ) : (
+                      <div className="flex items-center justify-center h-full">
+                        <Upload size={24} className="text-brand-muted/30 group-hover:text-brand-accent transition-colors" />
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition flex items-center justify-center opacity-0 group-hover:opacity-100">
+                      <span className="text-white text-xs font-sans font-bold">Cambiar</span>
+                    </div>
+                  </div>
+                  <div className="flex gap-1.5">
+                    <input value={img.alt} onChange={(e) => updateImageAlt(i, e.target.value)} placeholder="Descripción"
+                      className="flex-1 px-2 py-1.5 border border-brand-primary/10 rounded text-[11px] font-sans text-brand-muted focus:outline-none focus:border-brand-accent" />
+                    <button onClick={() => removeImage(i)} className="p-1.5 text-brand-muted hover:text-red-500 transition-colors">
+                      <Trash2 size={12} />
+                    </button>
+                  </div>
+                  <input
+                    ref={(el) => { fileInputRefs.current[i] = el; }}
+                    type="file" accept="image/*"
+                    onChange={(e) => handleImageUpload(i, e)}
+                    className="hidden"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* ─── FOTOS DE INSTAGRAM ───────────────── */}
+          <div className="bg-white rounded-2xl p-8 border border-brand-primary/5 space-y-6">
+            <div className="border-b border-brand-primary/5 pb-4">
+              <h2 className="text-lg font-serif text-brand-primary">📱 Fotos de Instagram</h2>
+              <p className="text-xs font-sans text-brand-muted mt-1">Sube hasta 10 fotos para simular tu feed en la barra inferior. Recomendamos imágenes cuadradas o verticales (4:5).</p>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              {(config.instagramImages || []).map((img, i) => (
+                <div key={`ig-${i}`} className="space-y-2">
+                  <div
+                    className="relative aspect-square rounded-xl overflow-hidden border-2 border-dashed border-brand-primary/10 hover:border-brand-accent/40 transition-colors cursor-pointer bg-brand-secondary group"
+                    onClick={() => igInputRefs.current[i]?.click()}
+                  >
+                    {img.src ? (
+                      <Image src={img.src} alt="Instagram Post" fill className="object-cover" />
+                    ) : (
+                      <div className="flex items-center justify-center h-full">
+                        <Upload size={24} className="text-brand-muted/30 group-hover:text-brand-accent transition-colors" />
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition flex items-center justify-center opacity-0 group-hover:opacity-100">
+                      <span className="text-white text-[10px] font-sans font-bold">Cambiar</span>
+                    </div>
+                  </div>
+                  <input
+                    ref={(el) => { igInputRefs.current[i] = el; }}
+                    type="file" accept="image/*"
+                    onChange={(e) => handleIgUpload(i, e)}
+                    className="hidden"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* ─── PRODUCTOS ───────────────────────── */}
+          <div className="bg-white rounded-2xl p-8 border border-brand-primary/5 space-y-6">
+            <div className="flex items-center justify-between border-b border-brand-primary/5 pb-4">
+              <div>
+                <h2 className="text-lg font-serif text-brand-primary">🛒 Tienda (Productos Destacados)</h2>
+                <p className="text-xs font-sans text-brand-muted mt-1">Configura hasta 3 productos para mostrar en la página de inicio.</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {(config.products || []).map((product, i) => (
+                <div key={`prod-${i}`} className="space-y-3 p-4 border border-brand-primary/10 rounded-xl bg-brand-secondary/30">
+                  <div
+                    className="relative aspect-[4/5] rounded-lg overflow-hidden border-2 border-dashed border-brand-primary/10 hover:border-brand-accent/40 bg-white cursor-pointer group transition-colors"
+                    onClick={() => productInputRefs.current[i]?.click()}
+                  >
+                    {product.image ? (
+                      <Image src={product.image} alt={product.name} fill className="object-cover" />
+                    ) : (
+                      <div className="flex items-center justify-center h-full">
+                        <Upload size={24} className="text-brand-muted/30 group-hover:text-brand-accent transition-colors" />
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition flex items-center justify-center opacity-0 group-hover:opacity-100">
+                      <span className="text-white text-xs font-bold">Cambiar Foto</span>
+                    </div>
+                  </div>
+                  <input
+                    ref={(el) => { productInputRefs.current[i] = el; }}
+                    type="file" accept="image/*"
+                    onChange={(e) => handleProductUpload(i, e)}
+                    className="hidden"
+                  />
+                  
+                  <div className="space-y-2">
+                    <div>
+                      <label className="text-[10px] font-bold text-brand-muted uppercase tracking-wider pl-1">Nombre del producto</label>
+                      <input value={product.name || ""} onChange={(e) => updateProduct(i, 'name', e.target.value)} placeholder="Ej. Tabla de Mezquite"
+                        className="w-full px-3 py-2 border border-brand-primary/10 rounded-lg text-sm focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent/20 transition-all font-serif" />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-brand-muted uppercase tracking-wider pl-1">Precio</label>
+                      <input value={product.price || ""} onChange={(e) => updateProduct(i, 'price', e.target.value)} placeholder="Ej. $850 MXN"
+                        className="w-full px-3 py-2 border border-brand-primary/10 rounded-lg text-sm focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent/20 transition-all font-sans text-brand-muted" />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-brand-muted uppercase tracking-wider pl-1">URL (Link)</label>
+                      <input value={product.link || ""} onChange={(e) => updateProduct(i, 'link', e.target.value)} placeholder="https://..."
+                        className="w-full px-3 py-2 border border-brand-primary/10 rounded-lg text-sm focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent/20 transition-all font-sans text-brand-muted" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* ─── SAVE BUTTON ──────────────────────── */}
+          <div className="sticky bottom-6 z-10">
+            <button onClick={handleSave} disabled={saving}
+              className={`w-full flex items-center justify-center gap-2 py-4 rounded-xl text-sm font-sans font-bold tracking-[0.15em] uppercase transition-all shadow-lg ${
+                saved
+                  ? "bg-green-600 text-white"
+                  : "bg-brand-primary text-brand-secondary hover:bg-brand-accent"
+              } disabled:opacity-60`}
+            >
+              {saving ? (
+                <><Loader2 size={18} className="animate-spin" /> Guardando...</>
+              ) : saved ? (
+                "✓ Guardado con Éxito"
+              ) : (
+                <><Save size={18} /> Guardar Cambios</>
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

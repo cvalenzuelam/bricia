@@ -1,26 +1,66 @@
 @import "tailwindcss";
 
+@theme {
+  --color-brand-primary: #1D1D1B;
+  --color-brand-secondary: #FAF9F4;
+  --color-brand-accent: #B08D57;
+  --color-brand-muted: #7A7A78;
+
+  --font-serif: var(--font-playfair), Georgia, serif;
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #FAF9F4;
+  --foreground: #1D1D1B;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+@layer base {
+  body {
+    background-color: var(--color-brand-secondary);
+    color: var(--color-brand-primary);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    line-height: 1.7;
+  }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    line-height: 1.2;
+  }
+
+  a {
+    transition: color 0.3s ease;
+  }
+
+  img {
+    display: block;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Utility: editorial small caps tracking */
+.editorial-spacing {
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  font-size: 0.625rem;
+  font-weight: 600;
+  font-family: var(--font-sans);
+}
+
+/* Smooth scroll */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Better image rendering */
+img {
+  image-rendering: auto;
+}
+
+/* Selection color */
+::selection {
+  background-color: rgba(176, 141, 87, 0.2);
+  color: #1D1D1B;
 }

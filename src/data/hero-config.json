@@ -1,0 +1,111 @@
+{
+  "title": "Mis días de cocina en",
+  "titleColor": "#5C3D2E",
+  "titleFont": "serif",
+  "logo": "|BRICIA|",
+  "logoColor": "#1D1D1B",
+  "logoFont": "aboreto",
+  "tagline": "Un blog que celebra la cocina emocional y los placeres cotidianos.",
+  "taglineItalic": true,
+  "description": "Aquí la cocina cotidiana cobra vida a través de recetas cálidas, deliciosas y pensadas para disfrutarse en casa. Celebramos esos momentos simples alrededor de la mesa y dejamos que los aromas, los sabores y los ingredientes despierten la curiosidad del paladar.",
+  "ctaText": "Ven para descubrir recetas inspiradoras cada semana.",
+  "collageImages": [
+    {
+      "src": "/images/bricia_real.jfif",
+      "alt": "Bricia en su cocina"
+    },
+    {
+      "src": "/images/tiradito.png",
+      "alt": "Tiradito de atún"
+    },
+    {
+      "src": "/images/chocolate.png",
+      "alt": "Volcán de chocolate"
+    },
+    {
+      "src": "/images/ensalada.png",
+      "alt": "Ensalada primavera"
+    },
+    {
+      "src": "/images/sopa.png",
+      "alt": "Sopa de calabaza"
+    },
+    {
+      "src": "/images/style_candle.png",
+      "alt": "Ambiente de cocina"
+    }
+  ],
+  "backgroundColor": "#FAF9F4",
+  "instagramImages": [
+    {
+      "src": "/images/dessert.png",
+      "caption": "Brownies de Plátano Caseros 🍫✨ Súper fáciles y rápidos. #postres #recetafacil #brownies",
+      "isVideo": true
+    },
+    {
+      "src": "/images/bricia_portrait.png",
+      "caption": "Aguachile de Camarón 🍤 #aguachile #cocina #recetafacil #mariscos",
+      "isVideo": true
+    },
+    {
+      "src": "/images/ensalada.png",
+      "caption": "Enchiladas Cremosas de Pollo 🍗 Perfectas para la cena familiar. #mexicanfood #enchiladas",
+      "isVideo": true
+    },
+    {
+      "src": "/images/tiradito.png",
+      "caption": "Tiradito Fresco 🐟 Ideal para el calorcito. #recetadeldia #tiradito",
+      "isVideo": true
+    },
+    {
+      "src": "/images/bricia_real.jfif",
+      "caption": "Flor de Queso Crema y Salmón 🧀 Estilo Casa Mandoka. #salmon #botana",
+      "isVideo": true
+    },
+    {
+      "src": "/images/style_candle.png",
+      "caption": "Nuevos ingredientes frescos que llegaron hoy a la cocina 🌿",
+      "isVideo": true
+    },
+    {
+      "src": "/images/spring.png",
+      "caption": "Arroz con Camarón al Cilantro 🍚🍤 #arroz #camarones",
+      "isVideo": true
+    },
+    {
+      "src": "/images/hero.png",
+      "caption": "Festejando con el pequeño de la casa 🐱❤️",
+      "isVideo": true
+    },
+    {
+      "src": "/images/chocolate.png",
+      "caption": "Flores frescas de fin de semana 🌸 Un toque especial para inspirarme.",
+      "isVideo": true
+    },
+    {
+      "src": "/images/sopa.png",
+      "caption": "Curry Tailandés 🍛 Una explosión de sabor. #curry",
+      "isVideo": true
+    }
+  ],
+  "products": [
+    {
+      "name": "Tabla de Mezquite",
+      "price": "$850 MXN",
+      "image": "/images/producto_tabla.png",
+      "link": "/tienda"
+    },
+    {
+      "name": "Cucharas de Olivo",
+      "price": "$220 MXN",
+      "image": "/images/producto_cuchara.png",
+      "link": "/tienda"
+    },
+    {
+      "name": "Cerámica Artesanal",
+      "price": "$1,200 MXN",
+      "image": "/images/producto_ceramica.png",
+      "link": "/tienda"
+    }
+  ]
+}

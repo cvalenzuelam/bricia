@@ -1,0 +1,126 @@
+export interface Recipe {
+  slug: string;
+  title: string;
+  subtitle: string;
+  category: string;
+  image: string;
+  history: string;
+  ingredients: string[];
+  steps: string[];
+  prepTime: string;
+  servings: string;
+}
+
+export const recipes: Recipe[] = [
+  {
+    slug: "tiradito-atun-salsa-serrano",
+    title: "Tiradito de Atún",
+    subtitle: "en Salsa Serrano",
+    category: "RECETA ESTRELLA",
+    image: "/images/hero.png",
+    history: "De verdad... si amas los mariscos tanto como yo, tienes que prepararlo. Para la salsa necesitas el jugo de una naranja, el jugo de cinco limones, un chile serrano, un diente de ajo, salsa de soya y salsa inglesa. Lo licuas todo, y lo usas como cama para el atún. Yo lo corté en láminas delgadas, y lo coroné con cebolla morada, más chile serrano, un toque de aceite de ajonjolí —que te prometo hace magia— y un poco de ajonjolí negro. Y listo. Fresco, intenso, y simplemente irresistible.",
+    ingredients: [
+      "200g de atún fresco (calidad sashimi)",
+      "Jugo de 1 naranja",
+      "Jugo de 5 limones",
+      "1 chile serrano (picado)",
+      "1 diente de ajo",
+      "2 cucharadas de salsa de soya",
+      "1 chorrito de salsa inglesa",
+      "Cebolla morada (fileteada)",
+      "Aceite de ajonjolí",
+      "Ajonjolí negro (para decorar)"
+    ],
+    steps: [
+      "Licúa el jugo de naranja, los limones, el chile serrano, el ajo, la soya y la salsa inglesa hasta obtener una salsa homogénea.",
+      "Corta el atún en láminas delgadas (tipo sashimi) con un cuchillo bien afilado.",
+      "Coloca una 'cama' de la salsa en un plato extendido.",
+      "Acomoda las láminas de atún sobre la salsa de forma decorativa.",
+      "Corona con la cebolla morada fileteada y un poco más de chile serrano fresco.",
+      "Finaliza con un chorrito de aceite de ajonjolí y una lluvia de ajonjolí negro."
+    ],
+    prepTime: "15 MIN",
+    servings: "2 PERSONAS"
+  },
+  {
+    slug: "ensalada-primavera-fresas",
+    title: "Ensalada Primavera",
+    subtitle: "con Fresas y Flores",
+    category: "PRIMAVERA",
+    image: "/images/spring.png",
+    history: "Esta ensalada es como un abrazo del sol después de un invierno largo. Las flores comestibles no son solo adorno, aportan un toque sutil y terrenal que combina perfecto con la acidez de las fresas naturales. Es el plato que siempre sirvo cuando quiero que la mesa se sienta alegre.",
+    ingredients: [
+      "Mix de lechugas orgánicas",
+      "1 taza de fresas frescas fileteadas",
+      "Flores comestibles (pensamientos o capuchinas)",
+      "1 aguacate en láminas",
+      "Nueces garapiñadas",
+      "Vinagreta de miel y mostaza",
+      "Queso de cabra desmoronado"
+    ],
+    steps: [
+      "Lava y seca cuidadosamente el mix de lechugas.",
+      "En un bowl grande, mezcla las lechugas con la mitad de la vinagreta.",
+      "Acomoda el aguacate y las fresas por encima de forma armónica.",
+      "Esparce las nueces y el queso de cabra.",
+      "Corona con las flores comestibles justo antes de servir para mantener su frescura.",
+      "Agrega el resto de la vinagreta al gusto."
+    ],
+    prepTime: "20 MIN",
+    servings: "4 PERSONAS"
+  },
+  {
+    slug: "volcan-chocolate-decadente",
+    title: "Volcán de Chocolate",
+    subtitle: "con Corazón Líquido",
+    category: "POSTRES",
+    image: "/images/dessert.png",
+    history: "Hay momentos que piden chocolate, y este postre es la respuesta definitiva. El secreto está en el tiempo exacto del horno para que al romperlo, el centro fluya como lava. Es el favorito de Bricia para las cenas especiales.",
+    ingredients: [
+      "150g de chocolate oscuro (70% cacao)",
+      "100g de mantequilla sin sal",
+      "3 huevos grandes",
+      "50g de azúcar mascabado",
+      "30g de harina de trigo",
+      "Pizca de sal",
+      "Frambuesas frescas para acompañar"
+    ],
+    steps: [
+      "Derrite el chocolate con la mantequilla a baño maría hasta que esté brillante.",
+      "Bate los huevos con el azúcar hasta que doblen su volumen (punto letra).",
+      "Incorpora el chocolate derretido a los huevos con movimientos envolventes.",
+      "Tamiza la harina y la sal e incorpóralas suavemente.",
+      "Vierte en moldes individuales engrasados y hornea a 200°C por exactos 10-12 minutos.",
+      "Desmolda con cuidado y sirve inmediatamente con frambuesas."
+    ],
+    prepTime: "30 MIN",
+    servings: "4 UNIDADES"
+  },
+  {
+    slug: "sopa-calabaza-semillas",
+    title: "Sopa de Calabaza",
+    subtitle: "Tostada y Cremosa",
+    category: "OTOÑO",
+    image: "/images/autumn.png",
+    history: "Cuando las nubes bajan y el aire se enfría, esta sopa es mi refugio. Tostar la calabaza en el horno antes de licuarla le da un sabor ahumado y profundo que no se logra de ninguna otra forma. Es el sabor del hogar.",
+    ingredients: [
+      "1 calabaza de castilla mediana",
+      "1 cebolla blanca",
+      "2 dientes de ajo",
+      "1 litro de caldo de vegetales",
+      "1/2 taza de crema para batir",
+      "Semillas de calabaza tostadas",
+      "Canela y nuez moscada"
+    ],
+    steps: [
+      "Corta la calabaza en cubos y hornéala con aceite y sal hasta que esté suave y dorada.",
+      "En una olla, sofríe la cebolla y el ajo hasta que estén transparentes.",
+      "Agrega la calabaza horneada y el caldo. Deja hervir por 10 minutos.",
+      "Licúa todo hasta obtener una textura aterciopelada.",
+      "Regresa al fuego, agrega la crema, la canela y la nuez moscada.",
+      "Sirve caliente y decora con las semillas tostadas."
+    ],
+    prepTime: "45 MIN",
+    servings: "6 PERSONAS"
+  }
+];
