@@ -72,7 +72,7 @@ export default function Hero() {
               {config.title}
             </h1>
             <span
-              className="block text-5xl md:text-6xl tracking-[0.2em] mt-0"
+              className="hidden md:block text-5xl md:text-6xl tracking-[0.2em] mt-0"
               style={{
                 color: config.logoColor,
                 fontFamily: FONT_MAP[config.logoFont] || FONT_MAP.aboreto,
@@ -84,7 +84,7 @@ export default function Hero() {
 
           <div className="space-y-6">
             <p
-              className="text-base font-serif leading-relaxed whitespace-nowrap"
+              className="text-base font-serif leading-relaxed whitespace-normal md:whitespace-nowrap px-4 md:px-0"
               style={{
                 color: config.titleColor + "cc",
                 fontStyle: config.taglineItalic ? "italic" : "normal",
