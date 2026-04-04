@@ -11,11 +11,11 @@ interface Recipe {
   image: string;
 }
 
-const CATEGORIES = ["TODAS", "PRIMAVERA", "VERANO", "OTOÑO", "INVIERNO", "POSTRES"];
+const CATEGORIES = ["PRIMAVERA", "VERANO", "OTOÑO", "INVIERNO", "POSTRES"];
 
 export default function RecipeGrid() {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
-  const [activeCategory, setActiveCategory] = useState("TODAS");
+  const [activeCategory, setActiveCategory] = useState("PRIMAVERA");
 
   useEffect(() => {
     fetch("/api/recipes")
@@ -23,34 +23,34 @@ export default function RecipeGrid() {
       .then(setRecipes);
   }, []);
 
-  const filteredRecipes = activeCategory === "TODAS" 
-    ? recipes 
-    : recipes.filter(r => r.category.toUpperCase() === activeCategory);
+  const filteredRecipes = recipes.filter(r => r.category.toUpperCase() === activeCategory);
 
   return (
     <div className="max-w-7xl mx-auto px-6 space-y-16">
-      {/* Dynamic Filter Bar */}
-      <div className="flex flex-wrap justify-center items-center gap-4 md:gap-8">
-        {CATEGORIES.map((cat) => (
-          <button
-            key={cat}
-            onClick={() => setActiveCategory(cat)}
-            className="group relative py-2"
-          >
-            <span className={`text-[10px] md:text-xs font-sans font-bold tracking-[0.2em] uppercase transition-colors duration-300 ${
-              activeCategory === cat ? "text-brand-accent" : "text-brand-muted hover:text-brand-primary"
-            }`}>
-              {cat}
-            </span>
-            {activeCategory === cat && (
-              <motion.div
-                layoutId="activeFilter"
-                className="absolute -bottom-1 left-0 right-0 h-px bg-brand-accent"
-                transition={{ type: "spring", stiffness: 380, damping: 30 }}
-              />
-            )}
-          </button>
-        ))}
+      {/* Dynamic Filter Bar - Improved for mobile display */}
+      <div className="flex justify-start md:justify-center">
+        <div className="flex flex-nowrap items-center gap-6 md:gap-12 overflow-x-auto no-scrollbar pb-4 -mb-4 px-4 w-full md:w-auto scroll-smooth">
+          {CATEGORIES.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setActiveCategory(cat)}
+              className="group relative py-2 shrink-0"
+            >
+              <span className={`text-[9px] md:text-sm font-sans font-bold tracking-[0.1em] md:tracking-[0.2em] uppercase transition-colors duration-300 ${
+                activeCategory === cat ? "text-brand-accent" : "text-brand-muted hover:text-brand-primary"
+              }`}>
+                {cat}
+              </span>
+              {activeCategory === cat && (
+                <motion.div
+                  layoutId="activeFilter"
+                  className="absolute -bottom-1 left-0 right-0 h-px bg-brand-accent"
+                  transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                />
+              )}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Grid with Grid Animation */}
