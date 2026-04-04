@@ -11,11 +11,11 @@ interface Recipe {
   image: string;
 }
 
-const CATEGORIES = ["PRIMAVERA", "VERANO", "OTOÑO", "INVIERNO", "POSTRES"];
+const CATEGORIES = ["TODAS", "PRIMAVERA", "VERANO", "OTOÑO", "INVIERNO", "POSTRES"];
 
 export default function RecipeGrid() {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
-  const [activeCategory, setActiveCategory] = useState("PRIMAVERA");
+  const [activeCategory, setActiveCategory] = useState("TODAS");
 
   useEffect(() => {
     fetch("/api/recipes")
@@ -23,7 +23,9 @@ export default function RecipeGrid() {
       .then(setRecipes);
   }, []);
 
-  const filteredRecipes = recipes.filter(r => r.category.toUpperCase() === activeCategory);
+  const filteredRecipes = activeCategory === "TODAS" 
+    ? recipes 
+    : recipes.filter(r => r.category.toUpperCase() === activeCategory);
 
   return (
     <div className="max-w-7xl mx-auto px-6 space-y-16">
@@ -34,7 +36,7 @@ export default function RecipeGrid() {
             <button
               key={cat}
               onClick={() => setActiveCategory(cat)}
-              className="group relative py-2 shrink-0"
+              className={`group relative py-2 shrink-0 ${cat === "TODAS" ? "hidden md:block" : ""}`}
             >
               <span className={`text-[9px] md:text-sm font-sans font-bold tracking-[0.1em] md:tracking-[0.2em] uppercase transition-colors duration-300 ${
                 activeCategory === cat ? "text-brand-accent" : "text-brand-muted hover:text-brand-primary"
