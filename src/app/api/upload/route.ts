@@ -15,7 +15,8 @@ export async function POST(request: NextRequest) {
     const buffer = Buffer.from(bytes);
 
     // Generate unique filename
-    const ext = file.name.split(".").pop() || "png";
+    let ext = file.name.split(".").pop()?.toLowerCase() || "png";
+    if (ext === "jfif" || ext === "jpeg") ext = "jpg";
     const uniqueName = `recipe_${Date.now()}.${ext}`;
     const uploadPath = path.join(process.cwd(), "public/images", uniqueName);
 

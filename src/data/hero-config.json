@@ -11,7 +11,7 @@
   "ctaText": "Ven para descubrir recetas inspiradoras cada semana.",
   "collageImages": [
     {
-      "src": "/images/bricia_real.jfif",
+      "src": "/images/bricia_real.jpg",
       "alt": "Bricia en su cocina"
     },
     {
@@ -58,7 +58,7 @@
       "isVideo": true
     },
     {
-      "src": "/images/bricia_real.jfif",
+      "src": "/images/bricia_real.jpg",
       "caption": "Flor de Queso Crema y Salmón 🧀 Estilo Casa Mandoka. #salmon #botana",
       "isVideo": true
     },
