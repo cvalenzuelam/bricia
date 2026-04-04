@@ -54,7 +54,7 @@ export default function Hero() {
       style={{ backgroundColor: config.backgroundColor }}
     >
       {/* Left Column: Text Content */}
-      <div className="w-full md:w-[45%] flex flex-col justify-center items-center px-8 md:px-16 py-20 md:py-0 text-center">
+      <div className="w-full md:w-[45%] flex flex-col justify-center items-center px-8 md:px-16 py-12 md:py-0 text-center">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -103,7 +103,7 @@ export default function Hero() {
           <motion.div
             animate={{ y: [0, 8, 0] }}
             transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-            className="pt-6 text-brand-primary/20"
+            className="hidden md:block pt-6 text-brand-primary/20"
           >
             <ArrowDown size={28} strokeWidth={1} className="mx-auto" />
           </motion.div>
