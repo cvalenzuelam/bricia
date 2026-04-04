@@ -7,7 +7,7 @@ import InstagramFeed from "@/components/InstagramFeed";
 
 export default function Home() {
   return (
-    <main className="min-h-screen pt-20 overflow-x-hidden bg-brand-secondary">
+    <main className="min-h-screen pt-4 md:pt-20 overflow-x-hidden bg-brand-secondary">
       {/* 1. Hero: Wix-style split with bio + photo mosaic */}
       <Hero />
       

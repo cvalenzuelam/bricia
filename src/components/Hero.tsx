@@ -54,7 +54,7 @@ export default function Hero() {
       style={{ backgroundColor: config.backgroundColor }}
     >
       {/* Left Column: Text Content */}
-      <div className="w-full md:w-[45%] flex flex-col justify-center items-center px-8 md:px-16 pt-16 pb-6 md:py-0 text-center">
+      <div className="w-full md:w-[45%] flex flex-col justify-center items-center px-8 md:px-16 pt-4 pb-6 md:py-0 text-center">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
