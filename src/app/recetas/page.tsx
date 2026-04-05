@@ -25,7 +25,7 @@ export default function RecetasPage() {
       <RecipeGrid />
 
       {/* Back link */}
-      <div className="text-center">
+      <div className="text-center mt-20 md:mt-32">
         <Link href="/" className="editorial-spacing hover:text-brand-accent transition-colors flex items-center justify-center gap-2">
           <ArrowLeft size={16} /> VOLVER AL INICIO
         </Link>
