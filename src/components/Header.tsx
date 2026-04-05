@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Menu, X, Search, ShoppingBag } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { usePathname } from "next/navigation";
 
 const leftLinks = [
   { name: "RECETAS", href: "/recetas" },
@@ -31,7 +32,13 @@ export default function Header() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Recipe[]>([]);
   const [allRecipes, setAllRecipes] = useState<Recipe[]>([]);
+  const pathname = usePathname();
   const searchInputRef = useRef<HTMLInputElement>(null);
+  
+  const isDarkPage = pathname === "/contacto";
+  const textColor = scrolled ? "text-brand-primary" : (isDarkPage ? "text-white/90" : "text-brand-primary/80");
+  const logoColor = scrolled ? "text-brand-primary" : (isDarkPage ? "text-white" : "text-brand-primary");
+  const iconColor = scrolled ? "text-brand-primary" : (isDarkPage ? "text-white" : "text-brand-primary");
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -74,7 +81,7 @@ export default function Header() {
     }
     const q = value.toLowerCase();
     const filtered = allRecipes.filter(
-      (r) =>
+      (r: Recipe) =>
         r.title.toLowerCase().includes(q) ||
         r.subtitle.toLowerCase().includes(q) ||
         r.category.toLowerCase().includes(q)
@@ -98,7 +105,7 @@ export default function Header() {
               <Link
                 key={link.name}
                 href={link.href}
-                className="editorial-spacing text-brand-primary/80 hover:text-brand-primary transition-colors"
+                className={`editorial-spacing ${textColor} hover:text-brand-accent transition-colors`}
               >
                 {link.name}
               </Link>
@@ -107,7 +114,7 @@ export default function Header() {
 
           {/* Mobile Menu Trigger */}
           <button
-            className="md:hidden text-brand-primary"
+            className={`md:hidden ${iconColor}`}
             onClick={() => setIsOpen(!isOpen)}
           >
             {isOpen ? <X size={20} /> : <Menu size={20} />}
@@ -117,7 +124,7 @@ export default function Header() {
           <div className="flex justify-center">
             <Link
               href="/"
-              className="text-3xl tracking-[0.3em] text-brand-primary uppercase"
+              className={`text-3xl tracking-[0.3em] ${logoColor} uppercase`}
               style={{ fontFamily: "var(--font-aboreto)" }}
             >
               |BRICIA|
@@ -131,7 +138,7 @@ export default function Header() {
                 <Link
                   key={link.name}
                   href={link.href}
-                  className="editorial-spacing text-brand-primary/80 hover:text-brand-primary transition-colors"
+                  className={`editorial-spacing ${textColor} hover:text-brand-accent transition-colors`}
                 >
                   {link.name}
                 </Link>
@@ -141,13 +148,13 @@ export default function Header() {
             <div className="flex gap-4">
               <button
                 onClick={() => setSearchOpen(true)}
-                className="text-brand-primary hover:text-brand-accent transition-colors"
+                className={`${iconColor} hover:text-brand-accent transition-colors`}
               >
                 <Search size={18} strokeWidth={1.5} />
               </button>
               <Link
                 href="/cart"
-                className="text-brand-primary hover:text-brand-accent transition-colors relative"
+                className={`${iconColor} hover:text-brand-accent transition-colors relative`}
               >
                 <ShoppingBag size={18} strokeWidth={1.5} />
                 <span className="absolute -top-1 -right-1 w-2 h-2 bg-brand-accent rounded-full border border-brand-secondary"></span>
