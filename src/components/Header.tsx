@@ -73,6 +73,16 @@ export default function Header() {
     return () => window.removeEventListener("keydown", handleKey);
   }, []);
 
+  // Disable scroll when mobile menu is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => { document.body.style.overflow = "unset"; };
+  }, [isOpen]);
+
   const handleSearch = (value: string) => {
     setQuery(value);
     if (value.trim().length < 2) {
@@ -163,69 +173,60 @@ export default function Header() {
           </div>
         </div>
 
-        {/* ─── MOBILE MENU OVERLAY (Editorial Design) ──────────────── */}
+        {/* ─── MOBILE MENU OVERLAY (Editorial Design Refined) ──────── */}
         <AnimatePresence>
           {isOpen && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[60] bg-brand-secondary flex flex-col pt-32 pb-16 px-10"
+              className="fixed inset-0 z-[60] bg-brand-secondary/98 backdrop-blur-md flex flex-col pt-32 pb-16 px-10"
             >
-              <div className="max-w-md mx-auto w-full h-full flex flex-col justify-between">
+              <div className="max-w-md mx-auto w-full h-full flex flex-col justify-between items-center text-center">
                 {/* 1. Staggered Link List */}
-                <nav className="flex flex-col space-y-12">
+                <nav className="flex flex-col space-y-10">
                   {[...leftLinks, ...rightLinks].map((link, idx) => (
                     <motion.div
                       key={link.name}
-                      initial={{ opacity: 0, x: -30 }}
-                      animate={{ opacity: 1, x: 0 }}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
                       transition={{ 
-                        duration: 0.5, 
-                        delay: 0.1 + idx * 0.1,
-                        ease: [0.22, 1, 0.36, 1] 
+                        duration: 0.6, 
+                        delay: idx * 0.1,
+                        ease: [0.16, 1, 0.3, 1] 
                       }}
                     >
                       <Link
                         href={link.href}
                         onClick={() => setIsOpen(false)}
-                        className="group flex items-baseline gap-6"
+                        className="group block"
                       >
-                        <span className="text-[10px] font-sans font-bold tracking-[0.4em] text-brand-accent/50 group-hover:text-brand-accent transition-colors">
-                          {String(idx + 1).padStart(2, "0")}
-                        </span>
-                        <span className="text-4xl xs:text-5xl font-serif text-brand-primary lowercase tracking-tight group-hover:text-brand-accent transition-all duration-500">
+                        <span className="text-4xl xs:text-5xl font-serif text-brand-primary uppercase tracking-[0.1em] group-hover:text-brand-accent transition-all duration-500">
                           {link.name}
                         </span>
+                        <div className="h-px w-0 group-hover:w-full bg-brand-accent/30 mx-auto mt-2 transition-all duration-500"></div>
                       </Link>
                     </motion.div>
                   ))}
                 </nav>
 
-                {/* 2. Menu Bottom Signature / Socials */}
+                {/* 2. Menu Bottom Signature */}
                 <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.6, duration: 0.8 }}
-                  className="space-y-10 pt-10 border-t border-brand-primary/5"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.5 }}
+                  className="space-y-6 pt-10 text-center"
                 >
-                  <div className="flex justify-between items-center">
-                    <p className="editorial-spacing text-brand-muted opacity-60">
-                      bricia elizalde &copy; 2024
+                  <div className="flex flex-col items-center gap-4">
+                    <div className="w-12 h-px bg-brand-accent/20"></div>
+                    <p className="text-[10px] font-sans font-bold tracking-[0.4em] text-brand-muted uppercase">
+                      Bricia Elizalde
                     </p>
-                    <div className="flex gap-6">
-                      <a href="https://instagram.com/briciaelizalde" target="_blank" className="text-brand-muted hover:text-brand-accent transition-colors">
-                        <span className="text-[10px] font-sans font-bold tracking-[0.2em] uppercase">IG</span>
-                      </a>
-                      <a href="https://tiktok.com/@bricia.elizalde" target="_blank" className="text-brand-muted hover:text-brand-accent transition-colors">
-                        <span className="text-[10px] font-sans font-bold tracking-[0.2em] uppercase">TK</span>
-                      </a>
+                    <div className="flex gap-8">
+                       <a href="#" className="text-brand-muted hover:text-brand-accent transition-colors editorial-spacing !text-[9px]">Instagram</a>
+                       <a href="#" className="text-brand-muted hover:text-brand-accent transition-colors editorial-spacing !text-[9px]">TikTok</a>
                     </div>
                   </div>
-                  
-                  <p className="text-[12px] font-serif italic text-brand-accent opacity-80 leading-loose">
-                    Cocina con amor, historias que alimentan el alma.
-                  </p>
                 </motion.div>
               </div>
             </motion.div>
