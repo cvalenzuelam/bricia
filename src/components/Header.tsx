@@ -163,25 +163,71 @@ export default function Header() {
           </div>
         </div>
 
-        {/* Mobile Menu Overlay */}
+        {/* ─── MOBILE MENU OVERLAY (Editorial Design) ──────────────── */}
         <AnimatePresence>
           {isOpen && (
             <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "100vh" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="absolute top-full left-0 w-full bg-brand-secondary flex flex-col items-center pt-20 px-6 gap-8 overflow-hidden z-40"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[60] bg-brand-secondary flex flex-col pt-32 pb-16 px-10"
             >
-              {[...leftLinks, ...rightLinks].map((link) => (
-                <Link
-                  key={link.name}
-                  href={link.href}
-                  onClick={() => setIsOpen(false)}
-                  className="text-2xl font-serif lowercase tracking-wide text-brand-primary"
+              <div className="max-w-md mx-auto w-full h-full flex flex-col justify-between">
+                {/* 1. Staggered Link List */}
+                <nav className="flex flex-col space-y-12">
+                  {[...leftLinks, ...rightLinks].map((link, idx) => (
+                    <motion.div
+                      key={link.name}
+                      initial={{ opacity: 0, x: -30 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ 
+                        duration: 0.5, 
+                        delay: 0.1 + idx * 0.1,
+                        ease: [0.22, 1, 0.36, 1] 
+                      }}
+                    >
+                      <Link
+                        href={link.href}
+                        onClick={() => setIsOpen(false)}
+                        className="group flex items-baseline gap-6"
+                      >
+                        <span className="text-[10px] font-sans font-bold tracking-[0.4em] text-brand-accent/50 group-hover:text-brand-accent transition-colors">
+                          {String(idx + 1).padStart(2, "0")}
+                        </span>
+                        <span className="text-4xl xs:text-5xl font-serif text-brand-primary lowercase tracking-tight group-hover:text-brand-accent transition-all duration-500">
+                          {link.name}
+                        </span>
+                      </Link>
+                    </motion.div>
+                  ))}
+                </nav>
+
+                {/* 2. Menu Bottom Signature / Socials */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6, duration: 0.8 }}
+                  className="space-y-10 pt-10 border-t border-brand-primary/5"
                 >
-                  {link.name}
-                </Link>
-              ))}
+                  <div className="flex justify-between items-center">
+                    <p className="editorial-spacing text-brand-muted opacity-60">
+                      bricia elizalde &copy; 2024
+                    </p>
+                    <div className="flex gap-6">
+                      <a href="https://instagram.com/briciaelizalde" target="_blank" className="text-brand-muted hover:text-brand-accent transition-colors">
+                        <span className="text-[10px] font-sans font-bold tracking-[0.2em] uppercase">IG</span>
+                      </a>
+                      <a href="https://tiktok.com/@bricia.elizalde" target="_blank" className="text-brand-muted hover:text-brand-accent transition-colors">
+                        <span className="text-[10px] font-sans font-bold tracking-[0.2em] uppercase">TK</span>
+                      </a>
+                    </div>
+                  </div>
+                  
+                  <p className="text-[12px] font-serif italic text-brand-accent opacity-80 leading-loose">
+                    Cocina con amor, historias que alimentan el alma.
+                  </p>
+                </motion.div>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
