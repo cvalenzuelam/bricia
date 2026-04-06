@@ -34,7 +34,7 @@ export default function Header() {
   const [allRecipes, setAllRecipes] = useState<Recipe[]>([]);
   const pathname = usePathname();
   const searchInputRef = useRef<HTMLInputElement>(null);
-  
+
   const isDarkPage = pathname === "/contacto";
   const textColor = scrolled ? "text-brand-primary" : (isDarkPage ? "text-white/90" : "text-brand-primary/80");
   const logoColor = scrolled ? "text-brand-primary" : (isDarkPage ? "text-white" : "text-brand-primary");
@@ -51,7 +51,7 @@ export default function Header() {
     fetch("/api/recipes")
       .then((res) => res.json())
       .then(setAllRecipes)
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   // Focus input when search opens
@@ -102,11 +102,10 @@ export default function Header() {
   return (
     <>
       <header
-        className={`fixed top-0 w-full z-50 transition-all duration-500 ${
-          scrolled
+        className={`fixed top-0 w-full z-50 transition-all duration-500 ${scrolled
             ? "bg-brand-secondary/95 backdrop-blur-sm border-b border-brand-primary/5 py-4"
             : "bg-transparent py-8"
-        }`}
+          }`}
       >
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-3 items-center">
           {/* Left Links (Desktop) */}
@@ -124,7 +123,7 @@ export default function Header() {
 
           {/* Mobile Menu Trigger */}
           <button
-            className={`md:hidden ${iconColor}`}
+            className={`md:hidden ${iconColor} z-[70] relative`}
             onClick={() => setIsOpen(!isOpen)}
           >
             {isOpen ? <X size={20} /> : <Menu size={20} />}
@@ -190,10 +189,10 @@ export default function Header() {
                       key={link.name}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ 
-                        duration: 0.6, 
+                      transition={{
+                        duration: 0.6,
                         delay: idx * 0.1,
-                        ease: [0.16, 1, 0.3, 1] 
+                        ease: [0.16, 1, 0.3, 1]
                       }}
                     >
                       <Link
@@ -223,8 +222,8 @@ export default function Header() {
                       Bricia Elizalde
                     </p>
                     <div className="flex gap-8">
-                       <a href="#" className="text-brand-muted hover:text-brand-accent transition-colors editorial-spacing !text-[9px]">Instagram</a>
-                       <a href="#" className="text-brand-muted hover:text-brand-accent transition-colors editorial-spacing !text-[9px]">TikTok</a>
+                      <a href="#" className="text-brand-muted hover:text-brand-accent transition-colors editorial-spacing !text-[9px]">Instagram</a>
+                      <a href="#" className="text-brand-muted hover:text-brand-accent transition-colors editorial-spacing !text-[9px]">TikTok</a>
                     </div>
                   </div>
                 </motion.div>
