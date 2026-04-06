@@ -2,7 +2,7 @@ import Hero from "@/components/Hero";
 import FeaturedRecipe from "@/components/FeaturedRecipe";
 import RecipeGrid from "@/components/RecipeGrid";
 import ProductSection from "@/components/ProductSection";
-import StorySection from "@/components/StorySection";
+import MesaSection from "@/components/MesaSection";
 import InstagramFeed from "@/components/InstagramFeed";
 
 export default function Home() {
@@ -30,8 +30,8 @@ export default function Home() {
         <RecipeGrid />
       </section>
 
-      {/* 4. Stories */}
-      <StorySection />
+      {/* 4. Mesa Section */}
+      <MesaSection />
 
       {/* 5. Products */}
       <ProductSection />
@@ -41,12 +41,12 @@ export default function Home() {
         <div className="max-w-3xl mx-auto space-y-8">
           <div className="text-6xl text-brand-accent/20 font-serif">"</div>
           <h3 className="text-3xl md:text-4xl font-serif italic text-brand-primary leading-relaxed">
-            Cocina con amor, historias que alimentan.
+            Cocina con amor, mesas que conectan.
           </h3>
           <p className="text-sm font-sans text-brand-muted max-w-xl mx-auto leading-relaxed">
-            Cada receta en este blog tiene un origen, un recuerdo o una persona 
-            especial detrás. No solo cocinamos para comer, cocinamos para 
-            conectar los corazones.
+            Cada receta en este blog tiene un origen, y cada mesa que montamos 
+            tiene una intención. No solo cocinamos para comer, diseñamos espacios 
+            para conectar los corazones.
           </p>
           <div className="w-16 h-px bg-brand-accent mx-auto opacity-30"></div>
         </div>

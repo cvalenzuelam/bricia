@@ -9,7 +9,7 @@ import { usePathname } from "next/navigation";
 
 const leftLinks = [
   { name: "RECETAS", href: "/recetas" },
-  { name: "CUENTOS", href: "/cuentos" },
+  { name: "LA MESA", href: "/la-mesa" },
 ];
 
 const rightLinks = [

@@ -36,7 +36,7 @@ export default function Footer() {
         {/* Symmetrical Navigation Links */}
         <div className="flex flex-wrap justify-center gap-12 text-xs font-sans font-bold tracking-[0.3em] text-brand-primary/60 uppercase">
           <Link href="/recetas" className="hover:text-brand-accent transition-colors">RECETAS</Link>
-          <Link href="/cuentos" className="hover:text-brand-accent transition-colors">CUENTOS</Link>
+          <Link href="/la-mesa" className="hover:text-brand-accent transition-colors">LA MESA</Link>
           <Link href="/productos" className="hover:text-brand-accent transition-colors">TIENDA</Link>
           <Link href="/contacto" className="hover:text-brand-accent transition-colors">CONTACTO</Link>
         </div>
