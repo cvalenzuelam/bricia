@@ -13,9 +13,11 @@ export default function NuevaRecetaPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [uploadedImagePath, setUploadedImagePath] = useState("");
   const [gallery, setGallery] = useState<string[]>([]);
+  const pendingMainUploadRef = useRef<Promise<string | null> | null>(null);
 
   const [form, setForm] = useState({
     title: "",
@@ -40,21 +42,28 @@ export default function NuevaRecetaPage() {
     if (!file) return;
 
     try {
+      setUploading(true);
       // Preview
       const reader = new FileReader();
       reader.onloadend = () => setImagePreview(reader.result as string);
       reader.readAsDataURL(file);
 
       // Upload
-      const formData = new FormData();
-      formData.append("file", file);
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
-      const data = await res.json();
-      if (data.path) setUploadedImagePath(data.path);
-      else alert(data.error || "Error al subir imagen");
+      const uploadPromise = (async () => {
+        const formData = new FormData();
+        formData.append("file", file);
+        const res = await fetch("/api/upload", { method: "POST", body: formData });
+        const data = await res.json();
+        return (data?.path as string | undefined) || null;
+      })();
+      pendingMainUploadRef.current = uploadPromise;
+      const path = await uploadPromise;
+      if (path) setUploadedImagePath(path);
+      else alert("Error al subir imagen");
     } catch {
       alert("Error al subir imagen");
     } finally {
+      setUploading(false);
       // Permite seleccionar el mismo archivo otra vez (si no, el browser no dispara onChange)
       input.value = "";
     }
@@ -92,6 +101,19 @@ export default function NuevaRecetaPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
+
+    // Asegura que el upload (si existe) termine antes de guardar
+    try {
+      const pending = pendingMainUploadRef.current;
+      if (pending) {
+        setUploading(true);
+        const path = await pending;
+        if (path) setUploadedImagePath(path);
+      }
+    } finally {
+      setUploading(false);
+      pendingMainUploadRef.current = null;
+    }
 
     const recipe = {
       ...form,
@@ -365,12 +387,16 @@ export default function NuevaRecetaPage() {
           <div className="pt-6 border-t border-brand-primary/5">
             <button
               type="submit"
-              disabled={saving}
+              disabled={saving || uploading}
               className="w-full flex items-center justify-center gap-2 bg-brand-primary text-brand-secondary py-4 rounded-xl text-sm font-sans font-bold tracking-[0.15em] uppercase hover:bg-brand-accent transition-colors disabled:opacity-60"
             >
               {saving ? (
                 <>
                   <Loader2 size={18} className="animate-spin" /> Guardando...
+                </>
+              ) : uploading ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" /> Subiendo imagen...
                 </>
               ) : (
                 "Publicar Receta"
