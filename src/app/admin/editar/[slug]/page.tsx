@@ -64,20 +64,31 @@ export default function EditRecipePage({ params }: EditPageProps) {
   }, [slug, router]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    const input = e.currentTarget;
+    const file = input.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () => setImagePreview(reader.result as string);
-    reader.readAsDataURL(file);
-    const formData = new FormData();
-    formData.append("file", file);
-    const res = await fetch("/api/upload", { method: "POST", body: formData });
-    const data = await res.json();
-    if (data.path) setUploadedImagePath(data.path);
+    try {
+      const reader = new FileReader();
+      reader.onloadend = () => setImagePreview(reader.result as string);
+      reader.readAsDataURL(file);
+
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      const data = await res.json();
+      if (data.path) setUploadedImagePath(data.path);
+      else alert(data.error || "Error al subir imagen");
+    } catch {
+      alert("Error al subir imagen");
+    } finally {
+      // Permite seleccionar el mismo archivo otra vez (si no, el browser no dispara onChange)
+      input.value = "";
+    }
   };
 
   const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
+    const input = e.currentTarget;
+    const files = input.files;
     if (!files) return;
     
     if (gallery.length + files.length > 4) {
@@ -86,13 +97,20 @@ export default function EditRecipePage({ params }: EditPageProps) {
     }
 
     const uploadedPaths: string[] = [];
-    for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        const formData = new FormData();
-        formData.append("file", file);
-        const res = await fetch("/api/upload", { method: "POST", body: formData });
-        const data = await res.json();
-        if (data.path) uploadedPaths.push(data.path);
+    try {
+      for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          const formData = new FormData();
+          formData.append("file", file);
+          const res = await fetch("/api/upload", { method: "POST", body: formData });
+          const data = await res.json();
+          if (data.path) uploadedPaths.push(data.path);
+          else alert(data.error || "Error al subir imagen");
+      }
+    } catch {
+      alert("Error al subir imagen");
+    } finally {
+      input.value = "";
     }
     setGallery((prev) => [...prev, ...uploadedPaths]);
   };

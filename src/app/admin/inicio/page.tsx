@@ -89,18 +89,27 @@ export default function AdminInicioPage() {
   };
 
   const handleImageUpload = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    const input = e.currentTarget;
+    const file = input.files?.[0];
     if (!file) return;
 
-    const formData = new FormData();
-    formData.append("file", file);
-    const res = await fetch("/api/upload", { method: "POST", body: formData });
-    const data = await res.json();
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      const data = await res.json();
 
-    if (data.path) {
-      const updated = [...config.collageImages];
-      updated[index] = { ...updated[index], src: data.path };
-      setConfig({ ...config, collageImages: updated });
+      if (data.path) {
+        const updated = [...config.collageImages];
+        updated[index] = { ...updated[index], src: data.path };
+        setConfig({ ...config, collageImages: updated });
+      } else {
+        alert(data.error || "Error al subir imagen");
+      }
+    } catch {
+      alert("Error al subir imagen");
+    } finally {
+      input.value = "";
     }
   };
 
@@ -112,34 +121,52 @@ export default function AdminInicioPage() {
   };
 
   const handleIgUpload = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    const input = e.currentTarget;
+    const file = input.files?.[0];
     if (!file) return;
 
-    const formData = new FormData();
-    formData.append("file", file);
-    const res = await fetch("/api/upload", { method: "POST", body: formData });
-    const data = await res.json();
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      const data = await res.json();
 
-    if (data.path) {
-      const updated = [...(config.instagramImages || [])];
-      updated[index] = { src: data.path };
-      setConfig({ ...config, instagramImages: updated });
+      if (data.path) {
+        const updated = [...(config.instagramImages || [])];
+        updated[index] = { src: data.path };
+        setConfig({ ...config, instagramImages: updated });
+      } else {
+        alert(data.error || "Error al subir imagen");
+      }
+    } catch {
+      alert("Error al subir imagen");
+    } finally {
+      input.value = "";
     }
   };
 
   const handleProductUpload = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    const input = e.currentTarget;
+    const file = input.files?.[0];
     if (!file) return;
 
-    const formData = new FormData();
-    formData.append("file", file);
-    const res = await fetch("/api/upload", { method: "POST", body: formData });
-    const data = await res.json();
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      const data = await res.json();
 
-    if (data.path) {
-      const updated = [...(config.products || [])];
-      updated[index] = { ...updated[index], image: data.path };
-      setConfig({ ...config, products: updated });
+      if (data.path) {
+        const updated = [...(config.products || [])];
+        updated[index] = { ...updated[index], image: data.path };
+        setConfig({ ...config, products: updated });
+      } else {
+        alert(data.error || "Error al subir imagen");
+      }
+    } catch {
+      alert("Error al subir imagen");
+    } finally {
+      input.value = "";
     }
   };
 
