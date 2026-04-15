@@ -7,7 +7,7 @@ interface RouteParams {
 
 export async function GET(_request: NextRequest, { params }: RouteParams) {
   const { slug } = await params;
-  const recipe = getRecipeBySlug(slug);
+  const recipe = await getRecipeBySlug(slug);
   if (!recipe) {
     return NextResponse.json({ error: "Receta no encontrada" }, { status: 404 });
   }
@@ -18,7 +18,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
     const { slug } = await params;
     const body = await request.json();
-    const updated = updateRecipe(slug, body);
+    const updated = await updateRecipe(slug, body);
     if (!updated) {
       return NextResponse.json({ error: "Receta no encontrada" }, { status: 404 });
     }
@@ -30,7 +30,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
 export async function DELETE(_request: NextRequest, { params }: RouteParams) {
   const { slug } = await params;
-  const deleted = deleteRecipe(slug);
+  const deleted = await deleteRecipe(slug);
   if (!deleted) {
     return NextResponse.json({ error: "Receta no encontrada" }, { status: 404 });
   }

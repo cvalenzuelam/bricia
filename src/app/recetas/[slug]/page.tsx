@@ -9,7 +9,7 @@ interface PageProps {
 }
 
 export async function generateStaticParams() {
-  const recipes = getRecipes();
+  const recipes = await getRecipes();
   return recipes.map((r) => ({ slug: r.slug }));
 }
 
@@ -17,7 +17,7 @@ export const dynamic = "force-dynamic";
 
 export default async function RecipePage({ params }: PageProps) {
   const { slug } = await params;
-  const recipe = getRecipeBySlug(slug);
+  const recipe = await getRecipeBySlug(slug);
 
   if (!recipe) {
     notFound();

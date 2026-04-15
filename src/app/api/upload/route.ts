@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { writeFile } from "fs/promises";
-import path from "path";
+import { put } from "@vercel/blob";
 
 export async function POST(request: NextRequest) {
   try {
@@ -8,7 +7,10 @@ export async function POST(request: NextRequest) {
     const file = formData.get("file") as File;
 
     if (!file) {
-      return NextResponse.json({ error: "No se recibió archivo" }, { status: 400 });
+      return NextResponse.json(
+        { error: "No se recibió archivo" },
+        { status: 400 }
+      );
     }
 
     const bytes = await file.arrayBuffer();
@@ -17,16 +19,19 @@ export async function POST(request: NextRequest) {
     // Generate unique filename
     let ext = file.name.split(".").pop()?.toLowerCase() || "png";
     if (ext === "jfif" || ext === "jpeg") ext = "jpg";
-    const uniqueName = `recipe_${Date.now()}.${ext}`;
-    const uploadPath = path.join(process.cwd(), "public/images", uniqueName);
+    const uniqueName = `bricia/images/recipe_${Date.now()}.${ext}`;
 
-    await writeFile(uploadPath, buffer);
+    const blob = await put(uniqueName, buffer, { access: "public" });
 
     return NextResponse.json({
       success: true,
-      path: `/images/${uniqueName}`,
+      path: blob.url,
     });
-  } catch {
-    return NextResponse.json({ error: "Error al subir imagen" }, { status: 500 });
+  } catch (err) {
+    console.error("Upload error:", err);
+    return NextResponse.json(
+      { error: "Error al subir imagen" },
+      { status: 500 }
+    );
   }
 }

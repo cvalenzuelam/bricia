@@ -3,20 +3,36 @@ import { getRecipes, addRecipe, generateSlug } from "@/data/recipes";
 
 export async function GET() {
   try {
-    const recipes = getRecipes();
+    const recipes = await getRecipes();
     return NextResponse.json(recipes);
   } catch {
-    return NextResponse.json({ error: "Error al cargar recetas" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Error al cargar recetas" },
+      { status: 500 }
+    );
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { title, subtitle, category, image, history, ingredients, steps, prepTime, servings } = body;
+    const {
+      title,
+      subtitle,
+      category,
+      image,
+      history,
+      ingredients,
+      steps,
+      prepTime,
+      servings,
+    } = body;
 
     if (!title || !category) {
-      return NextResponse.json({ error: "Título y categoría son obligatorios" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Título y categoría son obligatorios" },
+        { status: 400 }
+      );
     }
 
     const slug = generateSlug(title);
@@ -33,9 +49,12 @@ export async function POST(request: NextRequest) {
       servings: servings || "",
     };
 
-    addRecipe(recipe);
+    await addRecipe(recipe);
     return NextResponse.json({ success: true, recipe }, { status: 201 });
   } catch {
-    return NextResponse.json({ error: "Error al crear receta" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Error al crear receta" },
+      { status: 500 }
+    );
   }
 }
