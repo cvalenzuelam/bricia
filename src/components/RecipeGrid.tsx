@@ -18,7 +18,7 @@ export default function RecipeGrid() {
   const [activeCategory, setActiveCategory] = useState("TODAS");
 
   useEffect(() => {
-    fetch("/api/recipes")
+    fetch("/api/recipes", { cache: "no-store" })
       .then((res) => res.json())
       .then(setRecipes);
   }, []);

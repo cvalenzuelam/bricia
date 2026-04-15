@@ -45,7 +45,7 @@ export default function EditRecipePage({ params }: EditPageProps) {
       return;
     }
 
-    fetch(`/api/recipes/${slug}`)
+    fetch(`/api/recipes/${slug}`, { cache: "no-store" })
       .then((res) => res.json())
       .then((recipe) => {
         setForm({

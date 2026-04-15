@@ -35,7 +35,7 @@ export default function AdminPage() {
   }, []);
 
   const fetchRecipes = async () => {
-    const res = await fetch("/api/recipes");
+    const res = await fetch("/api/recipes", { cache: "no-store" });
     const data = await res.json();
     setRecipes(data);
   };
