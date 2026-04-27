@@ -1,14 +1,42 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Plus, Minus, ShoppingBag, Trash2, ArrowRight } from "lucide-react";
+import { X, Plus, Minus, ShoppingBag, Trash2, ArrowRight, Loader2 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { formatPrice } from "@/data/products";
 
 export default function CartDrawer() {
   const { items, isOpen, closeCart, removeItem, updateQuantity, subtotal, itemCount } = useCart();
+  const [checkingOut, setCheckingOut] = useState(false);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+
+  const handleCheckout = async () => {
+    setCheckingOut(true);
+    setCheckoutError(null);
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: items.map(({ product, quantity }) => ({
+            id: product.id,
+            name: product.name,
+            price: product.price,
+            quantity,
+            image: product.image,
+          })),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error ?? "Error al iniciar el pago");
+      window.location.href = data.checkoutUrl;
+    } catch (err) {
+      setCheckoutError(err instanceof Error ? err.message : "Error al conectar con el servicio de pago");
+      setCheckingOut(false);
+    }
+  };
 
   // Lock scroll when open
   useEffect(() => {
@@ -178,12 +206,22 @@ export default function CartDrawer() {
                   Gastos de envío calculados al finalizar la compra.
                 </p>
 
-                {/* CTA — deshabilitado hasta integrar MercadoPago */}
+                {checkoutError && (
+                  <p className="text-[10px] font-sans text-red-500 text-center leading-relaxed">
+                    {checkoutError}
+                  </p>
+                )}
+
                 <button
-                  disabled
-                  className="w-full bg-brand-primary text-brand-secondary py-4 rounded-xl text-xs font-sans font-bold tracking-[0.2em] uppercase opacity-40 cursor-not-allowed flex items-center justify-center gap-2"
+                  onClick={handleCheckout}
+                  disabled={checkingOut}
+                  className="w-full bg-brand-primary text-brand-secondary py-4 rounded-xl text-xs font-sans font-bold tracking-[0.2em] uppercase hover:bg-brand-accent transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  Próximamente · Checkout
+                  {checkingOut ? (
+                    <><Loader2 size={14} className="animate-spin" /> Redirigiendo…</>
+                  ) : (
+                    "Ir a pagar · Mercado Pago"
+                  )}
                 </button>
 
                 <button
