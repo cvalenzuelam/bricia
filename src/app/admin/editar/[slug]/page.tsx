@@ -8,6 +8,8 @@ import { ArrowLeft, Upload, Plus, X, Loader2, Save } from "lucide-react";
 
 const CATEGORIES = ["PRIMAVERA", "VERANO", "OTOÑO", "INVIERNO", "POSTRES"];
 const REQUEST_TIMEOUT_MS = 20000;
+const FRONT_SYNC_TIMEOUT_MS = 60000;
+const FRONT_SYNC_INTERVAL_MS = 2500;
 
 async function fetchWithTimeout(
   input: RequestInfo | URL,
@@ -23,6 +25,56 @@ async function fetchWithTimeout(
   }
 }
 
+async function waitForRecipeUpdateInApi(
+  slug: string,
+  expected: { title: string; image: string },
+  timeoutMs = FRONT_SYNC_TIMEOUT_MS
+) {
+  const startedAt = Date.now();
+
+  while (Date.now() - startedAt < timeoutMs) {
+    try {
+      const res = await fetchWithTimeout(`/api/recipes/${slug}?t=${Date.now()}`, { cache: "no-store" });
+      if (res.ok) {
+        const recipe = await res.json();
+        if (recipe?.title === expected.title && recipe?.image === expected.image) {
+          return true;
+        }
+      }
+    } catch {
+      // keep polling
+    }
+    await new Promise((resolve) => setTimeout(resolve, FRONT_SYNC_INTERVAL_MS));
+  }
+
+  return false;
+}
+
+async function waitForRecipeTitleInFrontend(
+  slug: string,
+  expectedTitle: string,
+  timeoutMs = FRONT_SYNC_TIMEOUT_MS
+) {
+  const startedAt = Date.now();
+
+  while (Date.now() - startedAt < timeoutMs) {
+    try {
+      const res = await fetchWithTimeout(`/recetas/${slug}?t=${Date.now()}`, { cache: "no-store" });
+      if (res.ok) {
+        const html = await res.text();
+        if (html.includes(expectedTitle)) {
+          return true;
+        }
+      }
+    } catch {
+      // keep polling
+    }
+    await new Promise((resolve) => setTimeout(resolve, FRONT_SYNC_INTERVAL_MS));
+  }
+
+  return false;
+}
+
 interface EditPageProps {
   params: Promise<{ slug: string }>;
 }
@@ -34,6 +86,8 @@ export default function EditRecipePage({ params }: EditPageProps) {
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+  const [publishMessage, setPublishMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [uploadedImagePath, setUploadedImagePath] = useState("");
@@ -83,6 +137,16 @@ export default function EditRecipePage({ params }: EditPageProps) {
         setLoading(false);
       });
   }, [slug, router]);
+
+  useEffect(() => {
+    if (!saving && !uploading && !publishing) return;
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [saving, uploading, publishing]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.currentTarget;
@@ -181,6 +245,25 @@ export default function EditRecipePage({ params }: EditPageProps) {
       });
 
       if (res.ok) {
+        setPublishing(true);
+        setPublishMessage("Validando guardado en el CMS...");
+        const syncedInApi = await waitForRecipeUpdateInApi(slug, {
+          title: recipe.title,
+          image: recipe.image,
+        });
+
+        if (!syncedInApi) {
+          alert("Se guardó, pero no se pudo confirmar sincronización en CMS. Intenta refrescar.");
+          return;
+        }
+
+        setPublishMessage("Esperando que los cambios se reflejen en el front...");
+        const reflectedInFrontend = await waitForRecipeTitleInFrontend(slug, recipe.title);
+        if (!reflectedInFrontend) {
+          alert("Se guardó en CMS, pero el front tardó demasiado en reflejar cambios.");
+          return;
+        }
+
         router.push("/admin");
       } else {
         alert("Error al actualizar la receta");
@@ -188,6 +271,8 @@ export default function EditRecipePage({ params }: EditPageProps) {
     } catch {
       alert("La petición tardó demasiado. Revisa conexión y vuelve a intentar.");
     } finally {
+      setPublishing(false);
+      setPublishMessage("");
       setSaving(false);
     }
   };
@@ -213,6 +298,22 @@ export default function EditRecipePage({ params }: EditPageProps) {
 
   return (
     <div className="min-h-screen bg-brand-secondary pt-20">
+      {(saving || uploading || publishing) && (
+        <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm flex items-center justify-center px-6">
+          <div className="bg-white rounded-2xl border border-brand-primary/10 shadow-xl p-6 w-full max-w-md text-center space-y-3">
+            <Loader2 size={28} className="animate-spin text-brand-accent mx-auto" />
+            <p className="text-sm font-sans font-bold tracking-[0.12em] uppercase text-brand-primary">
+              Procesando cambios
+            </p>
+            <p className="text-xs font-sans text-brand-muted">
+              {publishMessage || (uploading ? "Subiendo imagen..." : "Guardando receta...")}
+            </p>
+            <p className="text-[11px] font-sans text-brand-muted/80">
+              No cierres ni salgas de esta pantalla hasta terminar.
+            </p>
+          </div>
+        </div>
+      )}
       <div className="max-w-3xl mx-auto px-6 py-12">
         <Link
           href="/admin"
