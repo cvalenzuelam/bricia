@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import { upload } from "@vercel/blob/client";
 import { ArrowLeft, Save, Upload, Loader2, Plus, Trash2, Eye } from "lucide-react";
 
 const FONT_OPTIONS = [
@@ -11,6 +12,15 @@ const FONT_OPTIONS = [
   { value: "sans", label: "Inter (Sans)" },
   { value: "aboreto", label: "Aboreto (Logo)" },
 ];
+
+function sanitizeFileName(name: string) {
+  return name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9._-]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
 
 interface CollageImage {
   src: string;
@@ -76,6 +86,18 @@ export default function AdminInicioPage() {
       .then((data) => { setConfig(data); setLoading(false); });
   }, [router]);
 
+  const uploadCmsImage = async (file: File, section: "collage" | "instagram" | "products") => {
+    const safeName = sanitizeFileName(file.name || `image-${Date.now()}.jpg`);
+    const pathname = `bricia/images/home/${section}/${Date.now()}-${safeName}`;
+    const blob = await upload(pathname, file, {
+      access: "public",
+      handleUploadUrl: "/api/upload/client",
+      multipart: true,
+      contentType: file.type || "image/jpeg",
+    });
+    return blob.url;
+  };
+
   const handleSave = async () => {
     setSaving(true);
     await fetch("/api/hero", {
@@ -94,17 +116,14 @@ export default function AdminInicioPage() {
     if (!file) return;
 
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
-      const data = await res.json();
+      const path = await uploadCmsImage(file, "collage");
 
-      if (data.path) {
+      if (path) {
         const updated = [...config.collageImages];
-        updated[index] = { ...updated[index], src: data.path };
+        updated[index] = { ...updated[index], src: path };
         setConfig({ ...config, collageImages: updated });
       } else {
-        alert(data.error || "Error al subir imagen");
+        alert("Error al subir imagen");
       }
     } catch {
       alert("Error al subir imagen");
@@ -126,17 +145,14 @@ export default function AdminInicioPage() {
     if (!file) return;
 
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
-      const data = await res.json();
+      const path = await uploadCmsImage(file, "instagram");
 
-      if (data.path) {
+      if (path) {
         const updated = [...(config.instagramImages || [])];
-        updated[index] = { src: data.path };
+        updated[index] = { src: path };
         setConfig({ ...config, instagramImages: updated });
       } else {
-        alert(data.error || "Error al subir imagen");
+        alert("Error al subir imagen");
       }
     } catch {
       alert("Error al subir imagen");
@@ -151,17 +167,14 @@ export default function AdminInicioPage() {
     if (!file) return;
 
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
-      const data = await res.json();
+      const path = await uploadCmsImage(file, "products");
 
-      if (data.path) {
+      if (path) {
         const updated = [...(config.products || [])];
-        updated[index] = { ...updated[index], image: data.path };
+        updated[index] = { ...updated[index], image: path };
         setConfig({ ...config, products: updated });
       } else {
-        alert(data.error || "Error al subir imagen");
+        alert("Error al subir imagen");
       }
     } catch {
       alert("Error al subir imagen");
