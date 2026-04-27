@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { upload } from "@vercel/blob/client";
+import { uploadCmsImageFile } from "@/lib/cms-upload-image";
 import { ArrowLeft, Upload, Plus, X, Loader2, Video } from "lucide-react";
 
 const CATEGORIES = ["PRIMAVERA", "VERANO", "OTOÑO", "INVIERNO", "POSTRES"];
@@ -55,13 +55,7 @@ export default function NuevaRecetaPage() {
   const uploadRecipeImage = async (file: File): Promise<string | null> => {
     const safeName = sanitizeFileName(file.name || `recipe-${Date.now()}.jpg`);
     const pathname = `${getUploadFolder()}/${Date.now()}-${safeName}`;
-    const blob = await upload(pathname, file, {
-      access: "public",
-      handleUploadUrl: "/api/upload/client",
-      multipart: true,
-      contentType: file.type || "image/jpeg",
-    });
-    return blob.url;
+    return uploadCmsImageFile(file, pathname);
   };
 
   // Auth check

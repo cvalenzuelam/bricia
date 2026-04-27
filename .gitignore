@@ -24,6 +24,9 @@
 .DS_Store
 *.pem
 
+# local CMS uploads (sin token Blob)
+/public/uploads-dev
+
 # debug
 npm-debug.log*
 yarn-debug.log*

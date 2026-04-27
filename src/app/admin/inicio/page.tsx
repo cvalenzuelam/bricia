@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { upload } from "@vercel/blob/client";
+import { uploadCmsImageFile } from "@/lib/cms-upload-image";
 import { ArrowLeft, Save, Upload, Loader2, Eye } from "lucide-react";
 
 const FONT_OPTIONS = [
@@ -158,13 +158,7 @@ export default function AdminInicioPage() {
   const uploadCmsImage = async (file: File, section: "collage" | "instagram" | "products") => {
     const safeName = sanitizeFileName(file.name || `image-${Date.now()}.jpg`);
     const pathname = `bricia/images/home/${section}/${Date.now()}-${safeName}`;
-    const blob = await upload(pathname, file, {
-      access: "public",
-      handleUploadUrl: "/api/upload/client",
-      multipart: true,
-      contentType: file.type || "image/jpeg",
-    });
-    return blob.url;
+    return uploadCmsImageFile(file, pathname);
   };
 
   const handleSave = async () => {

@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { upload } from "@vercel/blob/client";
+import { uploadCmsImageFile } from "@/lib/cms-upload-image";
 import { ArrowLeft, Upload, Plus, X, Loader2, Save, Video } from "lucide-react";
 
 const CATEGORIES = ["PRIMAVERA", "VERANO", "OTOÑO", "INVIERNO", "POSTRES"];
@@ -38,13 +38,7 @@ function sanitizeFileName(name: string) {
 async function uploadRecipeImage(file: File, slug: string): Promise<string | null> {
   const safeName = sanitizeFileName(file.name || `recipe-${Date.now()}.jpg`);
   const pathname = `bricia/images/recipes/${slug}/${Date.now()}-${safeName}`;
-  const blob = await upload(pathname, file, {
-    access: "public",
-    handleUploadUrl: "/api/upload/client",
-    multipart: true,
-    contentType: file.type || "image/jpeg",
-  });
-  return blob.url;
+  return uploadCmsImageFile(file, pathname);
 }
 
 async function waitForRecipeUpdateInApi(

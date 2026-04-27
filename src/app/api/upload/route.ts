@@ -1,9 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
+import { mkdir, writeFile } from "fs/promises";
+import path from "path";
+import crypto from "crypto";
 import { put } from "@vercel/blob";
 
 export const runtime = "nodejs";
 
-const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
+const MAX_IMAGE_SIZE_BYTES = 25 * 1024 * 1024;
+const BLOB_TOKEN =
+  process.env.BLOB_READ_WRITE_TOKEN ||
+  process.env.BLOB_TOKEN ||
+  process.env.VERCEL_BLOB_READ_WRITE_TOKEN;
+
+/** Sin Blob en máquina local: guardar en disco para poder desarrollar el CMS. */
+async function saveDevUpload(file: File, ext: string) {
+  const dir = path.join(process.cwd(), "public", "uploads-dev");
+  await mkdir(dir, { recursive: true });
+  const name = `${Date.now()}-${crypto.randomBytes(6).toString("hex")}.${ext}`;
+  const full = path.join(dir, name);
+  const buf = Buffer.from(await file.arrayBuffer());
+  await writeFile(full, buf);
+  return `/uploads-dev/${name}`;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,18 +44,42 @@ export async function POST(request: NextRequest) {
 
     if (file.size > MAX_IMAGE_SIZE_BYTES) {
       return NextResponse.json(
-        { error: "La imagen excede el límite de 10 MB" },
+        { error: "La imagen excede el límite de 25 MB" },
         { status: 400 }
       );
     }
 
-    // Generate unique filename
     let ext = file.name.split(".").pop()?.toLowerCase() || "png";
     if (ext === "jfif" || ext === "jpeg") ext = "jpg";
     if (!ext) ext = "png";
-    const uniqueName = `bricia/images/recipe_${Date.now()}.${ext}`;
 
-    const blob = await put(uniqueName, file, { access: "public" });
+    const onVercel = Boolean(process.env.VERCEL);
+    const useDevDisk =
+      !onVercel && !BLOB_TOKEN && process.env.NODE_ENV === "development";
+
+    if (useDevDisk) {
+      const publicPath = await saveDevUpload(file, ext);
+      return NextResponse.json({
+        success: true,
+        path: publicPath,
+      });
+    }
+
+    if (!BLOB_TOKEN) {
+      return NextResponse.json(
+        {
+          error:
+            "Falta BLOB_READ_WRITE_TOKEN. En local puedes usar `npm run dev` sin Vercel y se guardará en /public/uploads-dev, o añade el token en .env.local.",
+        },
+        { status: 500 }
+      );
+    }
+
+    const uniqueName = `bricia/images/recipe_${Date.now()}.${ext}`;
+    const blob = await put(uniqueName, file, {
+      access: "public",
+      token: BLOB_TOKEN,
+    });
 
     return NextResponse.json({
       success: true,
