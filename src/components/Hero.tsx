@@ -107,12 +107,12 @@ export default function Hero() {
       </div>
 
       {/* Right Column: Single Hero Image */}
-      <div className="w-full md:w-[55%] h-[70vh] md:h-screen p-1.5">
+      <div className="w-full md:w-[55%] h-[70vh] md:h-screen p-1.5 md:pl-0 md:pr-24">
         <motion.div
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, delay: 0.2 }}
-          className="relative h-full w-full overflow-hidden rounded-lg"
+          className="relative h-full w-full overflow-hidden rounded-lg bg-brand-secondary"
         >
           <Image
             src={heroImage}
@@ -120,7 +120,7 @@ export default function Hero() {
             fill
             priority
             sizes="(max-width: 768px) 100vw, 55vw"
-            className="object-cover hover:scale-105 transition-transform duration-[1.5s] ease-out"
+            className="object-cover md:object-contain md:object-left hover:scale-[1.02] transition-transform duration-[1.5s] ease-out"
           />
         </motion.div>
       </div>
