@@ -3,11 +3,21 @@
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
-import { mesaArticles } from "@/data/lamesa";
 
-export default function MesaSection() {
-  // Take top 3 for the home page
-  const featuredArticles = mesaArticles.slice(0, 3);
+interface ArticlePreview {
+  slug: string;
+  title: string;
+  type: string;
+  readingTime: string;
+  excerpt: string;
+}
+
+interface MesaSectionProps {
+  articles: ArticlePreview[];
+}
+
+export default function MesaSection({ articles }: MesaSectionProps) {
+  const featuredArticles = articles.slice(0, 3);
 
   return (
     <section className="bg-brand-primary text-brand-secondary py-32 px-6">

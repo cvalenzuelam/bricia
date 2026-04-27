@@ -4,8 +4,11 @@ import RecipeGrid from "@/components/RecipeGrid";
 import ProductSection from "@/components/ProductSection";
 import MesaSection from "@/components/MesaSection";
 import InstagramFeed from "@/components/InstagramFeed";
+import { getMesaArticles } from "@/data/lamesa";
 
-export default function Home() {
+export default async function Home() {
+  const mesaArticles = await getMesaArticles();
+
   return (
     <main className="min-h-screen pt-28 md:pt-20 overflow-x-hidden bg-brand-secondary">
       {/* 1. Hero: Wix-style split with bio + photo mosaic */}
@@ -31,7 +34,7 @@ export default function Home() {
       </section>
 
       {/* 4. Mesa Section */}
-      <MesaSection />
+      <MesaSection articles={mesaArticles} />
 
       {/* 5. Products */}
       <ProductSection />
