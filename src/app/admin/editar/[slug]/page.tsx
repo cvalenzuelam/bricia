@@ -163,7 +163,10 @@ export default function EditRecipePage({ params }: EditPageProps) {
         formData.append("file", file);
         const res = await fetchWithTimeout("/api/upload", { method: "POST", body: formData });
         const data = await res.json();
-        if (!res.ok) return null;
+        if (!res.ok) {
+          alert(data?.error || "Error al subir imagen");
+          return null;
+        }
         return (data?.path as string | undefined) || null;
       })();
       pendingMainUploadRef.current = uploadPromise;
