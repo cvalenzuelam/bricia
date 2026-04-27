@@ -12,6 +12,23 @@ const FONT_OPTIONS = [
   { value: "sans", label: "Inter (Sans)" },
   { value: "aboreto", label: "Aboreto (Logo)" },
 ];
+const REQUEST_TIMEOUT_MS = 20000;
+const FRONT_SYNC_TIMEOUT_MS = 60000;
+const FRONT_SYNC_INTERVAL_MS = 2500;
+
+async function fetchWithTimeout(
+  input: RequestInfo | URL,
+  init?: RequestInit,
+  timeoutMs = REQUEST_TIMEOUT_MS
+) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
 
 function sanitizeFileName(name: string) {
   return name
@@ -54,6 +71,9 @@ interface HeroConfig {
 export default function AdminInicioPage() {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+  const [publishMessage, setPublishMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [saved, setSaved] = useState(false);
   const landingInputRef = useRef<HTMLInputElement | null>(null);
@@ -86,6 +106,55 @@ export default function AdminInicioPage() {
       .then((data) => { setConfig(data); setLoading(false); });
   }, [router]);
 
+  useEffect(() => {
+    if (!saving && !uploading && !publishing) return;
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [saving, uploading, publishing]);
+
+  const waitForHeroUpdateInApi = async (expected: HeroConfig) => {
+    const startedAt = Date.now();
+    while (Date.now() - startedAt < FRONT_SYNC_TIMEOUT_MS) {
+      try {
+        const res = await fetchWithTimeout(`/api/hero?t=${Date.now()}`, { cache: "no-store" });
+        if (res.ok) {
+          const current = await res.json();
+          const sameMainImage =
+            (current?.collageImages?.[0]?.src || "") ===
+            (expected.collageImages?.[0]?.src || "");
+          if (sameMainImage && current?.title === expected.title) return true;
+        }
+      } catch {
+        // keep polling
+      }
+      await new Promise((resolve) => setTimeout(resolve, FRONT_SYNC_INTERVAL_MS));
+    }
+    return false;
+  };
+
+  const waitForHeroUpdateInFrontend = async (expected: HeroConfig) => {
+    const startedAt = Date.now();
+    while (Date.now() - startedAt < FRONT_SYNC_TIMEOUT_MS) {
+      try {
+        const res = await fetchWithTimeout(`/?t=${Date.now()}`, { cache: "no-store" });
+        if (res.ok) {
+          const html = await res.text();
+          const hasTitle = html.includes(expected.title);
+          const hasImage = html.includes(expected.collageImages?.[0]?.src || "");
+          if (hasTitle && hasImage) return true;
+        }
+      } catch {
+        // keep polling
+      }
+      await new Promise((resolve) => setTimeout(resolve, FRONT_SYNC_INTERVAL_MS));
+    }
+    return false;
+  };
+
   const uploadCmsImage = async (file: File, section: "collage" | "instagram" | "products") => {
     const safeName = sanitizeFileName(file.name || `image-${Date.now()}.jpg`);
     const pathname = `bricia/images/home/${section}/${Date.now()}-${safeName}`;
@@ -100,14 +169,41 @@ export default function AdminInicioPage() {
 
   const handleSave = async () => {
     setSaving(true);
-    await fetch("/api/hero", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(config),
-    });
-    setSaving(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+    try {
+      const res = await fetchWithTimeout("/api/hero", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(config),
+      });
+      if (!res.ok) {
+        alert("Error al guardar cambios");
+        return;
+      }
+
+      setPublishing(true);
+      setPublishMessage("Validando guardado en el CMS...");
+      const syncedInApi = await waitForHeroUpdateInApi(config);
+      if (!syncedInApi) {
+        alert("Se guardó, pero no se pudo confirmar sincronización en CMS. Intenta refrescar.");
+        return;
+      }
+
+      setPublishMessage("Esperando que los cambios se reflejen en el front...");
+      const reflectedInFrontend = await waitForHeroUpdateInFrontend(config);
+      if (!reflectedInFrontend) {
+        alert("Se guardó en CMS, pero el front tardó demasiado en reflejar cambios.");
+        return;
+      }
+
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch {
+      alert("La petición tardó demasiado. Revisa conexión y vuelve a intentar.");
+    } finally {
+      setPublishing(false);
+      setPublishMessage("");
+      setSaving(false);
+    }
   };
 
   const handleLandingUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -116,6 +212,7 @@ export default function AdminInicioPage() {
     if (!file) return;
 
     try {
+      setUploading(true);
       const path = await uploadCmsImage(file, "collage");
       if (path) {
         const updated = [...(config.collageImages || [])];
@@ -131,6 +228,7 @@ export default function AdminInicioPage() {
     } catch {
       alert("Error al subir imagen");
     } finally {
+      setUploading(false);
       input.value = "";
     }
   };
@@ -151,6 +249,7 @@ export default function AdminInicioPage() {
     if (!file) return;
 
     try {
+      setUploading(true);
       const path = await uploadCmsImage(file, "instagram");
 
       if (path) {
@@ -163,6 +262,7 @@ export default function AdminInicioPage() {
     } catch {
       alert("Error al subir imagen");
     } finally {
+      setUploading(false);
       input.value = "";
     }
   };
@@ -173,6 +273,7 @@ export default function AdminInicioPage() {
     if (!file) return;
 
     try {
+      setUploading(true);
       const path = await uploadCmsImage(file, "products");
 
       if (path) {
@@ -185,6 +286,7 @@ export default function AdminInicioPage() {
     } catch {
       alert("Error al subir imagen");
     } finally {
+      setUploading(false);
       input.value = "";
     }
   };
@@ -207,6 +309,22 @@ export default function AdminInicioPage() {
 
   return (
     <div className="min-h-screen bg-brand-secondary pt-20">
+      {(saving || uploading || publishing) && (
+        <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm flex items-center justify-center px-6">
+          <div className="bg-white rounded-2xl border border-brand-primary/10 shadow-xl p-6 w-full max-w-md text-center space-y-3">
+            <Loader2 size={28} className="animate-spin text-brand-accent mx-auto" />
+            <p className="text-sm font-sans font-bold tracking-[0.12em] uppercase text-brand-primary">
+              Procesando cambios
+            </p>
+            <p className="text-xs font-sans text-brand-muted">
+              {publishMessage || (uploading ? "Subiendo imagen..." : "Guardando configuración...")}
+            </p>
+            <p className="text-[11px] font-sans text-brand-muted/80">
+              No cierres ni salgas de esta pantalla hasta terminar.
+            </p>
+          </div>
+        </div>
+      )}
       <div className="max-w-4xl mx-auto px-6 py-12">
         {/* Top nav */}
         <Link href="/admin" className="inline-flex items-center gap-2 text-xs font-sans text-brand-muted hover:text-brand-accent transition-colors mb-8">
@@ -460,7 +578,7 @@ export default function AdminInicioPage() {
 
           {/* ─── SAVE BUTTON ──────────────────────── */}
           <div className="sticky bottom-6 z-10">
-            <button onClick={handleSave} disabled={saving}
+            <button onClick={handleSave} disabled={saving || uploading || publishing}
               className={`w-full flex items-center justify-center gap-2 py-4 rounded-xl text-sm font-sans font-bold tracking-[0.15em] uppercase transition-all shadow-lg ${
                 saved
                   ? "bg-green-600 text-white"
