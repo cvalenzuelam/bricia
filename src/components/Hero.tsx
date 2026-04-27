@@ -39,14 +39,10 @@ export default function Hero() {
     return <section className="min-h-screen bg-brand-secondary" />;
   }
 
-  const gridSizes = [
-    "col-span-1 row-span-2",
-    "col-span-1 row-span-1",
-    "col-span-1 row-span-1",
-    "col-span-1 row-span-1",
-    "col-span-1 row-span-1",
-    "col-span-1 row-span-1",
-  ];
+  const heroImage =
+    config.collageImages?.[0]?.src || "/images/hero-landing-picnic.png";
+  const heroImageAlt =
+    config.collageImages?.[0]?.alt || "Foto principal de Bricia";
 
   return (
     <section
@@ -110,26 +106,23 @@ export default function Hero() {
         </motion.div>
       </div>
 
-      {/* Right Column: Photo Mosaic */}
-      <div className="w-full md:w-[55%] h-[70vh] md:h-screen grid grid-cols-3 grid-rows-2 gap-1.5 p-1.5">
-        {config.collageImages.map((img, i) => (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.2 + i * 0.1 }}
-            className={`relative overflow-hidden rounded-lg ${gridSizes[i] || ""}`}
-          >
-            <Image
-              src={img.src}
-              alt={img.alt}
-              fill
-              priority={i < 3}
-              sizes="(max-width: 768px) 33vw, 20vw"
-              className="object-cover hover:scale-105 transition-transform duration-[1.5s] ease-out"
-            />
-          </motion.div>
-        ))}
+      {/* Right Column: Single Hero Image */}
+      <div className="w-full md:w-[55%] h-[70vh] md:h-screen p-1.5">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+          className="relative h-full w-full overflow-hidden rounded-lg"
+        >
+          <Image
+            src={heroImage}
+            alt={heroImageAlt}
+            fill
+            priority
+            sizes="(max-width: 768px) 100vw, 55vw"
+            className="object-cover hover:scale-105 transition-transform duration-[1.5s] ease-out"
+          />
+        </motion.div>
       </div>
     </section>
   );

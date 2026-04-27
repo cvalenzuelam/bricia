@@ -11,28 +11,8 @@
   "ctaText": "Ven para descubrir recetas inspiradoras cada semana.",
   "collageImages": [
     {
-      "src": "/images/recipe_1775416496036.jpg",
-      "alt": "Bricia en su cocina"
-    },
-    {
-      "src": "/images/tiradito.png",
-      "alt": "Tiradito de atún"
-    },
-    {
-      "src": "/images/chocolate.png",
-      "alt": "Volcán de chocolate"
-    },
-    {
-      "src": "/images/ensalada.png",
-      "alt": "Ensalada primavera"
-    },
-    {
-      "src": "/images/sopa.png",
-      "alt": "Sopa de calabaza"
-    },
-    {
-      "src": "/images/style_candle.png",
-      "alt": "Ambiente de cocina"
+      "src": "/images/hero-landing-picnic.png",
+      "alt": "Bricia en picnic al aire libre"
     }
   ],
   "backgroundColor": "#FAF9F4",
