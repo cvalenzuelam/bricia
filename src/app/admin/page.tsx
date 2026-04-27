@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Plus, Edit3, Trash2, Lock, ChefHat, LayoutList } from "lucide-react";
+import { Plus, Edit3, Trash2, Lock, ChefHat, LayoutList, ShoppingBag } from "lucide-react";
 
 interface Recipe {
   slug: string;
@@ -126,6 +126,12 @@ export default function AdminPage() {
               <button className="flex items-center gap-2 border border-brand-primary/10 text-brand-primary px-6 py-3 rounded-lg text-xs font-sans font-bold tracking-[0.15em] uppercase hover:border-brand-accent hover:text-brand-accent transition-colors">
                 <LayoutList size={16} />
                 La Mesa
+              </button>
+            </Link>
+            <Link href="/admin/productos">
+              <button className="flex items-center gap-2 border border-brand-primary/10 text-brand-primary px-6 py-3 rounded-lg text-xs font-sans font-bold tracking-[0.15em] uppercase hover:border-brand-accent hover:text-brand-accent transition-colors">
+                <ShoppingBag size={16} />
+                Productos
               </button>
             </Link>
             <Link href="/admin/nueva">

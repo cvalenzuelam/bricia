@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingBag, Check } from "lucide-react";
-import { products, formatPrice } from "@/data/products";
+import { ShoppingBag, Check, Loader2 } from "lucide-react";
+import { formatPrice } from "@/data/products";
 import type { Product } from "@/data/products";
 import { useCart } from "@/context/CartContext";
 
@@ -59,6 +59,18 @@ function AddButton({ product }: { product: Product }) {
 
 export default function ProductosPage() {
   const [filter, setFilter] = useState<FilterCategory>("TODOS");
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/productos", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data)) setProducts(data);
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
 
   const filtered = filter === "TODOS"
     ? products
@@ -121,70 +133,76 @@ export default function ProductosPage() {
 
       {/* ── PRODUCT GRID ── */}
       <div className="max-w-7xl mx-auto px-6">
-        <motion.div
-          layout
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-20"
-        >
-          <AnimatePresence mode="popLayout">
-            {filtered.map((product, i) => (
-              <motion.div
-                key={product.id}
-                layout
-                initial={{ opacity: 0, y: 24 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.96 }}
-                transition={{ duration: 0.5, delay: i * 0.07 }}
-                className="group flex flex-col gap-6"
-              >
-                {/* Image */}
-                <div className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-white border border-brand-primary/5 shadow-sm">
-                  <Image
-                    src={product.image}
-                    alt={product.name}
-                    fill
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    className="object-cover transition-transform duration-[1.4s] ease-out group-hover:scale-105"
-                  />
-                  {/* Category badge */}
-                  <div className="absolute top-4 left-4">
-                    <span className="text-[9px] font-sans font-bold tracking-[0.25em] uppercase bg-white/90 backdrop-blur-sm text-brand-primary/60 px-3 py-1.5 rounded-full">
-                      {product.category}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Info */}
-                <div className="space-y-4">
-                  <div className="space-y-1">
-                    <h3 className="font-serif text-2xl md:text-3xl text-brand-primary lowercase leading-tight group-hover:text-brand-accent transition-colors duration-400">
-                      {product.name}
-                    </h3>
-                    <p className="text-xs font-sans text-brand-muted">{product.subtitle}</p>
-                  </div>
-
-                  <p className="text-sm font-serif italic text-brand-primary/60 leading-relaxed line-clamp-2">
-                    {product.description}
-                  </p>
-
-                  <div className="flex items-center justify-between pt-1">
-                    <span className="font-serif text-2xl text-brand-primary">
-                      {formatPrice(product.price)}
-                    </span>
-                    {product.stock <= 3 && (
-                      <span className="text-[9px] font-sans text-brand-accent border border-brand-accent/30 rounded-full px-2.5 py-1 tracking-[0.15em] uppercase">
-                        Últimas {product.stock}
+        {loading ? (
+          <div className="flex justify-center py-24">
+            <Loader2 size={24} className="animate-spin text-brand-muted" />
+          </div>
+        ) : (
+          <motion.div
+            layout
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-20"
+          >
+            <AnimatePresence mode="popLayout">
+              {filtered.map((product, i) => (
+                <motion.div
+                  key={product.id}
+                  layout
+                  initial={{ opacity: 0, y: 24 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.96 }}
+                  transition={{ duration: 0.5, delay: i * 0.07 }}
+                  className="group flex flex-col gap-6"
+                >
+                  {/* Image */}
+                  <div className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-white border border-brand-primary/5 shadow-sm">
+                    <Image
+                      src={product.image}
+                      alt={product.name}
+                      fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      className="object-cover transition-transform duration-[1.4s] ease-out group-hover:scale-105"
+                    />
+                    {/* Category badge */}
+                    <div className="absolute top-4 left-4">
+                      <span className="text-[9px] font-sans font-bold tracking-[0.25em] uppercase bg-white/90 backdrop-blur-sm text-brand-primary/60 px-3 py-1.5 rounded-full">
+                        {product.category}
                       </span>
-                    )}
+                    </div>
                   </div>
 
-                  <AddButton product={product} />
-                </div>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </motion.div>
+                  {/* Info */}
+                  <div className="space-y-4">
+                    <div className="space-y-1">
+                      <h3 className="font-serif text-2xl md:text-3xl text-brand-primary lowercase leading-tight group-hover:text-brand-accent transition-colors duration-400">
+                        {product.name}
+                      </h3>
+                      <p className="text-xs font-sans text-brand-muted">{product.subtitle}</p>
+                    </div>
 
-        {filtered.length === 0 && (
+                    <p className="text-sm font-serif italic text-brand-primary/60 leading-relaxed line-clamp-2">
+                      {product.description}
+                    </p>
+
+                    <div className="flex items-center justify-between pt-1">
+                      <span className="font-serif text-2xl text-brand-primary">
+                        {formatPrice(product.price)}
+                      </span>
+                      {product.stock <= 3 && (
+                        <span className="text-[9px] font-sans text-brand-accent border border-brand-accent/30 rounded-full px-2.5 py-1 tracking-[0.15em] uppercase">
+                          Últimas {product.stock}
+                        </span>
+                      )}
+                    </div>
+
+                    <AddButton product={product} />
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </motion.div>
+        )}
+
+        {!loading && filtered.length === 0 && (
           <div className="text-center py-32">
             <p className="font-serif text-2xl italic text-brand-primary/30">
               No hay productos en esta categoría aún.
