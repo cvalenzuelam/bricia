@@ -1,3 +1,5 @@
+import { readFile, writeFile } from "fs/promises";
+import path from "path";
 import { put, list } from "@vercel/blob";
 import localRecipesData from "./recipes.json";
 
@@ -20,9 +22,24 @@ export interface Recipe {
 }
 
 const BLOB_KEY = "bricia/recipes.json";
+const LOCAL_RECIPES_PATH = path.join(process.cwd(), "src/data/recipes.json");
 const LIST_TIMEOUT_MS = 10000;
 const FETCH_TIMEOUT_MS = 10000;
 const SAVE_TIMEOUT_MS = 15000;
+
+const BLOB_TOKEN =
+  process.env.BLOB_READ_WRITE_TOKEN ||
+  process.env.BLOB_TOKEN ||
+  process.env.VERCEL_BLOB_READ_WRITE_TOKEN;
+
+function shouldPersistRecipesLocally(): boolean {
+  const onVercel = Boolean(process.env.VERCEL);
+  return (
+    !onVercel &&
+    !BLOB_TOKEN &&
+    process.env.NODE_ENV === "development"
+  );
+}
 
 async function withTimeout<T>(
   promise: Promise<T>,
@@ -41,9 +58,21 @@ async function withTimeout<T>(
 }
 
 export async function getRecipes(): Promise<Recipe[]> {
+  if (shouldPersistRecipesLocally()) {
+    try {
+      const raw = await readFile(LOCAL_RECIPES_PATH, "utf-8");
+      return JSON.parse(raw) as Recipe[];
+    } catch {
+      return localRecipesData as Recipe[];
+    }
+  }
+
   try {
     const { blobs } = await withTimeout(
-      list({ prefix: BLOB_KEY }),
+      list({
+        prefix: BLOB_KEY,
+        ...(BLOB_TOKEN ? { token: BLOB_TOKEN } : {}),
+      }),
       LIST_TIMEOUT_MS,
       "listing recipe blobs"
     );
@@ -74,11 +103,25 @@ export async function getRecipeBySlug(
 }
 
 export async function saveRecipes(recipes: Recipe[]): Promise<void> {
+  const payload = JSON.stringify(recipes, null, 2);
+
+  if (shouldPersistRecipesLocally()) {
+    await writeFile(LOCAL_RECIPES_PATH, payload, "utf-8");
+    return;
+  }
+
+  if (!BLOB_TOKEN) {
+    throw new Error(
+      "Falta BLOB_READ_WRITE_TOKEN para guardar recetas. En desarrollo local sin token se usa src/data/recipes.json."
+    );
+  }
+
   await withTimeout(
-    put(BLOB_KEY, JSON.stringify(recipes, null, 2), {
+    put(BLOB_KEY, payload, {
       access: "public",
       allowOverwrite: true,
       contentType: "application/json",
+      token: BLOB_TOKEN,
     }),
     SAVE_TIMEOUT_MS,
     "saving recipes blob"

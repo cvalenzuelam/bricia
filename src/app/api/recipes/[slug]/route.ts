@@ -30,8 +30,10 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: "Receta no encontrada" }, { status: 404 });
     }
     return NextResponse.json({ success: true, recipe: updated });
-  } catch {
-    return NextResponse.json({ error: "Error al actualizar" }, { status: 500 });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Error al actualizar";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 

@@ -325,7 +325,8 @@ export default function EditRecipePage({ params }: EditPageProps) {
 
         router.push("/admin");
       } else {
-        alert("Error al actualizar la receta");
+        const errData = await res.json().catch(() => null);
+        alert(errData?.error || "Error al actualizar la receta");
       }
     } catch {
       alert("La petición tardó demasiado. Revisa conexión y vuelve a intentar.");
