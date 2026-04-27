@@ -6,6 +6,7 @@ import Image from "next/image";
 import { Menu, X, Search, ShoppingBag } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
+import { useCart } from "@/context/CartContext";
 
 const leftLinks = [
   { name: "RECETAS", href: "/recetas" },
@@ -26,6 +27,7 @@ interface Recipe {
 }
 
 export default function Header() {
+  const { itemCount, openCart } = useCart();
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -161,13 +163,23 @@ export default function Header() {
               >
                 <Search size={18} strokeWidth={1.5} />
               </button>
-              <Link
-                href="/cart"
+              <button
+                onClick={openCart}
                 className={`${iconColor} hover:text-brand-accent transition-colors relative`}
+                aria-label="Abrir carrito"
               >
                 <ShoppingBag size={18} strokeWidth={1.5} />
-                <span className="absolute -top-1 -right-1 w-2 h-2 bg-brand-accent rounded-full border border-brand-secondary"></span>
-              </Link>
+                {itemCount > 0 && (
+                  <motion.span
+                    key={itemCount}
+                    initial={{ scale: 0.5, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 bg-brand-accent text-white text-[9px] font-sans font-bold rounded-full flex items-center justify-center px-0.5 border border-brand-secondary"
+                  >
+                    {itemCount > 9 ? "9+" : itemCount}
+                  </motion.span>
+                )}
+              </button>
             </div>
           </div>
         </div>

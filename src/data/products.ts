@@ -1,0 +1,81 @@
+export interface Product {
+  id: string;
+  name: string;
+  subtitle: string;
+  price: number; // MXN
+  description: string;
+  image: string;
+  category: "COCINA" | "MESA" | "DESPENSA";
+  stock: number;
+}
+
+export const products: Product[] = [
+  {
+    id: "tabla-mezquite",
+    name: "tabla de mezquite",
+    subtitle: "Artesanal · Valle de Oaxaca",
+    price: 850,
+    description: "Tallada a mano en madera de mezquite del Valle de Oaxaca y acabada con aceite de linaza. Cada pieza tiene veta única. Ideal para servir, cortar y presentar en la mesa.",
+    image: "/images/producto_tabla.png",
+    category: "COCINA",
+    stock: 8,
+  },
+  {
+    id: "cucharas-olivo",
+    name: "cucharas de olivo",
+    subtitle: "Set de 3 · Artesanal",
+    price: 420,
+    description: "Set de tres cucharas en madera de olivo con diferentes tamaños. Resistentes, antiadherentes y con una veta preciosa. Cada set es distinto, cada uno es único.",
+    image: "/images/producto_cuchara.png",
+    category: "COCINA",
+    stock: 15,
+  },
+  {
+    id: "ceramica-artesanal",
+    name: "cerámica artesanal",
+    subtitle: "Bowl grande · Tono crema",
+    price: 1200,
+    description: "Bowl de cerámica hecho a mano en Tlaquepaque. Esmalte en tono crema con borde natural. Perfecto para servir en la mesa o como pieza decorativa de cocina.",
+    image: "/images/producto_ceramica.png",
+    category: "MESA",
+    stock: 5,
+  },
+  {
+    id: "mantel-lino",
+    name: "mantel de lino belga",
+    subtitle: "140 × 250 cm · Color crudo",
+    price: 950,
+    description: "Lino belga sin blanquear, 100% natural. Se arruga de forma hermosa con el uso, nunca pierde su carácter. El complemento perfecto para mesas que respiran.",
+    image: "/images/mesa_setting.png",
+    category: "MESA",
+    stock: 10,
+  },
+  {
+    id: "especias-temporada",
+    name: "kit de especias de temporada",
+    subtitle: "5 variedades · Cosecha 2026",
+    price: 580,
+    description: "Cinco especias cuidadosamente seleccionadas de productores mexicanos: chile mulato, canela de Ceilán, comino entero, cúrcuma y pimienta negra. En frasco de vidrio reciclado.",
+    image: "/images/mesa_details.png",
+    category: "DESPENSA",
+    stock: 20,
+  },
+  {
+    id: "aceite-oliva",
+    name: "aceite de oliva extra virgen",
+    subtitle: "500 ml · Primera extracción en frío",
+    price: 320,
+    description: "Prensado en frío de olivares de Baja California. Aromas frutados, ligeramente picante al final. El aceite que Bricia usa en cada receta que importa.",
+    image: "/images/mesa_hosting.png",
+    category: "DESPENSA",
+    stock: 30,
+  },
+];
+
+export function getProductById(id: string): Product | undefined {
+  return products.find((p) => p.id === id);
+}
+
+export function formatPrice(price: number): string {
+  return `$${price.toLocaleString("es-MX")} MXN`;
+}

@@ -3,6 +3,7 @@ import { Playfair_Display, Inter, Aboreto } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import ClientShell from "@/components/ClientShell";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -33,11 +34,13 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body className={`${playfair.variable} ${inter.variable} ${aboreto.variable} antialiased min-h-screen flex flex-col`}>
-        <Header />
-        <div className="flex-grow">
-          {children}
-        </div>
-        <Footer />
+        <ClientShell>
+          <Header />
+          <div className="flex-grow">
+            {children}
+          </div>
+          <Footer />
+        </ClientShell>
       </body>
     </html>
   );
