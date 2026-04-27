@@ -10,6 +10,8 @@ const CATEGORIES = ["PRIMAVERA", "VERANO", "OTOÑO", "INVIERNO", "POSTRES"];
 const REQUEST_TIMEOUT_MS = 20000;
 const FRONT_SYNC_TIMEOUT_MS = 60000;
 const FRONT_SYNC_INTERVAL_MS = 2500;
+const MAX_UPLOAD_BYTES = 4 * 1024 * 1024;
+const MAX_IMAGE_SIDE = 2200;
 
 async function fetchWithTimeout(
   input: RequestInfo | URL,
@@ -23,6 +25,42 @@ async function fetchWithTimeout(
   } finally {
     clearTimeout(timeoutId);
   }
+}
+
+async function compressImageForUpload(file: File): Promise<File> {
+  if (!file.type.startsWith("image/")) return file;
+  if (file.size <= MAX_UPLOAD_BYTES) return file;
+
+  const imageBitmap = await createImageBitmap(file);
+  const scale = Math.min(1, MAX_IMAGE_SIDE / Math.max(imageBitmap.width, imageBitmap.height));
+  const targetWidth = Math.max(1, Math.round(imageBitmap.width * scale));
+  const targetHeight = Math.max(1, Math.round(imageBitmap.height * scale));
+
+  const canvas = document.createElement("canvas");
+  canvas.width = targetWidth;
+  canvas.height = targetHeight;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return file;
+  ctx.drawImage(imageBitmap, 0, 0, targetWidth, targetHeight);
+
+  const qualitySteps = [0.88, 0.8, 0.72, 0.64, 0.56, 0.48];
+  for (const quality of qualitySteps) {
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, "image/jpeg", quality)
+    );
+    if (!blob) continue;
+    if (blob.size <= MAX_UPLOAD_BYTES) {
+      const baseName = file.name.replace(/\.[^/.]+$/, "");
+      return new File([blob], `${baseName}.jpg`, { type: "image/jpeg" });
+    }
+  }
+
+  const lastBlob = await new Promise<Blob | null>((resolve) =>
+    canvas.toBlob(resolve, "image/jpeg", 0.42)
+  );
+  if (!lastBlob) return file;
+  const baseName = file.name.replace(/\.[^/.]+$/, "");
+  return new File([lastBlob], `${baseName}.jpg`, { type: "image/jpeg" });
 }
 
 async function waitForRecipeUpdateInApi(
@@ -150,10 +188,15 @@ export default function EditRecipePage({ params }: EditPageProps) {
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.currentTarget;
-    const file = input.files?.[0];
-    if (!file) return;
+    const originalFile = input.files?.[0];
+    if (!originalFile) return;
     try {
       setUploading(true);
+      const file = await compressImageForUpload(originalFile);
+      if (file.size > MAX_UPLOAD_BYTES) {
+        alert("La imagen sigue siendo muy pesada. Intenta con una versión más ligera.");
+        return;
+      }
       const reader = new FileReader();
       reader.onloadend = () => setImagePreview(reader.result as string);
       reader.readAsDataURL(file);
@@ -195,7 +238,11 @@ export default function EditRecipePage({ params }: EditPageProps) {
     const uploadedPaths: string[] = [];
     try {
       for (let i = 0; i < files.length; i++) {
-          const file = files[i];
+          const file = await compressImageForUpload(files[i]);
+          if (file.size > MAX_UPLOAD_BYTES) {
+            alert(`La imagen ${i + 1} es demasiado pesada incluso comprimida. Omítela o redúcela.`);
+            continue;
+          }
           const formData = new FormData();
           formData.append("file", file);
           const res = await fetchWithTimeout("/api/upload", { method: "POST", body: formData });
