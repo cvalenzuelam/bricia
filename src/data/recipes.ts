@@ -9,6 +9,10 @@ export interface Recipe {
   image: string;
   history: string;
   gallery?: string[];
+  /** YouTube, Vimeo, archivo .mp4/.webm, u otra URL https */
+  videoUrl?: string;
+  /** Miniatura del video (si no hay, se usa la foto principal de la receta) */
+  videoThumbnail?: string;
   ingredients: string[];
   steps: string[];
   prepTime: string;

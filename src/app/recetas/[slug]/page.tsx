@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, Clock, Users } from "lucide-react";
+import RecipeVideoBlock from "@/components/RecipeVideoBlock";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -52,6 +53,17 @@ export default async function RecipePage({ params }: PageProps) {
           <Image src={recipe.image} alt={recipe.title} fill className="object-cover" />
         </div>
       </div>
+
+      {recipe.videoUrl?.trim() && (
+        <RecipeVideoBlock
+          videoUrl={recipe.videoUrl.trim()}
+          thumbnailUrl={
+            (recipe.videoThumbnail && recipe.videoThumbnail.trim()) ||
+            recipe.image
+          }
+          title={recipe.title}
+        />
+      )}
 
       {/* Content */}
       <div className="max-w-4xl mx-auto px-6 space-y-32">

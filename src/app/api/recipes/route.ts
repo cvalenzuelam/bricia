@@ -26,6 +26,9 @@ export async function POST(request: NextRequest) {
       category,
       image,
       history,
+      gallery,
+      videoUrl,
+      videoThumbnail,
       ingredients,
       steps,
       prepTime,
@@ -47,6 +50,13 @@ export async function POST(request: NextRequest) {
       category: category.toUpperCase(),
       image: image || "/images/placeholder.png",
       history: history || "",
+      gallery: Array.isArray(gallery) ? gallery : [],
+      ...(typeof videoUrl === "string" && videoUrl.trim()
+        ? { videoUrl: videoUrl.trim() }
+        : {}),
+      ...(typeof videoThumbnail === "string" && videoThumbnail.trim()
+        ? { videoThumbnail: videoThumbnail.trim() }
+        : {}),
       ingredients: ingredients || [],
       steps: steps || [],
       prepTime: prepTime || "",
