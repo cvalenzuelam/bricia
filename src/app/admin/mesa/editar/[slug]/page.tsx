@@ -10,15 +10,47 @@ import type { ContentBlock, MesaArticle } from "@/data/lamesa";
 
 const ARTICLE_TYPES = ["MESA", "ILUMINACIÓN", "HOSTING", "ESTÉTICA"] as const;
 const REQUEST_TIMEOUT_MS = 20000;
+const FRONT_SYNC_TIMEOUT_MS = 60000;
+const FRONT_SYNC_INTERVAL_MS = 2500;
 
-async function fetchWithTimeout(input: RequestInfo | URL, init?: RequestInit) {
+async function fetchWithTimeout(input: RequestInfo | URL, init?: RequestInit, timeoutMs = REQUEST_TIMEOUT_MS) {
   const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  const id = setTimeout(() => controller.abort(), timeoutMs);
   try {
     return await fetch(input, { ...init, signal: controller.signal });
   } finally {
     clearTimeout(id);
   }
+}
+
+async function waitForMesaUpdateInApi(slug: string, expectedTitle: string): Promise<boolean> {
+  const startedAt = Date.now();
+  while (Date.now() - startedAt < FRONT_SYNC_TIMEOUT_MS) {
+    try {
+      const res = await fetchWithTimeout(`/api/mesa/${slug}?t=${Date.now()}`, { cache: "no-store" });
+      if (res.ok) {
+        const article = await res.json();
+        if (article?.title === expectedTitle) return true;
+      }
+    } catch { /* keep polling */ }
+    await new Promise((r) => setTimeout(r, FRONT_SYNC_INTERVAL_MS));
+  }
+  return false;
+}
+
+async function waitForMesaTitleInFrontend(slug: string, expectedTitle: string): Promise<boolean> {
+  const startedAt = Date.now();
+  while (Date.now() - startedAt < FRONT_SYNC_TIMEOUT_MS) {
+    try {
+      const res = await fetchWithTimeout(`/la-mesa/${slug}?t=${Date.now()}`, { cache: "no-store" });
+      if (res.ok) {
+        const html = await res.text();
+        if (html.includes(expectedTitle)) return true;
+      }
+    } catch { /* keep polling */ }
+    await new Promise((r) => setTimeout(r, FRONT_SYNC_INTERVAL_MS));
+  }
+  return false;
 }
 
 function sanitizeFileName(name: string) {
@@ -57,6 +89,8 @@ export default function EditarMesaPage({ params }: EditPageProps) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+  const [publishMessage, setPublishMessage] = useState("");
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const [uploadedCoverPath, setUploadedCoverPath] = useState("");
 
@@ -71,6 +105,16 @@ export default function EditarMesaPage({ params }: EditPageProps) {
   });
 
   const [blocks, setBlocks] = useState<BlockWithId[]>([]);
+
+  useEffect(() => {
+    if (!saving && !uploading && !publishing) return;
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [saving, uploading, publishing]);
 
   useEffect(() => {
     const session = sessionStorage.getItem("bricia_admin");
@@ -160,19 +204,39 @@ export default function EditarMesaPage({ params }: EditPageProps) {
       body: cleanBlocks,
     };
 
-    const res = await fetchWithTimeout(`/api/mesa/${slug}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+    try {
+      const res = await fetchWithTimeout(`/api/mesa/${slug}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
 
-    if (res.ok) {
-      router.push("/admin/mesa");
-    } else {
-      const data = await res.json().catch(() => null);
-      alert(data?.error || "Error al guardar el artículo");
+      if (res.ok) {
+        setPublishing(true);
+        setPublishMessage("Validando guardado en el CMS...");
+        const syncedInApi = await waitForMesaUpdateInApi(slug, payload.title);
+        if (!syncedInApi) {
+          alert("Se guardó, pero no se pudo confirmar sincronización en CMS. Intenta refrescar.");
+          return;
+        }
+        setPublishMessage("Esperando que los cambios se reflejen en el front...");
+        const reflectedInFrontend = await waitForMesaTitleInFrontend(slug, payload.title);
+        if (!reflectedInFrontend) {
+          alert("Se guardó en CMS, pero el front tardó demasiado en reflejar cambios.");
+          return;
+        }
+        router.push("/admin/mesa");
+      } else {
+        const errData = await res.json().catch(() => null);
+        alert(errData?.error || "Error al guardar el artículo");
+      }
+    } catch {
+      alert("La petición tardó demasiado. Revisa tu conexión y vuelve a intentar.");
+    } finally {
+      setPublishing(false);
+      setPublishMessage("");
+      setSaving(false);
     }
-    setSaving(false);
   };
 
   if (loading) {
@@ -185,6 +249,22 @@ export default function EditarMesaPage({ params }: EditPageProps) {
 
   return (
     <div className="min-h-screen bg-brand-secondary pt-20">
+      {(saving || uploading || publishing) && (
+        <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm flex items-center justify-center px-6">
+          <div className="bg-white rounded-2xl border border-brand-primary/10 shadow-xl p-6 w-full max-w-md text-center space-y-3">
+            <Loader2 size={28} className="animate-spin text-brand-accent mx-auto" />
+            <p className="text-sm font-sans font-bold tracking-[0.12em] uppercase text-brand-primary">
+              Procesando cambios
+            </p>
+            <p className="text-xs font-sans text-brand-muted">
+              {publishMessage || (uploading ? "Subiendo imagen..." : "Guardando artículo...")}
+            </p>
+            <p className="text-[11px] font-sans text-brand-muted/80">
+              No cierres ni salgas de esta pantalla hasta terminar.
+            </p>
+          </div>
+        </div>
+      )}
       <div className="max-w-3xl mx-auto px-6 py-12">
         {/* Header */}
         <div className="mb-10">
