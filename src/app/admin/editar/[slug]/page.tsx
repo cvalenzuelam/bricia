@@ -7,6 +7,21 @@ import Link from "next/link";
 import { ArrowLeft, Upload, Plus, X, Loader2, Save } from "lucide-react";
 
 const CATEGORIES = ["PRIMAVERA", "VERANO", "OTOÑO", "INVIERNO", "POSTRES"];
+const REQUEST_TIMEOUT_MS = 20000;
+
+async function fetchWithTimeout(
+  input: RequestInfo | URL,
+  init?: RequestInit,
+  timeoutMs = REQUEST_TIMEOUT_MS
+) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
 
 interface EditPageProps {
   params: Promise<{ slug: string }>;
@@ -45,7 +60,7 @@ export default function EditRecipePage({ params }: EditPageProps) {
       return;
     }
 
-    fetch(`/api/recipes/${slug}`, { cache: "no-store" })
+    fetchWithTimeout(`/api/recipes/${slug}`, { cache: "no-store" })
       .then((res) => res.json())
       .then((recipe) => {
         setForm({
@@ -61,6 +76,10 @@ export default function EditRecipePage({ params }: EditPageProps) {
         setSteps(recipe.steps?.length ? recipe.steps : [""]);
         setGallery(recipe.gallery || []);
         setImagePreview(recipe.image);
+        setLoading(false);
+      })
+      .catch(() => {
+        alert("No se pudo cargar la receta. Intenta recargar la página.");
         setLoading(false);
       });
   }, [slug, router]);
@@ -78,8 +97,9 @@ export default function EditRecipePage({ params }: EditPageProps) {
       const uploadPromise = (async () => {
         const formData = new FormData();
         formData.append("file", file);
-        const res = await fetch("/api/upload", { method: "POST", body: formData });
+        const res = await fetchWithTimeout("/api/upload", { method: "POST", body: formData });
         const data = await res.json();
+        if (!res.ok) return null;
         return (data?.path as string | undefined) || null;
       })();
       pendingMainUploadRef.current = uploadPromise;
@@ -111,9 +131,9 @@ export default function EditRecipePage({ params }: EditPageProps) {
           const file = files[i];
           const formData = new FormData();
           formData.append("file", file);
-          const res = await fetch("/api/upload", { method: "POST", body: formData });
+          const res = await fetchWithTimeout("/api/upload", { method: "POST", body: formData });
           const data = await res.json();
-          if (data.path) uploadedPaths.push(data.path);
+          if (res.ok && data.path) uploadedPaths.push(data.path);
           else alert(data.error || "Error al subir imagen");
       }
     } catch {
@@ -127,6 +147,7 @@ export default function EditRecipePage({ params }: EditPageProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
+    let mainImagePath = uploadedImagePath || form.image;
 
     // Asegura que el upload (si existe) termine antes de guardar
     try {
@@ -134,7 +155,10 @@ export default function EditRecipePage({ params }: EditPageProps) {
       if (pending) {
         setUploading(true);
         const path = await pending;
-        if (path) setUploadedImagePath(path);
+        if (path) {
+          mainImagePath = path;
+          setUploadedImagePath(path);
+        }
       }
     } finally {
       setUploading(false);
@@ -143,24 +167,29 @@ export default function EditRecipePage({ params }: EditPageProps) {
 
     const recipe = {
       ...form,
-      image: uploadedImagePath || form.image,
+      image: mainImagePath,
       gallery,
       ingredients: ingredients.filter((i) => i.trim() !== ""),
       steps: steps.filter((s) => s.trim() !== ""),
     };
 
-    const res = await fetch(`/api/recipes/${slug}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(recipe),
-    });
+    try {
+      const res = await fetchWithTimeout(`/api/recipes/${slug}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(recipe),
+      });
 
-    if (res.ok) {
-      router.push("/admin");
-    } else {
-      alert("Error al actualizar la receta");
+      if (res.ok) {
+        router.push("/admin");
+      } else {
+        alert("Error al actualizar la receta");
+      }
+    } catch {
+      alert("La petición tardó demasiado. Revisa conexión y vuelve a intentar.");
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
   };
 
   const addIngredient = () => setIngredients([...ingredients, ""]);

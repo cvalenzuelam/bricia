@@ -16,16 +16,43 @@ export interface Recipe {
 }
 
 const BLOB_KEY = "bricia/recipes.json";
+const LIST_TIMEOUT_MS = 10000;
+const FETCH_TIMEOUT_MS = 10000;
+const SAVE_TIMEOUT_MS = 15000;
+
+async function withTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+  label: string
+): Promise<T> {
+  return await Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(
+        () => reject(new Error(`Timeout while ${label} after ${timeoutMs}ms`)),
+        timeoutMs
+      )
+    ),
+  ]);
+}
 
 export async function getRecipes(): Promise<Recipe[]> {
   try {
-    const { blobs } = await list({ prefix: BLOB_KEY });
+    const { blobs } = await withTimeout(
+      list({ prefix: BLOB_KEY }),
+      LIST_TIMEOUT_MS,
+      "listing recipe blobs"
+    );
     if (blobs.length > 0) {
       // Sort desc to get the most recent one
       const latest = blobs.sort((a, b) =>
         b.uploadedAt > a.uploadedAt ? 1 : -1
       )[0];
-      const res = await fetch(latest.url, { cache: "no-store" });
+      const res = await withTimeout(
+        fetch(latest.url, { cache: "no-store" }),
+        FETCH_TIMEOUT_MS,
+        "fetching latest recipes blob"
+      );
       return (await res.json()) as Recipe[];
     }
     // First run: fall back to the bundled static JSON
@@ -43,11 +70,15 @@ export async function getRecipeBySlug(
 }
 
 export async function saveRecipes(recipes: Recipe[]): Promise<void> {
-  await put(BLOB_KEY, JSON.stringify(recipes, null, 2), {
-    access: "public",
-    allowOverwrite: true,
-    contentType: "application/json",
-  });
+  await withTimeout(
+    put(BLOB_KEY, JSON.stringify(recipes, null, 2), {
+      access: "public",
+      allowOverwrite: true,
+      contentType: "application/json",
+    }),
+    SAVE_TIMEOUT_MS,
+    "saving recipes blob"
+  );
 }
 
 export async function addRecipe(recipe: Recipe): Promise<void> {
