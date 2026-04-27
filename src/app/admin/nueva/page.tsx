@@ -363,7 +363,7 @@ export default function NuevaRecetaPage() {
               <h3 className="text-sm font-serif text-brand-primary">Video de la receta</h3>
             </div>
             <p className="text-[11px] font-sans text-brand-muted leading-relaxed">
-              YouTube, Vimeo o enlace directo a .mp4/.webm. Miniatura opcional (subida directa, archivos grandes OK).
+              Lo más común: enlace de Instagram (reel o publicación). También YouTube, Vimeo o .mp4/.webm. Miniatura opcional (subida directa, archivos grandes OK).
             </p>
             <div className="space-y-2">
               <label className="text-[10px] font-sans font-bold tracking-[0.25em] text-brand-muted uppercase block">
@@ -373,7 +373,7 @@ export default function NuevaRecetaPage() {
                 type="url"
                 value={form.videoUrl}
                 onChange={(e) => setForm({ ...form, videoUrl: e.target.value })}
-                placeholder="https://www.youtube.com/watch?v=..."
+                placeholder="https://www.instagram.com/reel/…"
                 className="w-full px-4 py-3 border border-brand-primary/10 rounded-lg bg-white text-brand-primary font-sans text-sm focus:outline-none focus:border-brand-accent transition-colors"
               />
             </div>

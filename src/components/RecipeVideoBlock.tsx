@@ -40,12 +40,15 @@ export default function RecipeVideoBlock({
     setOpen(true);
   };
 
+  const ctaLabel =
+    info.kind === "instagram" ? "Ver en Instagram" : "Ver video";
+
   return (
     <>
       <section className="max-w-3xl mx-auto px-6 mb-24">
         <div className="flex items-center gap-4 mb-6">
           <h2 className="editorial-spacing border-b border-brand-accent/30 pb-4 inline-block">
-            EN VIDEO
+            {info.kind === "instagram" ? "EN INSTAGRAM" : "EN VIDEO"}
           </h2>
         </div>
 
@@ -54,7 +57,7 @@ export default function RecipeVideoBlock({
             type="button"
             onClick={openPlayer}
             className="group relative block w-full text-left aspect-video focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2 focus-visible:ring-offset-brand-secondary"
-            aria-label="Ver video de la receta"
+            aria-label={ctaLabel}
           >
             <Image
               src={thumbnailUrl}
@@ -69,15 +72,22 @@ export default function RecipeVideoBlock({
                 <Play size={28} className="ml-1" fill="currentColor" />
               </span>
               <span className="text-xs font-sans font-bold tracking-[0.2em] uppercase text-white drop-shadow-sm">
-                Ver video
+                {ctaLabel}
               </span>
             </div>
           </button>
 
           <div className="flex items-center justify-between gap-3 px-5 py-4 border-t border-brand-primary/5 bg-brand-secondary/40">
             <p className="text-sm font-serif text-brand-primary/80 italic">
-              Mira el paso a paso en video.
+              {info.kind === "instagram"
+                ? "Reel o publicación de Instagram."
+                : "Mira el paso a paso en video."}
             </p>
+            {info.kind === "instagram" && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-sans font-bold uppercase tracking-wider text-brand-muted">
+                <ExternalLink size={12} /> También en la app
+              </span>
+            )}
             {info.kind === "external" && (
               <span className="inline-flex items-center gap-1 text-[10px] font-sans font-bold uppercase tracking-wider text-brand-muted">
                 <ExternalLink size={12} /> Se abre en nueva pestaña
@@ -108,7 +118,13 @@ export default function RecipeVideoBlock({
               <X size={20} />
             </button>
 
-            <div className="aspect-video w-full">
+            <div
+              className={
+                info.kind === "instagram"
+                  ? "flex min-h-[min(85vh,820px)] w-full flex-col bg-white"
+                  : "aspect-video w-full"
+              }
+            >
               {info.kind === "youtube" || info.kind === "vimeo" ? (
                 <iframe
                   src={info.src}
@@ -117,6 +133,25 @@ export default function RecipeVideoBlock({
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                   allowFullScreen
                 />
+              ) : info.kind === "instagram" ? (
+                <>
+                  <iframe
+                    src={info.src}
+                    title={`Instagram — ${title}`}
+                    className="min-h-[480px] w-full flex-1 border-0"
+                    allow="encrypted-media; clipboard-write; autoplay; fullscreen"
+                  />
+                  {info.href && (
+                    <a
+                      href={info.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex shrink-0 items-center justify-center gap-2 border-t border-brand-primary/10 bg-brand-secondary px-4 py-3 text-xs font-sans font-bold uppercase tracking-wider text-brand-accent hover:text-brand-primary"
+                    >
+                      <ExternalLink size={14} /> Abrir en Instagram
+                    </a>
+                  )}
+                </>
               ) : (
                 <video
                   src={info.src}
