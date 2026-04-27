@@ -1,4 +1,7 @@
-// src/data/lamesa.ts
+import { readFile, writeFile } from "fs/promises";
+import path from "path";
+import { put, list } from "@vercel/blob";
+import localMesaData from "./lamesa.json";
 
 export type ContentBlock =
   | { type: "paragraph"; text: string }
@@ -18,153 +21,142 @@ export interface MesaArticle {
   body: ContentBlock[];
 }
 
-export const mesaArticles: MesaArticle[] = [
-  {
-    slug: "como-poner-mesa-bonita-sin-complicarse",
-    title: "cómo poner una mesa hermosa",
-    date: "14 de abril, 2026",
-    type: "MESA",
-    readingTime: "4 min",
-    excerpt:
-      "No necesitas vajillas carísimas para crear un momento especial. El secreto está en las texturas, las capas y en dejar que el ambiente respire...",
-    coverColor: "from-[#F3EDE4] to-[#E5DACE]", // Linos y crudos
-    coverImage: "/images/mesa_setting.png",
-    body: [
-      {
-        type: "paragraph",
-        text: "No necesitas vajillas carísimas para crear un momento especial. El secreto está en las texturas, las capas y en dejar que el ambiente respire."
-      },
-      {
-        type: "image",
-        url: "/images/mesa_setting.png",
-        alt: "Mesa rústica y hermosa",
-        caption: "La belleza de lo imperfecto. Mantel de lino rústico y luz cálida."
-      },
-      {
-        type: "paragraph",
-        text: "A veces pensamos que ser un buen host significa estresarse tres días antes buscando cubiertos descombinados o flores exóticas. La verdad es que las mesas más memorables son aquellas que parecen armadas sin esfuerzo."
-      },
-      {
-        type: "quote",
-        text: "La mesa es solo el escenario; la magia ocurre cuando la gente se sienta a habitarla.",
-        author: "Bricia Elizalde"
-      },
-      {
-        type: "paragraph",
-        text: "Mi regla de oro: elige una paleta neutra para los manteles (el lino arrugado es tu mejor amigo) y deja que la comida y una o dos piezas centrales llamen la atención. Unas velas esbeltas y asimétricas aportan más dinamismo que un centro floral gigantesco que bloquea la vista de tus invitados."
-      },
-      {
-        type: "paragraph",
-        text: "No tengas miedo de mezclar cerámicas. Un plato base minimalista puede vivir perfectamente debajo de un tazón rústico de barro. Es ese choque de personalidades lo que le da alma a tu comedor."
-      }
-    ],
-  },
-  {
-    slug: "iluminacion-en-cocina-o-comedor",
-    title: "la luz como ingrediente principal",
-    date: "05 de abril, 2026",
-    type: "ILUMINACIÓN",
-    readingTime: "5 min",
-    excerpt:
-      "La iluminación dicta cómo se siente un espacio. Entre cocinar y cenar, las necesidades de luz cambian dramáticamente...",
-    coverColor: "from-[#D9CDC1] to-[#C0B2A3]",
-    coverImage: "/images/mesa_lighting.png",
-    body: [
-      {
-        type: "paragraph",
-        text: "La iluminación dicta cómo se siente un espacio. Una comida increíble puede sentirse hostil bajo luces blancas y frías de supermercado."
-      },
-      {
-        type: "image",
-        url: "/images/mesa_lighting.png",
-        alt: "Iluminación dramática y cálida",
-        caption: "El contraste entre las sombras y la luz focal crea intimidad arquitectónica."
-      },
-      {
-        type: "paragraph",
-        text: "En el diseño de interiores, estructuramos la luz en tres capas: luz general (la que te permite no tropezarte), luz de acento (la que destaca detalles y crea dramatismo) y luz de trabajo (la que necesitas en la cubierta para picar verduras sin accidentes)."
-      },
-      {
-        type: "quote",
-        text: "Nunca subestimes el poder de los dimmers. Tener el control absoluto de la intensidad te permite cambiar el mood del lugar en un chasquido de dedos."
-      },
-      {
-        type: "paragraph",
-        text: "El error más común en los comedores es depender de un solo foco muy potente en el techo. En su lugar, agrega luz cálida (de 2700K o menos) en lámparas colgantes que bajen al nivel de la vista cuando estás sentado."
-      }
-    ],
-  },
-  {
-    slug: "tips-de-hosting-recibir-en-casa",
-    title: "el arte de recibir (y disfrutarlo)",
-    date: "28 de marzo, 2026",
-    type: "HOSTING",
-    readingTime: "3 min",
-    excerpt:
-      "El estrés del anfitrión apaga cualquier cena. Te comparto mis secretos para preparar y disfrutar tus propios eventos, siendo tú el alma de la fiesta...",
-    coverColor: "from-[#EADFCE] to-[#DAC9B5]",
-    coverImage: "/images/mesa_hosting.png",
-    body: [
-      {
-        type: "paragraph",
-        text: "El estrés del anfitrión apaga cualquier cena. Si tú estás sudando en la cocina toda la noche, tus invitados se sentirán culpables de que los hayas invitado."
-      },
-      {
-        type: "quote",
-        text: "Un buen host no es el que hace el menú más complicado, sino el que más relajado está cuando suena el timbre."
-      },
-      {
-        type: "paragraph",
-        text: "El arte del buen hosting radica 80% en la preparación previa y 20% en dejar ir el control. Planea un menú donde solo un platillo requiera tu atención de último minuto. El resto puede servirse frío, a temperatura ambiente o recalentarse suavemente en el horno."
-      },
-      {
-        type: "image",
-        url: "/images/mesa_hosting.png",
-        alt: "Ambiente relajado de hosting"
-      },
-      {
-        type: "paragraph",
-        text: "A mí me encanta recibir a la gente con una bebida en mano y un playlist ya sonando de fondo. Es un anclaje psicológico: cruzan la puerta e inmediatamente bajan los hombros y entran en modo sobremesa."
-      }
-    ],
-  },
-  {
-    slug: "detalles-que-hacen-especial-un-espacio",
-    title: "el lujo silencioso de los detalles",
-    date: "10 de marzo, 2026",
-    type: "ESTÉTICA",
-    readingTime: "4 min",
-    excerpt:
-      "Como arquitecta y creadora, siempre busco esos pequeños acentos que transforman lo monótono en algo extraordinario y profundamente personal...",
-    coverColor: "from-[#F5F2EC] to-[#EAE4D9]",
-    coverImage: "/images/mesa_details.png",
-    body: [
-      {
-        type: "paragraph",
-        text: "A veces, todo el carácter de una habitación o de una mesa se reduce a un solo detalle que rompe con lo esperado. Es en esa tensión visual donde vive el verdadero diseño."
-      },
-      {
-        type: "image",
-        url: "/images/mesa_details.png",
-        alt: "Detalle texturizado y luz natural",
-        caption: "La luz natural rozando contra un tazón artesanal. Wabi-sabi en su máxima expresión."
-      },
-      {
-        type: "paragraph",
-        text: "En mis proyectos apuesto por los silencios visuales. Dejar zonas vacías permite que la vista descanse y valore muchísimo más los objetos que sí están presentes. Podría ser el contraste entre una sofisticada mesa de madera nogal liso y unos servilleteros hechos a mano de forma tosca."
-      },
-      {
-        type: "quote",
-        text: "Invierte en aquello que se toca. Es lo que el cerebro registra inmediatamente como lujo."
-      },
-      {
-        type: "paragraph",
-        text: "La textura de la servilleta de tela, el peso de un buen vaso en la mano, o el sonido que hacen los cubiertos al descansar sobre la cerámica son claves fundamentales para crear experiencias inolvidables."
-      }
-    ],
-  }
-];
+const BLOB_KEY = "bricia/lamesa.json";
+const LOCAL_PATH = path.join(process.cwd(), "src/data/lamesa.json");
+const LIST_TIMEOUT_MS = 10000;
+const FETCH_TIMEOUT_MS = 10000;
+const SAVE_TIMEOUT_MS = 15000;
 
-export function getMesaArticleBySlug(slug: string): MesaArticle | undefined {
-  return mesaArticles.find((a) => a.slug === slug);
+const BLOB_TOKEN =
+  process.env.BLOB_READ_WRITE_TOKEN ||
+  process.env.BLOB_TOKEN ||
+  process.env.VERCEL_BLOB_READ_WRITE_TOKEN;
+
+function shouldPersistLocally(): boolean {
+  const onVercel = Boolean(process.env.VERCEL);
+  return !onVercel && !BLOB_TOKEN && process.env.NODE_ENV === "development";
 }
+
+async function withTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+  label: string
+): Promise<T> {
+  return await Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(
+        () => reject(new Error(`Timeout while ${label} after ${timeoutMs}ms`)),
+        timeoutMs
+      )
+    ),
+  ]);
+}
+
+export async function getMesaArticles(): Promise<MesaArticle[]> {
+  if (shouldPersistLocally()) {
+    try {
+      const raw = await readFile(LOCAL_PATH, "utf-8");
+      return JSON.parse(raw) as MesaArticle[];
+    } catch {
+      return localMesaData as MesaArticle[];
+    }
+  }
+
+  try {
+    const { blobs } = await withTimeout(
+      list({
+        prefix: BLOB_KEY,
+        ...(BLOB_TOKEN ? { token: BLOB_TOKEN } : {}),
+      }),
+      LIST_TIMEOUT_MS,
+      "listing mesa blobs"
+    );
+    if (blobs.length > 0) {
+      const latest = blobs.sort((a, b) =>
+        b.uploadedAt > a.uploadedAt ? 1 : -1
+      )[0];
+      const res = await withTimeout(
+        fetch(latest.url, { cache: "no-store" }),
+        FETCH_TIMEOUT_MS,
+        "fetching latest mesa blob"
+      );
+      return (await res.json()) as MesaArticle[];
+    }
+    return localMesaData as MesaArticle[];
+  } catch {
+    return localMesaData as MesaArticle[];
+  }
+}
+
+export async function getMesaArticleBySlug(
+  slug: string
+): Promise<MesaArticle | undefined> {
+  const articles = await getMesaArticles();
+  return articles.find((a) => a.slug === slug);
+}
+
+export async function saveMesaArticles(articles: MesaArticle[]): Promise<void> {
+  const payload = JSON.stringify(articles, null, 2);
+
+  if (shouldPersistLocally()) {
+    await writeFile(LOCAL_PATH, payload, "utf-8");
+    return;
+  }
+
+  if (!BLOB_TOKEN) {
+    throw new Error(
+      "Falta BLOB_READ_WRITE_TOKEN para guardar artículos. En desarrollo local sin token se usa src/data/lamesa.json."
+    );
+  }
+
+  await withTimeout(
+    put(BLOB_KEY, payload, {
+      access: "public",
+      allowOverwrite: true,
+      contentType: "application/json",
+      token: BLOB_TOKEN,
+    }),
+    SAVE_TIMEOUT_MS,
+    "saving mesa blob"
+  );
+}
+
+export async function addMesaArticle(article: MesaArticle): Promise<void> {
+  const articles = await getMesaArticles();
+  articles.unshift(article);
+  await saveMesaArticles(articles);
+}
+
+export async function updateMesaArticle(
+  slug: string,
+  updated: Partial<MesaArticle>
+): Promise<MesaArticle | null> {
+  const articles = await getMesaArticles();
+  const index = articles.findIndex((a) => a.slug === slug);
+  if (index === -1) return null;
+  articles[index] = { ...articles[index], ...updated };
+  await saveMesaArticles(articles);
+  return articles[index];
+}
+
+export async function deleteMesaArticle(slug: string): Promise<boolean> {
+  const articles = await getMesaArticles();
+  const filtered = articles.filter((a) => a.slug !== slug);
+  if (filtered.length === articles.length) return false;
+  await saveMesaArticles(filtered);
+  return true;
+}
+
+export function generateMesaSlug(title: string): string {
+  return title
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+// Legacy synchronous export — used by client components that still import directly.
+// Will match whatever is in the local JSON at build time.
+export const mesaArticles: MesaArticle[] = localMesaData as MesaArticle[];

@@ -1,9 +1,10 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { mesaArticles } from "@/data/lamesa";
+import { MesaArticle } from "@/data/lamesa";
 import Image from "next/image";
 
 const typeColor: Record<string, string> = {
@@ -14,7 +15,23 @@ const typeColor: Record<string, string> = {
 };
 
 export default function LaMesaPage() {
-  const [featured, ...rest] = mesaArticles;
+  const [articles, setArticles] = useState<MesaArticle[]>([]);
+
+  useEffect(() => {
+    fetch("/api/mesa", { cache: "no-store" })
+      .then((res) => res.json())
+      .then((data) => Array.isArray(data) && setArticles(data));
+  }, []);
+
+  if (articles.length === 0) {
+    return (
+      <article className="min-h-screen bg-[#FDFCF8] flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-[#C2A878] border-t-transparent rounded-full animate-spin" />
+      </article>
+    );
+  }
+
+  const [featured, ...rest] = articles;
 
   return (
     <article className="min-h-screen bg-[#FDFCF8]">
@@ -59,22 +76,19 @@ export default function LaMesaPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.4 }}
-            className={`group relative rounded-[2rem] overflow-hidden p-12 md:p-20 cursor-pointer transition-all duration-700 hover:shadow-2xl hover:shadow-[#C2A878]/20 bg-neutral-900`}
+            className="group relative rounded-[2rem] overflow-hidden p-12 md:p-20 cursor-pointer transition-all duration-700 hover:shadow-2xl hover:shadow-[#C2A878]/20 bg-neutral-900"
           >
-            <Image 
+            <Image
               src={featured.coverImage}
               alt={featured.title}
               fill
               className="object-cover opacity-60 mix-blend-overlay group-hover:scale-105 transition-transform duration-[2s] ease-out"
               priority
             />
-            {/* Texture overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
             <div className="relative max-w-3xl space-y-8">
               <div className="flex items-center gap-5">
-                <span
-                  className="text-[10px] font-sans font-bold tracking-[0.4em] uppercase px-4 py-2 rounded-full border border-white/20 text-white/80 backdrop-blur-sm"
-                >
+                <span className="text-[10px] font-sans font-bold tracking-[0.4em] uppercase px-4 py-2 rounded-full border border-white/20 text-white/80 backdrop-blur-sm">
                   {featured.type}
                 </span>
                 <span className="text-[10px] font-sans text-white/50 tracking-widest uppercase">
@@ -95,71 +109,64 @@ export default function LaMesaPage() {
         </Link>
       </div>
 
-      {/* ── ARTICLES GRID (Design Focus) ── */}
-      <div className="max-w-7xl mx-auto px-6 mb-40">
-        <div className="grid md:grid-cols-12 gap-8 md:gap-12">
-          {rest.map((article, i) => (
-            <Link 
-              key={article.slug} 
-              href={`/la-mesa/${article.slug}`}
-              className={`group ${i % 3 === 0 ? 'md:col-span-12' : 'md:col-span-6'}`}
-            >
-              <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-100px" }}
-                transition={{ delay: i * 0.1, duration: 0.8 }}
-                className={`h-full flex flex-col ${i % 3 === 0 ? 'md:flex-row md:items-center gap-12' : 'gap-8'}`}
+      {/* ── ARTICLES GRID ── */}
+      {rest.length > 0 && (
+        <div className="max-w-7xl mx-auto px-6 mb-40">
+          <div className="grid md:grid-cols-12 gap-8 md:gap-12">
+            {rest.map((article, i) => (
+              <Link
+                key={article.slug}
+                href={`/la-mesa/${article.slug}`}
+                className={`group ${i % 3 === 0 ? "md:col-span-12" : "md:col-span-6"}`}
               >
-                {/* Visual Block with real image */}
-                <div className={`rounded-3xl overflow-hidden relative group-hover:shadow-2xl transition-all duration-700 ${i % 3 === 0 ? 'md:w-1/2 aspect-square md:aspect-[4/3]' : 'w-full aspect-[4/3]'}`}>
-                    <Image 
-                      src={article.coverImage} 
-                      alt={article.title} 
-                      fill 
-                      className="object-cover transform group-hover:scale-105 transition-transform duration-[1.5s] ease-out" 
+                <motion.div
+                  initial={{ opacity: 0, y: 16 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-100px" }}
+                  transition={{ delay: i * 0.1, duration: 0.8 }}
+                  className={`h-full flex flex-col ${i % 3 === 0 ? "md:flex-row md:items-center gap-12" : "gap-8"}`}
+                >
+                  <div className={`rounded-3xl overflow-hidden relative group-hover:shadow-2xl transition-all duration-700 ${i % 3 === 0 ? "md:w-1/2 aspect-square md:aspect-[4/3]" : "w-full aspect-[4/3]"}`}>
+                    <Image
+                      src={article.coverImage}
+                      alt={article.title}
+                      fill
+                      className="object-cover transform group-hover:scale-105 transition-transform duration-[1.5s] ease-out"
                     />
-                    {/* Inner styling overlay */}
                     <div className="absolute inset-x-8 bottom-8 flex justify-between items-end opacity-0 group-hover:opacity-40 transition-opacity duration-700">
-                         <div className="w-1/2 h-px bg-white"></div>
-                         <div className="w-4 h-4 rounded-full border border-white"></div>
+                      <div className="w-1/2 h-px bg-white"></div>
+                      <div className="w-4 h-4 rounded-full border border-white"></div>
                     </div>
-                </div>
-
-                <div className={`flex flex-col gap-6 ${i % 3 === 0 ? 'md:w-1/2 md:py-10' : 'flex-1'}`}>
-                  {/* Top meta */}
-                  <div className="flex items-center gap-4">
-                    <span
-                      className="text-[10px] font-sans font-bold tracking-[0.3em] uppercase"
-                      style={{ color: typeColor[article.type] ?? "#A89F91" }}
-                    >
-                      {article.type}
-                    </span>
-                    <span className="text-[10px] font-sans text-brand-muted/40 tracking-widest uppercase">
-                      {article.date}
-                    </span>
                   </div>
 
-                  {/* Title */}
-                  <h3 className="text-3xl md:text-5xl font-serif text-brand-primary lowercase leading-[1.1] tracking-tight group-hover:text-[#C2A878] transition-colors duration-400">
-                    {article.title}
-                  </h3>
-
-                  {/* Excerpt */}
-                  <p className="text-base font-serif italic text-brand-primary/60 leading-relaxed font-light">
-                    {article.excerpt}
-                  </p>
-
-                  {/* Footer */}
-                  <div className="mt-auto pt-6 flex items-center gap-3 text-[10px] font-sans font-bold tracking-[0.25em] uppercase text-brand-primary/40 group-hover:text-[#C2A878] transition-colors duration-300">
-                    Saber más <ArrowRight size={14} strokeWidth={1.5} className="group-hover:translate-x-1 transition-transform" />
+                  <div className={`flex flex-col gap-6 ${i % 3 === 0 ? "md:w-1/2 md:py-10" : "flex-1"}`}>
+                    <div className="flex items-center gap-4">
+                      <span
+                        className="text-[10px] font-sans font-bold tracking-[0.3em] uppercase"
+                        style={{ color: typeColor[article.type] ?? "#A89F91" }}
+                      >
+                        {article.type}
+                      </span>
+                      <span className="text-[10px] font-sans text-brand-muted/40 tracking-widest uppercase">
+                        {article.date}
+                      </span>
+                    </div>
+                    <h3 className="text-3xl md:text-5xl font-serif text-brand-primary lowercase leading-[1.1] tracking-tight group-hover:text-[#C2A878] transition-colors duration-400">
+                      {article.title}
+                    </h3>
+                    <p className="text-base font-serif italic text-brand-primary/60 leading-relaxed font-light">
+                      {article.excerpt}
+                    </p>
+                    <div className="mt-auto pt-6 flex items-center gap-3 text-[10px] font-sans font-bold tracking-[0.25em] uppercase text-brand-primary/40 group-hover:text-[#C2A878] transition-colors duration-300">
+                      Saber más <ArrowRight size={14} strokeWidth={1.5} className="group-hover:translate-x-1 transition-transform" />
+                    </div>
                   </div>
-                </div>
-              </motion.div>
-            </Link>
-          ))}
+                </motion.div>
+              </Link>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ── BOTTOM SIGNATURE ── */}
       <div className="text-center pb-24">
