@@ -176,7 +176,8 @@ export default function AdminInicioPage() {
         body: JSON.stringify(config),
       });
       if (!res.ok) {
-        alert("Error al guardar cambios");
+        const data = await res.json().catch(() => null);
+        alert(data?.error || "Error al guardar cambios");
         return;
       }
 
