@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { upload } from "@vercel/blob/client";
-import { ArrowLeft, Save, Upload, Loader2, Plus, Trash2, Eye } from "lucide-react";
+import { ArrowLeft, Save, Upload, Loader2, Eye } from "lucide-react";
 
 const FONT_OPTIONS = [
   { value: "serif", label: "Playfair Display (Serif)" },
@@ -56,7 +56,7 @@ export default function AdminInicioPage() {
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saved, setSaved] = useState(false);
-  const fileInputRefs = useRef<Record<number, HTMLInputElement | null>>({});
+  const landingInputRef = useRef<HTMLInputElement | null>(null);
   const igInputRefs = useRef<Record<number, HTMLInputElement | null>>({});
   const productInputRefs = useRef<Record<number, HTMLInputElement | null>>({});
 
@@ -110,17 +110,20 @@ export default function AdminInicioPage() {
     setTimeout(() => setSaved(false), 3000);
   };
 
-  const handleImageUpload = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLandingUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.currentTarget;
     const file = input.files?.[0];
     if (!file) return;
 
     try {
       const path = await uploadCmsImage(file, "collage");
-
       if (path) {
-        const updated = [...config.collageImages];
-        updated[index] = { ...updated[index], src: path };
+        const updated = [...(config.collageImages || [])];
+        if (updated.length === 0) {
+          updated.push({ src: path, alt: "Foto principal de landing" });
+        } else {
+          updated[0] = { ...updated[0], src: path };
+        }
         setConfig({ ...config, collageImages: updated });
       } else {
         alert("Error al subir imagen");
@@ -132,11 +135,14 @@ export default function AdminInicioPage() {
     }
   };
 
-  const addImage = () => {
-    setConfig({
-      ...config,
-      collageImages: [...config.collageImages, { src: "", alt: "Nueva imagen" }],
-    });
+  const updateLandingAlt = (alt: string) => {
+    const updated = [...(config.collageImages || [])];
+    if (updated.length === 0) {
+      updated.push({ src: "", alt });
+    } else {
+      updated[0] = { ...updated[0], alt };
+    }
+    setConfig({ ...config, collageImages: updated });
   };
 
   const handleIgUpload = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
@@ -189,18 +195,7 @@ export default function AdminInicioPage() {
     setConfig({ ...config, products: updated });
   };
 
-  const removeImage = (i: number) => {
-    setConfig({
-      ...config,
-      collageImages: config.collageImages.filter((_, idx) => idx !== i),
-    });
-  };
-
-  const updateImageAlt = (i: number, alt: string) => {
-    const updated = [...config.collageImages];
-    updated[i] = { ...updated[i], alt };
-    setConfig({ ...config, collageImages: updated });
-  };
+  const landingImage = config.collageImages?.[0] || { src: "", alt: "Foto principal de landing" };
 
   if (loading) {
     return (
@@ -328,48 +323,46 @@ export default function AdminInicioPage() {
             </div>
           </div>
 
-          {/* ─── FOTOS DEL MOSAICO ────────────────── */}
+          {/* ─── FOTO DE LANDING ──────────────────── */}
           <div className="bg-white rounded-2xl p-8 border border-brand-primary/5 space-y-6">
             <div className="flex items-center justify-between border-b border-brand-primary/5 pb-4">
-              <h2 className="text-lg font-serif text-brand-primary">📸 Fotos del Mosaico</h2>
-              <button onClick={addImage} className="flex items-center gap-1.5 text-xs font-sans text-brand-accent hover:text-brand-primary transition-colors">
-                <Plus size={14} /> Agregar Foto
-              </button>
+              <h2 className="text-lg font-serif text-brand-primary">📸 Foto de Landing</h2>
             </div>
+            <p className="text-xs font-sans text-brand-muted">
+              Esta foto reemplaza el collage del landing. Puedes cambiarla cuando quieras.
+            </p>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {config.collageImages.map((img, i) => (
-                <div key={i} className="space-y-2">
-                  <div
-                    className="relative aspect-square rounded-xl overflow-hidden border-2 border-dashed border-brand-primary/10 hover:border-brand-accent/40 transition-colors cursor-pointer bg-brand-secondary group"
-                    onClick={() => fileInputRefs.current[i]?.click()}
-                  >
-                    {img.src ? (
-                      <Image src={img.src} alt={img.alt} fill className="object-cover" />
-                    ) : (
-                      <div className="flex items-center justify-center h-full">
-                        <Upload size={24} className="text-brand-muted/30 group-hover:text-brand-accent transition-colors" />
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition flex items-center justify-center opacity-0 group-hover:opacity-100">
-                      <span className="text-white text-xs font-sans font-bold">Cambiar</span>
-                    </div>
+            <div className="max-w-sm space-y-2">
+              <div
+                className="relative aspect-[4/5] rounded-xl overflow-hidden border-2 border-dashed border-brand-primary/10 hover:border-brand-accent/40 transition-colors cursor-pointer bg-brand-secondary group"
+                onClick={() => landingInputRef.current?.click()}
+              >
+                {landingImage.src ? (
+                  <Image src={landingImage.src} alt={landingImage.alt} fill className="object-cover" />
+                ) : (
+                  <div className="flex items-center justify-center h-full">
+                    <Upload size={24} className="text-brand-muted/30 group-hover:text-brand-accent transition-colors" />
                   </div>
-                  <div className="flex gap-1.5">
-                    <input value={img.alt} onChange={(e) => updateImageAlt(i, e.target.value)} placeholder="Descripción"
-                      className="flex-1 px-2 py-1.5 border border-brand-primary/10 rounded text-[11px] font-sans text-brand-muted focus:outline-none focus:border-brand-accent" />
-                    <button onClick={() => removeImage(i)} className="p-1.5 text-brand-muted hover:text-red-500 transition-colors">
-                      <Trash2 size={12} />
-                    </button>
-                  </div>
-                  <input
-                    ref={(el) => { fileInputRefs.current[i] = el; }}
-                    type="file" accept="image/*"
-                    onChange={(e) => handleImageUpload(i, e)}
-                    className="hidden"
-                  />
+                )}
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition flex items-center justify-center opacity-0 group-hover:opacity-100">
+                  <span className="text-white text-xs font-sans font-bold">Cambiar</span>
                 </div>
-              ))}
+              </div>
+
+              <input
+                value={landingImage.alt}
+                onChange={(e) => updateLandingAlt(e.target.value)}
+                placeholder="Descripción"
+                className="w-full px-2 py-1.5 border border-brand-primary/10 rounded text-[11px] font-sans text-brand-muted focus:outline-none focus:border-brand-accent"
+              />
+
+              <input
+                ref={landingInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleLandingUpload}
+                className="hidden"
+              />
             </div>
           </div>
 

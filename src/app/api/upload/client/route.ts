@@ -7,10 +7,26 @@ const MAX_RECIPE_IMAGE_BYTES = 25 * 1024 * 1024;
 
 export async function POST(request: NextRequest) {
   try {
+    const blobToken =
+      process.env.BLOB_READ_WRITE_TOKEN ||
+      process.env.BLOB_TOKEN ||
+      process.env.VERCEL_BLOB_READ_WRITE_TOKEN;
+
+    if (!blobToken) {
+      return NextResponse.json(
+        {
+          error:
+            "Falta configurar BLOB_READ_WRITE_TOKEN en variables de entorno del proyecto.",
+        },
+        { status: 500 }
+      );
+    }
+
     const body = await request.json();
     const jsonResponse = await handleUpload({
       body,
       request,
+      token: blobToken,
       onBeforeGenerateToken: async () => {
         return {
           allowedContentTypes: ["image/*"],
