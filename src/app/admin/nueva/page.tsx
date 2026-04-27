@@ -4,9 +4,19 @@ import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import { upload } from "@vercel/blob/client";
 import { ArrowLeft, Upload, Plus, X, Loader2 } from "lucide-react";
 
 const CATEGORIES = ["PRIMAVERA", "VERANO", "OTOÑO", "INVIERNO", "POSTRES"];
+
+function sanitizeFileName(name: string) {
+  return name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9._-]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
 
 export default function NuevaRecetaPage() {
   const router = useRouter();
@@ -30,6 +40,25 @@ export default function NuevaRecetaPage() {
   const [ingredients, setIngredients] = useState([""]);
   const [steps, setSteps] = useState([""]);
 
+  const getUploadFolder = () => {
+    const titleSegment = form.title
+      ? sanitizeFileName(form.title)
+      : `draft-${Date.now()}`;
+    return `bricia/images/recipes/${titleSegment}`;
+  };
+
+  const uploadRecipeImage = async (file: File): Promise<string | null> => {
+    const safeName = sanitizeFileName(file.name || `recipe-${Date.now()}.jpg`);
+    const pathname = `${getUploadFolder()}/${Date.now()}-${safeName}`;
+    const blob = await upload(pathname, file, {
+      access: "public",
+      handleUploadUrl: "/api/upload/client",
+      multipart: true,
+      contentType: file.type || "image/jpeg",
+    });
+    return blob.url;
+  };
+
   // Auth check
   useEffect(() => {
     const session = sessionStorage.getItem("bricia_admin");
@@ -50,11 +79,7 @@ export default function NuevaRecetaPage() {
 
       // Upload
       const uploadPromise = (async () => {
-        const formData = new FormData();
-        formData.append("file", file);
-        const res = await fetch("/api/upload", { method: "POST", body: formData });
-        const data = await res.json();
-        return (data?.path as string | undefined) || null;
+        return await uploadRecipeImage(file);
       })();
       pendingMainUploadRef.current = uploadPromise;
       const path = await uploadPromise;
@@ -83,12 +108,9 @@ export default function NuevaRecetaPage() {
     try {
       for (let i = 0; i < files.length; i++) {
           const file = files[i];
-          const formData = new FormData();
-          formData.append("file", file);
-          const res = await fetch("/api/upload", { method: "POST", body: formData });
-          const data = await res.json();
-          if (data.path) uploadedPaths.push(data.path);
-          else alert(data.error || "Error al subir imagen");
+          const path = await uploadRecipeImage(file);
+          if (path) uploadedPaths.push(path);
+          else alert("Error al subir imagen");
       }
     } catch {
       alert("Error al subir imagen");

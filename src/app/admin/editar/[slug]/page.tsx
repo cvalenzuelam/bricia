@@ -4,14 +4,13 @@ import { useState, useRef, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import { upload } from "@vercel/blob/client";
 import { ArrowLeft, Upload, Plus, X, Loader2, Save } from "lucide-react";
 
 const CATEGORIES = ["PRIMAVERA", "VERANO", "OTOÑO", "INVIERNO", "POSTRES"];
 const REQUEST_TIMEOUT_MS = 20000;
 const FRONT_SYNC_TIMEOUT_MS = 60000;
 const FRONT_SYNC_INTERVAL_MS = 2500;
-const MAX_UPLOAD_BYTES = 4 * 1024 * 1024;
-const MAX_IMAGE_SIDE = 2200;
 
 async function fetchWithTimeout(
   input: RequestInfo | URL,
@@ -27,40 +26,25 @@ async function fetchWithTimeout(
   }
 }
 
-async function compressImageForUpload(file: File): Promise<File> {
-  if (!file.type.startsWith("image/")) return file;
-  if (file.size <= MAX_UPLOAD_BYTES) return file;
+function sanitizeFileName(name: string) {
+  return name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9._-]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
 
-  const imageBitmap = await createImageBitmap(file);
-  const scale = Math.min(1, MAX_IMAGE_SIDE / Math.max(imageBitmap.width, imageBitmap.height));
-  const targetWidth = Math.max(1, Math.round(imageBitmap.width * scale));
-  const targetHeight = Math.max(1, Math.round(imageBitmap.height * scale));
-
-  const canvas = document.createElement("canvas");
-  canvas.width = targetWidth;
-  canvas.height = targetHeight;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return file;
-  ctx.drawImage(imageBitmap, 0, 0, targetWidth, targetHeight);
-
-  const qualitySteps = [0.88, 0.8, 0.72, 0.64, 0.56, 0.48];
-  for (const quality of qualitySteps) {
-    const blob = await new Promise<Blob | null>((resolve) =>
-      canvas.toBlob(resolve, "image/jpeg", quality)
-    );
-    if (!blob) continue;
-    if (blob.size <= MAX_UPLOAD_BYTES) {
-      const baseName = file.name.replace(/\.[^/.]+$/, "");
-      return new File([blob], `${baseName}.jpg`, { type: "image/jpeg" });
-    }
-  }
-
-  const lastBlob = await new Promise<Blob | null>((resolve) =>
-    canvas.toBlob(resolve, "image/jpeg", 0.42)
-  );
-  if (!lastBlob) return file;
-  const baseName = file.name.replace(/\.[^/.]+$/, "");
-  return new File([lastBlob], `${baseName}.jpg`, { type: "image/jpeg" });
+async function uploadRecipeImage(file: File, slug: string): Promise<string | null> {
+  const safeName = sanitizeFileName(file.name || `recipe-${Date.now()}.jpg`);
+  const pathname = `bricia/images/recipes/${slug}/${Date.now()}-${safeName}`;
+  const blob = await upload(pathname, file, {
+    access: "public",
+    handleUploadUrl: "/api/upload/client",
+    multipart: true,
+    contentType: file.type || "image/jpeg",
+  });
+  return blob.url;
 }
 
 async function waitForRecipeUpdateInApi(
@@ -188,29 +172,16 @@ export default function EditRecipePage({ params }: EditPageProps) {
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.currentTarget;
-    const originalFile = input.files?.[0];
-    if (!originalFile) return;
+    const file = input.files?.[0];
+    if (!file) return;
     try {
       setUploading(true);
-      const file = await compressImageForUpload(originalFile);
-      if (file.size > MAX_UPLOAD_BYTES) {
-        alert("La imagen sigue siendo muy pesada. Intenta con una versión más ligera.");
-        return;
-      }
       const reader = new FileReader();
       reader.onloadend = () => setImagePreview(reader.result as string);
       reader.readAsDataURL(file);
 
       const uploadPromise = (async () => {
-        const formData = new FormData();
-        formData.append("file", file);
-        const res = await fetchWithTimeout("/api/upload", { method: "POST", body: formData });
-        const data = await res.json();
-        if (!res.ok) {
-          alert(data?.error || "Error al subir imagen");
-          return null;
-        }
-        return (data?.path as string | undefined) || null;
+        return await uploadRecipeImage(file, slug);
       })();
       pendingMainUploadRef.current = uploadPromise;
       const path = await uploadPromise;
@@ -238,17 +209,10 @@ export default function EditRecipePage({ params }: EditPageProps) {
     const uploadedPaths: string[] = [];
     try {
       for (let i = 0; i < files.length; i++) {
-          const file = await compressImageForUpload(files[i]);
-          if (file.size > MAX_UPLOAD_BYTES) {
-            alert(`La imagen ${i + 1} es demasiado pesada incluso comprimida. Omítela o redúcela.`);
-            continue;
-          }
-          const formData = new FormData();
-          formData.append("file", file);
-          const res = await fetchWithTimeout("/api/upload", { method: "POST", body: formData });
-          const data = await res.json();
-          if (res.ok && data.path) uploadedPaths.push(data.path);
-          else alert(data.error || "Error al subir imagen");
+          const file = files[i];
+          const path = await uploadRecipeImage(file, slug);
+          if (path) uploadedPaths.push(path);
+          else alert("Error al subir imagen");
       }
     } catch {
       alert("Error al subir imagen");
