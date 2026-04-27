@@ -3,8 +3,6 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, Clock, Users } from "lucide-react";
-import RecipeVideoBlock from "@/components/RecipeVideoBlock";
-
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
@@ -55,14 +53,16 @@ export default async function RecipePage({ params }: PageProps) {
       </div>
 
       {recipe.videoUrl?.trim() && (
-        <RecipeVideoBlock
-          videoUrl={recipe.videoUrl.trim()}
-          thumbnailUrl={
-            (recipe.videoThumbnail && recipe.videoThumbnail.trim()) ||
-            recipe.image
-          }
-          title={recipe.title}
-        />
+        <div className="max-w-4xl mx-auto px-6 mb-24 flex justify-center">
+          <a
+            href={recipe.videoUrl.trim()}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-serif text-xl md:text-2xl italic text-[#5a6b52] underline underline-offset-[5px] decoration-[#5a6b52]/80 decoration-1 hover:text-brand-accent hover:decoration-brand-accent transition-colors duration-300"
+          >
+            Clic aquí para ver el video.
+          </a>
+        </div>
       )}
 
       {/* Content */}

@@ -28,7 +28,6 @@ export async function POST(request: NextRequest) {
       history,
       gallery,
       videoUrl,
-      videoThumbnail,
       ingredients,
       steps,
       prepTime,
@@ -53,9 +52,6 @@ export async function POST(request: NextRequest) {
       gallery: Array.isArray(gallery) ? gallery : [],
       ...(typeof videoUrl === "string" && videoUrl.trim()
         ? { videoUrl: videoUrl.trim() }
-        : {}),
-      ...(typeof videoThumbnail === "string" && videoThumbnail.trim()
-        ? { videoThumbnail: videoThumbnail.trim() }
         : {}),
       ingredients: ingredients || [],
       steps: steps || [],

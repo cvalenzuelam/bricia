@@ -21,7 +21,6 @@ function sanitizeFileName(name: string) {
 export default function NuevaRecetaPage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const thumbnailInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -29,8 +28,6 @@ export default function NuevaRecetaPage() {
   const [uploadedImagePath, setUploadedImagePath] = useState("");
   const [gallery, setGallery] = useState<string[]>([]);
   const pendingMainUploadRef = useRef<Promise<string | null> | null>(null);
-  const pendingThumbnailUploadRef = useRef<Promise<string | null> | null>(null);
-  const [uploadedThumbnailPath, setUploadedThumbnailPath] = useState("");
 
   const [form, setForm] = useState({
     title: "",
@@ -40,7 +37,6 @@ export default function NuevaRecetaPage() {
     prepTime: "",
     servings: "",
     videoUrl: "",
-    videoThumbnail: "",
   });
   const [ingredients, setIngredients] = useState([""]);
   const [steps, setSteps] = useState([""]);
@@ -119,31 +115,6 @@ export default function NuevaRecetaPage() {
     setGallery((prev) => [...prev, ...uploadedPaths]);
   };
 
-  const handleVideoThumbnailUpload = async (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const input = e.currentTarget;
-    const file = input.files?.[0];
-    if (!file) return;
-    try {
-      setUploading(true);
-      const uploadPromise = uploadRecipeImage(file);
-      pendingThumbnailUploadRef.current = uploadPromise;
-      const path = await uploadPromise;
-      if (path) {
-        setUploadedThumbnailPath(path);
-        setForm((f) => ({ ...f, videoThumbnail: path }));
-      } else {
-        alert("Error al subir miniatura");
-      }
-    } catch {
-      alert("Error al subir miniatura");
-    } finally {
-      setUploading(false);
-      input.value = "";
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -161,27 +132,10 @@ export default function NuevaRecetaPage() {
       pendingMainUploadRef.current = null;
     }
 
-    let videoThumbPath = uploadedThumbnailPath || form.videoThumbnail;
-    try {
-      const pendingThumb = pendingThumbnailUploadRef.current;
-      if (pendingThumb) {
-        setUploading(true);
-        const path = await pendingThumb;
-        if (path) {
-          videoThumbPath = path;
-          setUploadedThumbnailPath(path);
-        }
-      }
-    } finally {
-      setUploading(false);
-      pendingThumbnailUploadRef.current = null;
-    }
-
     const recipe = {
       ...form,
       image: uploadedImagePath || "/images/tiradito.png",
       videoUrl: form.videoUrl.trim(),
-      videoThumbnail: videoThumbPath.trim(),
       gallery,
       ingredients: ingredients.filter((i) => i.trim() !== ""),
       steps: steps.filter((s) => s.trim() !== ""),
@@ -357,7 +311,7 @@ export default function NuevaRecetaPage() {
               <h3 className="text-sm font-serif text-brand-primary">Video de la receta</h3>
             </div>
             <p className="text-[11px] font-sans text-brand-muted leading-relaxed">
-              Lo más común: enlace de Instagram (reel o publicación). También YouTube, Vimeo o .mp4/.webm. Miniatura opcional (subida directa, archivos grandes OK).
+              En la receta se mostrará un enlace sencillo (“Clic aquí para ver el video.”). Puedes pegar Instagram, YouTube, Vimeo o un archivo .mp4/.webm.
             </p>
             <div className="space-y-2">
               <label className="text-[10px] font-sans font-bold tracking-[0.25em] text-brand-muted uppercase block">
@@ -370,47 +324,6 @@ export default function NuevaRecetaPage() {
                 placeholder="https://www.instagram.com/reel/…"
                 className="w-full px-4 py-3 border border-brand-primary/10 rounded-lg bg-white text-brand-primary font-sans text-sm focus:outline-none focus:border-brand-accent transition-colors"
               />
-            </div>
-            <div className="space-y-2">
-              <label className="text-[10px] font-sans font-bold tracking-[0.25em] text-brand-muted uppercase block">
-                Miniatura del video
-              </label>
-              <div
-                onClick={() => thumbnailInputRef.current?.click()}
-                className="relative h-40 max-w-xs rounded-xl border-2 border-dashed border-brand-primary/10 hover:border-brand-accent/40 transition-colors cursor-pointer overflow-hidden bg-brand-secondary group"
-              >
-                {form.videoThumbnail ? (
-                  <Image src={form.videoThumbnail} alt="Miniatura" fill className="object-cover" />
-                ) : (
-                  <div className="flex h-full items-center justify-center px-4 text-center">
-                    <p className="text-xs font-sans text-brand-muted">
-                      Clic para subir (opcional)
-                    </p>
-                  </div>
-                )}
-                <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition group-hover:bg-black/25 group-hover:opacity-100">
-                  <Upload className="text-white" size={22} />
-                </div>
-              </div>
-              <input
-                ref={thumbnailInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleVideoThumbnailUpload}
-                className="hidden"
-              />
-              {form.videoThumbnail && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setForm((f) => ({ ...f, videoThumbnail: "" }));
-                    setUploadedThumbnailPath("");
-                  }}
-                  className="text-xs font-sans text-brand-muted hover:text-red-600"
-                >
-                  Quitar miniatura
-                </button>
-              )}
             </div>
           </div>
 
