@@ -341,7 +341,7 @@ function buildOrderConfirmationHTML(order: Order): string {
                 Gracias por dejarnos ser parte de tu mesa.
               </p>
               <p style="font-family: ${FONT_TITLE}; font-size: 14px; color: ${COLORS.ink}; margin: 0;">
-                — Bricia
+                — Bricia Elizalde
               </p>
             </td>
           </tr>
@@ -397,7 +397,7 @@ function buildOrderConfirmationText(order: Order): string {
   lines.push("");
   lines.push(`Sigue tu pedido: ${PUBLIC_BASE_URL}/pago/exito?orderId=${encodeURIComponent(order.id)}`);
   lines.push("");
-  lines.push("Gracias por dejarnos ser parte de tu mesa. — Bricia");
+  lines.push("Gracias por dejarnos ser parte de tu mesa. — Bricia Elizalde");
   return lines.join("\n");
 }
 
@@ -623,7 +623,7 @@ function buildShippingEmailHTML(order: Order): string {
                 Disfrútalo cuando llegue.
               </p>
               <p style="font-family: ${FONT_TITLE}; font-size: 14px; color: ${COLORS.ink}; margin: 0;">
-                — Bricia
+                — Bricia Elizalde
               </p>
             </td>
           </tr>
@@ -674,7 +674,7 @@ function buildShippingEmailText(order: Order): string {
   );
   lines.push(order.shipping.country);
   lines.push("");
-  lines.push("Disfrútalo cuando llegue. — Bricia");
+  lines.push("Disfrútalo cuando llegue. — Bricia Elizalde");
   return lines.join("\n");
 }
 
