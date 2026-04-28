@@ -77,6 +77,16 @@ const COLORS = {
   border: "#E8E2D6",
 } as const;
 
+// Stacks de fuentes para el correo. Cargamos Aboreto (logo) y Playfair Display
+// (títulos) de Google Fonts en el <head>. Los clientes que sí soportan web
+// fonts (Apple Mail, Gmail web/iOS/Android) los renderizan; el resto cae al
+// fallback (Georgia) que es muy similar visualmente.
+const FONT_LOGO = `'Aboreto', Georgia, 'Times New Roman', serif`;
+const FONT_TITLE = `'Playfair Display', Georgia, 'Times New Roman', serif`;
+const FONT_BODY = `Helvetica, Arial, sans-serif`;
+const FONT_GOOGLE_HREF =
+  "https://fonts.googleapis.com/css2?family=Aboreto&family=Playfair+Display:ital,wght@0,400;0,500;1,400&display=swap";
+
 function formatMXN(amount: number): string {
   return `$${amount.toLocaleString("es-MX")} MXN`;
 }
@@ -115,19 +125,19 @@ function buildOrderConfirmationHTML(order: Order): string {
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
               <tr>
                 <td valign="top">
-                  <div style="font-family: Georgia, 'Times New Roman', serif; font-size: 17px; color: ${COLORS.ink}; text-transform: lowercase; line-height: 1.3;">
+                  <div style="font-family: ${FONT_TITLE}; font-size: 17px; color: ${COLORS.ink}; text-transform: lowercase; line-height: 1.3;">
                     ${name}
                   </div>
                   ${
                     subtitle
-                      ? `<div style="font-family: Helvetica, Arial, sans-serif; font-size: 12px; color: ${COLORS.muted}; margin-top: 4px; line-height: 1.5;">${subtitle}</div>`
+                      ? `<div style="font-family: ${FONT_BODY}; font-size: 12px; color: ${COLORS.muted}; margin-top: 4px; line-height: 1.5;">${subtitle}</div>`
                       : ""
                   }
-                  <div style="font-family: Helvetica, Arial, sans-serif; font-size: 11px; color: ${COLORS.muted}; margin-top: 8px; letter-spacing: 0.08em; text-transform: uppercase;">
+                  <div style="font-family: ${FONT_BODY}; font-size: 11px; color: ${COLORS.muted}; margin-top: 8px; letter-spacing: 0.08em; text-transform: uppercase;">
                     Cantidad · ${item.quantity}
                   </div>
                 </td>
-                <td valign="top" align="right" style="font-family: Georgia, 'Times New Roman', serif; font-size: 16px; color: ${COLORS.ink}; white-space: nowrap; padding-left: 16px;">
+                <td valign="top" align="right" style="font-family: ${FONT_TITLE}; font-size: 16px; color: ${COLORS.ink}; white-space: nowrap; padding-left: 16px;">
                   ${formatMXN(item.price * item.quantity)}
                 </td>
               </tr>
@@ -140,7 +150,7 @@ function buildOrderConfirmationHTML(order: Order): string {
 
   const shippingLine =
     order.shippingCost === 0
-      ? `<span style="font-family: Georgia, 'Times New Roman', serif; font-style: italic; color: ${COLORS.accent};">Cortesía</span>`
+      ? `<span style="font-family: ${FONT_TITLE}; font-style: italic; color: ${COLORS.accent};">Cortesía</span>`
       : formatMXN(order.shippingCost);
 
   const shippingMethodBlock = order.shippingMethod
@@ -154,7 +164,7 @@ function buildOrderConfirmationHTML(order: Order): string {
     : "";
 
   const notesBlock = order.shipping.notes
-    ? `<p style="font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-size: 13px; color: ${COLORS.muted}; margin: 12px 0 0; padding: 12px 14px; background: ${COLORS.bg}; border-radius: 8px; border-left: 2px solid ${COLORS.accent};">"${escapeHtml(order.shipping.notes)}"</p>`
+    ? `<p style="font-family: ${FONT_TITLE}; font-style: italic; font-size: 13px; color: ${COLORS.muted}; margin: 12px 0 0; padding: 12px 14px; background: ${COLORS.bg}; border-radius: 8px; border-left: 2px solid ${COLORS.accent};">"${escapeHtml(order.shipping.notes)}"</p>`
     : "";
 
   const orderUrl = `${PUBLIC_BASE_URL}/pago/exito?orderId=${encodeURIComponent(order.id)}`;
@@ -166,8 +176,14 @@ function buildOrderConfirmationHTML(order: Order): string {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tu pedido en Bricia · ${escapeHtml(order.id)}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="${FONT_GOOGLE_HREF}" rel="stylesheet">
+  <style type="text/css">
+    @import url("${FONT_GOOGLE_HREF}");
+  </style>
 </head>
-<body style="margin: 0; padding: 0; background-color: ${COLORS.bg}; font-family: Helvetica, Arial, sans-serif; color: ${COLORS.ink};">
+<body style="margin: 0; padding: 0; background-color: ${COLORS.bg}; font-family: ${FONT_BODY}; color: ${COLORS.ink};">
   <!-- Pre-header (oculto, mejora la previsualización en clientes) -->
   <div style="display:none; max-height:0; overflow:hidden; opacity:0; mso-hide:all;">
     Pedido ${escapeHtml(order.id)} confirmado · ${formatMXN(order.total)} · Lo preparamos con cariño.
@@ -181,7 +197,7 @@ function buildOrderConfirmationHTML(order: Order): string {
           <!-- Brand mark -->
           <tr>
             <td align="center" style="padding: 8px 0 40px 0;">
-              <div style="font-family: Georgia, 'Times New Roman', serif; font-size: 30px; letter-spacing: 0.32em; color: ${COLORS.ink}; font-weight: 400;">
+              <div style="font-family: ${FONT_LOGO}; font-size: 30px; letter-spacing: 0.32em; color: ${COLORS.ink}; font-weight: 400;">
                 |BRICIA|
               </div>
               <div style="height: 1px; width: 40px; background: ${COLORS.accent}; margin: 14px auto 0; opacity: 0.6;"></div>
@@ -191,13 +207,13 @@ function buildOrderConfirmationHTML(order: Order): string {
           <!-- Hero -->
           <tr>
             <td align="center" style="padding: 0 32px 36px;">
-              <p style="font-family: Helvetica, Arial, sans-serif; font-size: 10px; letter-spacing: 0.32em; text-transform: uppercase; color: ${COLORS.accent}; margin: 0 0 16px; font-weight: 700;">
+              <p style="font-family: ${FONT_BODY}; font-size: 10px; letter-spacing: 0.32em; text-transform: uppercase; color: ${COLORS.accent}; margin: 0 0 16px; font-weight: 700;">
                 Pedido confirmado
               </p>
-              <h1 style="font-family: Georgia, 'Times New Roman', serif; font-size: 34px; line-height: 1.15; color: ${COLORS.ink}; margin: 0 0 18px; font-weight: 400;">
+              <h1 style="font-family: ${FONT_TITLE}; font-size: 34px; line-height: 1.15; color: ${COLORS.ink}; margin: 0 0 18px; font-weight: 400;">
                 Gracias, ${escapeHtml(firstName(order.customer.name))}.
               </h1>
-              <p style="font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-size: 16px; line-height: 1.65; color: ${COLORS.muted}; margin: 0 auto; max-width: 440px;">
+              <p style="font-family: ${FONT_TITLE}; font-style: italic; font-size: 16px; line-height: 1.65; color: ${COLORS.muted}; margin: 0 auto; max-width: 440px;">
                 Recibimos tu pedido y ya lo estamos preparando con cariño.
                 Te avisaremos en cuanto salga rumbo a tu casa.
               </p>
@@ -208,10 +224,10 @@ function buildOrderConfirmationHTML(order: Order): string {
           <tr>
             <td align="center" style="padding: 0 32px 36px;">
               <div style="display: inline-block; background: ${COLORS.card}; border: 1px solid ${COLORS.border}; border-radius: 12px; padding: 16px 28px;">
-                <div style="font-family: Helvetica, Arial, sans-serif; font-size: 9px; letter-spacing: 0.3em; text-transform: uppercase; color: ${COLORS.muted}; margin-bottom: 6px;">
+                <div style="font-family: ${FONT_BODY}; font-size: 9px; letter-spacing: 0.3em; text-transform: uppercase; color: ${COLORS.muted}; margin-bottom: 6px;">
                   Folio del pedido
                 </div>
-                <div style="font-family: Helvetica, Arial, sans-serif; font-size: 18px; letter-spacing: 0.18em; color: ${COLORS.ink}; font-weight: 600;">
+                <div style="font-family: ${FONT_BODY}; font-size: 18px; letter-spacing: 0.18em; color: ${COLORS.ink}; font-weight: 600;">
                   ${escapeHtml(order.id)}
                 </div>
               </div>
@@ -224,7 +240,7 @@ function buildOrderConfirmationHTML(order: Order): string {
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${COLORS.card}; border:1px solid ${COLORS.border}; border-radius:16px;">
                 <tr>
                   <td style="padding: 24px 28px 8px;">
-                    <h2 style="font-family: Georgia, 'Times New Roman', serif; font-size: 18px; color: ${COLORS.ink}; margin: 0 0 4px; font-weight: 400;">
+                    <h2 style="font-family: ${FONT_TITLE}; font-size: 18px; color: ${COLORS.ink}; margin: 0 0 4px; font-weight: 400;">
                       Tu selección
                     </h2>
                     <div style="height:1px; background:${COLORS.border}; margin: 14px 0 0;"></div>
@@ -243,17 +259,17 @@ function buildOrderConfirmationHTML(order: Order): string {
                   <td style="padding: 16px 28px 0;">
                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                       <tr>
-                        <td style="padding: 6px 0; font-family: Helvetica, Arial, sans-serif; font-size: 11px; color: ${COLORS.muted}; text-transform: uppercase; letter-spacing: 0.18em;">Subtotal</td>
-                        <td style="padding: 6px 0; text-align: right; font-family: Georgia, 'Times New Roman', serif; font-size: 14px; color: ${COLORS.ink};">${formatMXN(order.subtotal)}</td>
+                        <td style="padding: 6px 0; font-family: ${FONT_BODY}; font-size: 11px; color: ${COLORS.muted}; text-transform: uppercase; letter-spacing: 0.18em;">Subtotal</td>
+                        <td style="padding: 6px 0; text-align: right; font-family: ${FONT_TITLE}; font-size: 14px; color: ${COLORS.ink};">${formatMXN(order.subtotal)}</td>
                       </tr>
                       <tr>
-                        <td style="padding: 6px 0; font-family: Helvetica, Arial, sans-serif; font-size: 11px; color: ${COLORS.muted}; text-transform: uppercase; letter-spacing: 0.18em;">Envío</td>
-                        <td style="padding: 6px 0; text-align: right; font-family: Georgia, 'Times New Roman', serif; font-size: 14px; color: ${COLORS.ink};">${shippingLine}</td>
+                        <td style="padding: 6px 0; font-family: ${FONT_BODY}; font-size: 11px; color: ${COLORS.muted}; text-transform: uppercase; letter-spacing: 0.18em;">Envío</td>
+                        <td style="padding: 6px 0; text-align: right; font-family: ${FONT_TITLE}; font-size: 14px; color: ${COLORS.ink};">${shippingLine}</td>
                       </tr>
                       ${shippingMethodBlock}
                       <tr>
-                        <td style="padding: 14px 0 22px; border-top: 1px solid ${COLORS.border}; font-family: Helvetica, Arial, sans-serif; font-size: 11px; color: ${COLORS.ink}; text-transform: uppercase; letter-spacing: 0.22em; font-weight: 700;">Total</td>
-                        <td style="padding: 14px 0 22px; border-top: 1px solid ${COLORS.border}; text-align: right; font-family: Georgia, 'Times New Roman', serif; font-size: 22px; color: ${COLORS.ink};">${formatMXN(order.total)}</td>
+                        <td style="padding: 14px 0 22px; border-top: 1px solid ${COLORS.border}; font-family: ${FONT_BODY}; font-size: 11px; color: ${COLORS.ink}; text-transform: uppercase; letter-spacing: 0.22em; font-weight: 700;">Total</td>
+                        <td style="padding: 14px 0 22px; border-top: 1px solid ${COLORS.border}; text-align: right; font-family: ${FONT_TITLE}; font-size: 22px; color: ${COLORS.ink};">${formatMXN(order.total)}</td>
                       </tr>
                     </table>
                   </td>
@@ -268,10 +284,10 @@ function buildOrderConfirmationHTML(order: Order): string {
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${COLORS.card}; border:1px solid ${COLORS.border}; border-radius:16px;">
                 <tr>
                   <td style="padding: 24px 28px;">
-                    <h2 style="font-family: Georgia, 'Times New Roman', serif; font-size: 18px; color: ${COLORS.ink}; margin: 0 0 14px; font-weight: 400; border-bottom: 1px solid ${COLORS.border}; padding-bottom: 12px;">
+                    <h2 style="font-family: ${FONT_TITLE}; font-size: 18px; color: ${COLORS.ink}; margin: 0 0 14px; font-weight: 400; border-bottom: 1px solid ${COLORS.border}; padding-bottom: 12px;">
                       Dirección de envío
                     </h2>
-                    <p style="font-family: Helvetica, Arial, sans-serif; font-size: 14px; line-height: 1.7; color: ${COLORS.ink}; margin: 0;">
+                    <p style="font-family: ${FONT_BODY}; font-size: 14px; line-height: 1.7; color: ${COLORS.ink}; margin: 0;">
                       <strong style="font-weight: 600;">${escapeHtml(order.customer.name)}</strong><br>
                       ${escapeHtml(order.shipping.street)} ${escapeHtml(order.shipping.exterior)}${order.shipping.interior ? ` Int. ${escapeHtml(order.shipping.interior)}` : ""}<br>
                       Col. ${escapeHtml(order.shipping.neighborhood)}<br>
@@ -290,11 +306,11 @@ function buildOrderConfirmationHTML(order: Order): string {
           <tr>
             <td align="center" style="padding: 36px 32px 8px;">
               <a href="${orderUrl}"
-                 style="display:inline-block; padding:14px 28px; font-family: Helvetica, Arial, sans-serif; font-size:11px; letter-spacing:0.28em; text-transform:uppercase; font-weight:700; color:${COLORS.bg}; background:${COLORS.ink}; text-decoration:none; border-radius:10px;">
+                 style="display:inline-block; padding:14px 28px; font-family: ${FONT_BODY}; font-size:11px; letter-spacing:0.28em; text-transform:uppercase; font-weight:700; color:${COLORS.bg}; background:${COLORS.ink}; text-decoration:none; border-radius:10px;">
                 Ver mi pedido
               </a>
               <div style="margin-top:16px;">
-                <a href="${shopUrl}" style="font-family: Helvetica, Arial, sans-serif; font-size:11px; letter-spacing:0.22em; text-transform:uppercase; color:${COLORS.muted}; text-decoration:none;">
+                <a href="${shopUrl}" style="font-family: ${FONT_BODY}; font-size:11px; letter-spacing:0.22em; text-transform:uppercase; color:${COLORS.muted}; text-decoration:none;">
                   Seguir explorando
                 </a>
               </div>
@@ -305,11 +321,11 @@ function buildOrderConfirmationHTML(order: Order): string {
           <tr>
             <td align="center" style="padding: 40px 32px 8px;">
               <div style="height: 1px; width: 40px; background: ${COLORS.accent}; margin: 0 auto 22px; opacity: 0.45;"></div>
-              <p style="font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-size: 15px; line-height: 1.7; color: ${COLORS.muted}; margin: 0 0 18px;">
+              <p style="font-family: ${FONT_TITLE}; font-style: italic; font-size: 15px; line-height: 1.7; color: ${COLORS.muted}; margin: 0 0 18px;">
                 Cocinar y compartir es un gesto de amor.<br>
                 Gracias por dejarnos ser parte de tu mesa.
               </p>
-              <p style="font-family: Georgia, 'Times New Roman', serif; font-size: 14px; color: ${COLORS.ink}; margin: 0;">
+              <p style="font-family: ${FONT_TITLE}; font-size: 14px; color: ${COLORS.ink}; margin: 0;">
                 — Bricia
               </p>
             </td>
@@ -318,10 +334,10 @@ function buildOrderConfirmationHTML(order: Order): string {
           <!-- Footer -->
           <tr>
             <td align="center" style="padding: 32px; border-top: 1px solid ${COLORS.border}; margin-top: 24px;">
-              <p style="font-family: Helvetica, Arial, sans-serif; font-size: 11px; color: ${COLORS.muted}; margin: 0 0 8px;">
+              <p style="font-family: ${FONT_BODY}; font-size: 11px; color: ${COLORS.muted}; margin: 0 0 8px;">
                 Pedido realizado el ${formatDate(order.createdAt)}
               </p>
-              <p style="font-family: Helvetica, Arial, sans-serif; font-size: 11px; color: ${COLORS.muted}; margin: 0;">
+              <p style="font-family: ${FONT_BODY}; font-size: 11px; color: ${COLORS.muted}; margin: 0;">
                 ¿Alguna pregunta? Escríbenos a
                 <a href="mailto:${SUPPORT_EMAIL}" style="color: ${COLORS.accent}; text-decoration: none;">${SUPPORT_EMAIL}</a>
               </p>
