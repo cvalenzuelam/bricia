@@ -2,14 +2,19 @@
 import fs from "fs";
 import path from "path";
 import { list, put } from "@vercel/blob";
+import { MemoryCache } from "@/lib/memory-cache";
 
 const CONFIG_PATH = path.join(process.cwd(), "src/data/contact-config.json");
 const CONTACT_BLOB_KEY = "bricia/contact-config.json";
-const NO_STORE_HEADERS = {
-  "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+
+const PUBLIC_CACHE_HEADERS = {
+  "Cache-Control":
+    "public, s-maxage=60, stale-while-revalidate=300",
 };
 
 export const runtime = "nodejs";
+
+const contactCache = new MemoryCache<unknown>(60_000);
 
 function readLocalConfig() {
   const raw = fs.readFileSync(CONFIG_PATH, "utf-8").replace(/^\uFEFF/, "");
@@ -18,6 +23,11 @@ function readLocalConfig() {
 
 export async function GET() {
   try {
+    const cached = contactCache.get();
+    if (cached) {
+      return NextResponse.json(cached, { headers: PUBLIC_CACHE_HEADERS });
+    }
+
     try {
       const { blobs } = await list({ prefix: CONTACT_BLOB_KEY });
       if (blobs.length > 0) {
@@ -25,7 +35,8 @@ export async function GET() {
         const res = await fetch(latest.url, { cache: "no-store" });
         if (res.ok) {
           const blobConfig = await res.json();
-          return NextResponse.json(blobConfig, { headers: NO_STORE_HEADERS });
+          contactCache.set(blobConfig);
+          return NextResponse.json(blobConfig, { headers: PUBLIC_CACHE_HEADERS });
         }
       }
     } catch {
@@ -33,11 +44,12 @@ export async function GET() {
     }
 
     const localConfig = readLocalConfig();
-    return NextResponse.json(localConfig, { headers: NO_STORE_HEADERS });
+    contactCache.set(localConfig);
+    return NextResponse.json(localConfig, { headers: PUBLIC_CACHE_HEADERS });
   } catch {
     return NextResponse.json(
       { error: "Error al cargar configuración de contacto" },
-      { status: 500, headers: NO_STORE_HEADERS }
+      { status: 500 }
     );
   }
 }
@@ -53,9 +65,11 @@ export async function PUT(request: NextRequest) {
         allowOverwrite: true,
         contentType: "application/json",
       });
+      contactCache.set(body);
       return NextResponse.json({ success: true });
     } catch {
       fs.writeFileSync(CONFIG_PATH, payload, "utf-8");
+      contactCache.set(body);
       return NextResponse.json({ success: true, local: true });
     }
   } catch (error) {

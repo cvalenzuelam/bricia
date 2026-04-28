@@ -2,6 +2,7 @@ import { readFile, writeFile } from "fs/promises";
 import path from "path";
 import { put, list } from "@vercel/blob";
 import localOrdersData from "./orders.json";
+import { MemoryCache } from "@/lib/memory-cache";
 
 export type OrderStatus =
   | "pending"
@@ -94,6 +95,11 @@ async function withTimeout<T>(
   ]);
 }
 
+// Cache breve para /admin/pedidos: evita un list() por cada vista/refresh.
+// Las escrituras (saveOrders) actualizan el cache, así que el admin sigue
+// viendo datos frescos tras crear/editar/borrar pedidos.
+const ordersCache = new MemoryCache<Order[]>(30_000);
+
 export async function getOrders(): Promise<Order[]> {
   if (shouldPersistLocally()) {
     try {
@@ -103,6 +109,9 @@ export async function getOrders(): Promise<Order[]> {
       return localOrdersData as Order[];
     }
   }
+
+  const cached = ordersCache.get();
+  if (cached) return cached;
 
   if (BLOB_TOKEN) {
     try {
@@ -118,7 +127,11 @@ export async function getOrders(): Promise<Order[]> {
           FETCH_TIMEOUT_MS,
           "fetching blob"
         );
-        if (res.ok) return (await res.json()) as Order[];
+        if (res.ok) {
+          const data = (await res.json()) as Order[];
+          ordersCache.set(data);
+          return data;
+        }
       }
     } catch (err) {
       console.error("[orders] blob read failed:", err);
@@ -133,6 +146,7 @@ export async function saveOrders(orders: Order[]): Promise<void> {
 
   if (shouldPersistLocally()) {
     await writeFile(LOCAL_PATH, json, "utf-8");
+    ordersCache.set(orders);
     return;
   }
 
@@ -147,10 +161,12 @@ export async function saveOrders(orders: Order[]): Promise<void> {
       SAVE_TIMEOUT_MS,
       "saving blob"
     );
+    ordersCache.set(orders);
     return;
   }
 
   await writeFile(LOCAL_PATH, json, "utf-8");
+  ordersCache.set(orders);
 }
 
 export function generateOrderId(): string {

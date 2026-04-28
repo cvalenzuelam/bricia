@@ -2,6 +2,7 @@ import { readFile, writeFile } from "fs/promises";
 import path from "path";
 import { put, list } from "@vercel/blob";
 import localRecipesData from "./recipes.json";
+import { MemoryCache } from "@/lib/memory-cache";
 
 export interface Recipe {
   slug: string;
@@ -57,6 +58,8 @@ async function withTimeout<T>(
   ]);
 }
 
+const recipesCache = new MemoryCache<Recipe[]>(60_000);
+
 export async function getRecipes(): Promise<Recipe[]> {
   if (shouldPersistRecipesLocally()) {
     try {
@@ -66,6 +69,9 @@ export async function getRecipes(): Promise<Recipe[]> {
       return localRecipesData as Recipe[];
     }
   }
+
+  const cached = recipesCache.get();
+  if (cached) return cached;
 
   try {
     const { blobs } = await withTimeout(
@@ -86,10 +92,14 @@ export async function getRecipes(): Promise<Recipe[]> {
         FETCH_TIMEOUT_MS,
         "fetching latest recipes blob"
       );
-      return (await res.json()) as Recipe[];
+      const data = (await res.json()) as Recipe[];
+      recipesCache.set(data);
+      return data;
     }
     // First run: fall back to the bundled static JSON
-    return localRecipesData as Recipe[];
+    const fallback = localRecipesData as Recipe[];
+    recipesCache.set(fallback);
+    return fallback;
   } catch {
     return localRecipesData as Recipe[];
   }
@@ -126,6 +136,7 @@ export async function saveRecipes(recipes: Recipe[]): Promise<void> {
     SAVE_TIMEOUT_MS,
     "saving recipes blob"
   );
+  recipesCache.set(recipes);
 }
 
 export async function addRecipe(recipe: Recipe): Promise<void> {

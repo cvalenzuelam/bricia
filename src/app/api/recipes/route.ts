@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getRecipes, addRecipe, generateSlug } from "@/data/recipes";
 
+// Permitimos que la CDN cachee 60s y sirva stale hasta 5 min mientras
+// revalida en segundo plano. Esto reduce drásticamente las llamadas a
+// Vercel Blob (cada `list()` cuenta como Advanced Request).
+const PUBLIC_CACHE_HEADERS = {
+  "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
+};
+
 const NO_STORE_HEADERS = {
   "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
 };
@@ -8,7 +15,7 @@ const NO_STORE_HEADERS = {
 export async function GET() {
   try {
     const recipes = await getRecipes();
-    return NextResponse.json(recipes, { headers: NO_STORE_HEADERS });
+    return NextResponse.json(recipes, { headers: PUBLIC_CACHE_HEADERS });
   } catch {
     return NextResponse.json(
       { error: "Error al cargar recetas" },

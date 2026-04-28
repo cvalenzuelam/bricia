@@ -3,6 +3,7 @@ import path from "path";
 import { put, list } from "@vercel/blob";
 import localProductsData from "./products.json";
 import type { Product } from "./products";
+import { MemoryCache } from "@/lib/memory-cache";
 
 const BLOB_KEY = "bricia/products.json";
 const LOCAL_PATH = path.join(process.cwd(), "src/data/products.json");
@@ -36,6 +37,8 @@ async function withTimeout<T>(
   ]);
 }
 
+const productsCache = new MemoryCache<Product[]>(60_000);
+
 export async function getProducts(): Promise<Product[]> {
   if (shouldPersistLocally()) {
     try {
@@ -45,6 +48,9 @@ export async function getProducts(): Promise<Product[]> {
       return localProductsData as Product[];
     }
   }
+
+  const cached = productsCache.get();
+  if (cached) return cached;
 
   if (BLOB_TOKEN) {
     try {
@@ -60,7 +66,11 @@ export async function getProducts(): Promise<Product[]> {
           FETCH_TIMEOUT_MS,
           "fetching blob"
         );
-        if (res.ok) return (await res.json()) as Product[];
+        if (res.ok) {
+          const data = (await res.json()) as Product[];
+          productsCache.set(data);
+          return data;
+        }
       }
     } catch (err) {
       console.error("[products-server] blob read failed:", err);
@@ -89,6 +99,7 @@ export async function saveProducts(products: Product[]): Promise<void> {
       SAVE_TIMEOUT_MS,
       "saving blob"
     );
+    productsCache.set(products);
     return;
   }
 
