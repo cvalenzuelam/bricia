@@ -51,6 +51,33 @@ interface ProductItem {
   link: string;
 }
 
+interface FeaturedSectionConfig {
+  imageSrc: string;
+  imageAlt: string;
+  panelBackgroundColor: string;
+  heading: string;
+  description: string;
+  ctaText: string;
+  ctaHref: string;
+  titleFont: string;
+  buttonBackgroundColor: string;
+  buttonTextColor: string;
+}
+
+const DEFAULT_FEATURED_SECTION: FeaturedSectionConfig = {
+  imageSrc: "/images/tiradito.png",
+  imageAlt: "Nuevas recetas cada semana",
+  panelBackgroundColor: "#8B7355",
+  heading: "Nuevas Recetas\nCada Semana",
+  description:
+    "Descubre recetas que tocan el corazón y despiertan tus sentidos. Cada semana traemos algo nuevo para que disfrutes en tu cocina. ¡Explora y déjate inspirar!",
+  ctaText: "Ver Recetas",
+  ctaHref: "/recetas",
+  titleFont: "serif",
+  buttonBackgroundColor: "#FFFFFF",
+  buttonTextColor: "#8B7355",
+};
+
 interface HeroConfig {
   title: string;
   titleColor: string;
@@ -66,6 +93,7 @@ interface HeroConfig {
   instagramImages: { src: string }[];
   products: ProductItem[];
   backgroundColor: string;
+  featuredSection: FeaturedSectionConfig;
 }
 
 export default function AdminInicioPage() {
@@ -77,6 +105,7 @@ export default function AdminInicioPage() {
   const [loading, setLoading] = useState(true);
   const [saved, setSaved] = useState(false);
   const landingInputRef = useRef<HTMLInputElement | null>(null);
+  const featuredInputRef = useRef<HTMLInputElement | null>(null);
   const igInputRefs = useRef<Record<number, HTMLInputElement | null>>({});
   const productInputRefs = useRef<Record<number, HTMLInputElement | null>>({});
 
@@ -95,6 +124,7 @@ export default function AdminInicioPage() {
     instagramImages: [],
     products: [],
     backgroundColor: "#FAF9F4",
+    featuredSection: { ...DEFAULT_FEATURED_SECTION },
   });
 
   useEffect(() => {
@@ -103,7 +133,19 @@ export default function AdminInicioPage() {
 
     fetch("/api/hero")
       .then((res) => res.json())
-      .then((data) => { setConfig(data); setLoading(false); });
+      .then((data) => {
+        setConfig({
+          ...data,
+          featuredSection: {
+            ...DEFAULT_FEATURED_SECTION,
+            ...(data.featuredSection && typeof data.featuredSection === "object"
+              ? data.featuredSection
+              : {}),
+          },
+        });
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
   }, [router]);
 
   useEffect(() => {
@@ -155,7 +197,10 @@ export default function AdminInicioPage() {
     return false;
   };
 
-  const uploadCmsImage = async (file: File, section: "collage" | "instagram" | "products") => {
+  const uploadCmsImage = async (
+    file: File,
+    section: "collage" | "instagram" | "products" | "featured"
+  ) => {
     const safeName = sanitizeFileName(file.name || `image-${Date.now()}.jpg`);
     const pathname = `bricia/images/home/${section}/${Date.now()}-${safeName}`;
     return uploadCmsImageFile(file, pathname);
@@ -164,10 +209,17 @@ export default function AdminInicioPage() {
   const handleSave = async () => {
     setSaving(true);
     try {
+      const payload = {
+        ...config,
+        featuredSection: {
+          ...DEFAULT_FEATURED_SECTION,
+          ...(config.featuredSection || {}),
+        },
+      };
       const res = await fetchWithTimeout("/api/hero", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(config),
+        body: JSON.stringify(payload),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => null);
@@ -199,6 +251,43 @@ export default function AdminInicioPage() {
       setPublishMessage("");
       setSaving(false);
     }
+  };
+
+  const handleFeaturedUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.currentTarget;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploading(true);
+      const path = await uploadCmsImage(file, "featured");
+      if (path) {
+        setConfig({
+          ...config,
+          featuredSection: {
+            ...config.featuredSection,
+            imageSrc: path,
+          },
+        });
+      } else {
+        alert("Error al subir imagen");
+      }
+    } catch {
+      alert("Error al subir imagen");
+    } finally {
+      setUploading(false);
+      input.value = "";
+    }
+  };
+
+  const updateFeatured = <K extends keyof FeaturedSectionConfig>(
+    field: K,
+    value: FeaturedSectionConfig[K]
+  ) => {
+    setConfig({
+      ...config,
+      featuredSection: { ...config.featuredSection, [field]: value },
+    });
   };
 
   const handleLandingUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -476,6 +565,186 @@ export default function AdminInicioPage() {
                 onChange={handleLandingUpload}
                 className="hidden"
               />
+            </div>
+          </div>
+
+          {/* ─── SECCIÓN DESTACADA (Nuevas recetas) ───────────────── */}
+          <div className="bg-white rounded-2xl p-8 border border-brand-primary/5 space-y-6">
+            <div className="border-b border-brand-primary/5 pb-4">
+              <h2 className="text-lg font-serif text-brand-primary">
+                ✨ Sección &quot;Nuevas recetas&quot; (debajo del hero)
+              </h2>
+              <p className="text-xs font-sans text-brand-muted mt-1">
+                La franja dividida en imagen + texto que aparece en el inicio, antes del grid de recetas.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-3">
+                <p className="text-[10px] font-sans font-bold tracking-[0.2em] uppercase text-brand-muted">
+                  Imagen (lado izquierdo en escritorio)
+                </p>
+                <div
+                  className="relative aspect-[4/5] max-w-sm rounded-xl overflow-hidden border-2 border-dashed border-brand-primary/10 hover:border-brand-accent/40 transition-colors cursor-pointer bg-brand-secondary group"
+                  onClick={() => featuredInputRef.current?.click()}
+                >
+                  {(config.featuredSection?.imageSrc || DEFAULT_FEATURED_SECTION.imageSrc) ? (
+                    <Image
+                      src={config.featuredSection?.imageSrc || DEFAULT_FEATURED_SECTION.imageSrc}
+                      alt=""
+                      fill
+                      className="object-cover"
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center h-full min-h-[200px]">
+                      <Upload size={24} className="text-brand-muted/30 group-hover:text-brand-accent transition-colors" />
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition flex items-center justify-center opacity-0 group-hover:opacity-100">
+                    <span className="text-white text-xs font-sans font-bold">Cambiar</span>
+                  </div>
+                </div>
+                <input
+                  ref={featuredInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFeaturedUpload}
+                  className="hidden"
+                />
+                <label className="text-[10px] font-sans font-bold tracking-[0.25em] text-brand-muted uppercase block">
+                  Texto alternativo (accesibilidad)
+                </label>
+                <input
+                  value={config.featuredSection?.imageAlt ?? ""}
+                  onChange={(e) => updateFeatured("imageAlt", e.target.value)}
+                  className="w-full px-3 py-2 border border-brand-primary/10 rounded-lg text-sm font-sans focus:outline-none focus:border-brand-accent"
+                />
+              </div>
+
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-sans font-bold tracking-[0.25em] text-brand-muted uppercase">
+                    Fondo del panel de texto
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="color"
+                      value={config.featuredSection?.panelBackgroundColor ?? "#8B7355"}
+                      onChange={(e) => updateFeatured("panelBackgroundColor", e.target.value)}
+                      className="w-10 h-10 rounded-lg cursor-pointer border border-brand-primary/10"
+                    />
+                    <input
+                      value={config.featuredSection?.panelBackgroundColor ?? "#8B7355"}
+                      onChange={(e) => updateFeatured("panelBackgroundColor", e.target.value)}
+                      className="flex-1 px-3 py-2 border border-brand-primary/10 rounded-lg bg-brand-secondary font-mono text-xs focus:outline-none focus:border-brand-accent"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-sans font-bold tracking-[0.25em] text-brand-muted uppercase">
+                    Título (una línea por renglón; Enter = nueva línea)
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={config.featuredSection?.heading ?? ""}
+                    onChange={(e) => updateFeatured("heading", e.target.value)}
+                    className="w-full px-4 py-3 border border-brand-primary/10 rounded-lg bg-brand-secondary font-serif focus:outline-none focus:border-brand-accent resize-y min-h-[5rem]"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-sans font-bold tracking-[0.25em] text-brand-muted uppercase">
+                    Párrafo
+                  </label>
+                  <textarea
+                    rows={4}
+                    value={config.featuredSection?.description ?? ""}
+                    onChange={(e) => updateFeatured("description", e.target.value)}
+                    className="w-full px-4 py-3 border border-brand-primary/10 rounded-lg bg-brand-secondary text-sm font-sans leading-relaxed focus:outline-none focus:border-brand-accent resize-y"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-sans font-bold tracking-[0.25em] text-brand-muted uppercase">
+                      Texto del botón
+                    </label>
+                    <input
+                      value={config.featuredSection?.ctaText ?? ""}
+                      onChange={(e) => updateFeatured("ctaText", e.target.value)}
+                      className="w-full px-3 py-2 border border-brand-primary/10 rounded-lg text-sm focus:outline-none focus:border-brand-accent"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-sans font-bold tracking-[0.25em] text-brand-muted uppercase">
+                      Enlace del botón
+                    </label>
+                    <input
+                      value={config.featuredSection?.ctaHref ?? ""}
+                      onChange={(e) => updateFeatured("ctaHref", e.target.value)}
+                      placeholder="/recetas"
+                      className="w-full px-3 py-2 border border-brand-primary/10 rounded-lg text-sm font-sans focus:outline-none focus:border-brand-accent"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-sans font-bold tracking-[0.25em] text-brand-muted uppercase">
+                    Fuente del título
+                  </label>
+                  <select
+                    value={config.featuredSection?.titleFont ?? "serif"}
+                    onChange={(e) => updateFeatured("titleFont", e.target.value)}
+                    className="w-full px-3 py-2.5 border border-brand-primary/10 rounded-lg bg-brand-secondary text-sm focus:outline-none focus:border-brand-accent"
+                  >
+                    {FONT_OPTIONS.map((f) => (
+                      <option key={f.value} value={f.value}>
+                        {f.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 pt-1">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-sans font-bold tracking-[0.25em] text-brand-muted uppercase">
+                      Fondo del botón
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={config.featuredSection?.buttonBackgroundColor ?? "#FFFFFF"}
+                        onChange={(e) => updateFeatured("buttonBackgroundColor", e.target.value)}
+                        className="w-9 h-9 rounded cursor-pointer border border-brand-primary/10"
+                      />
+                      <input
+                        value={config.featuredSection?.buttonBackgroundColor ?? "#FFFFFF"}
+                        onChange={(e) => updateFeatured("buttonBackgroundColor", e.target.value)}
+                        className="flex-1 px-2 py-1.5 border border-brand-primary/10 rounded font-mono text-[11px]"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-sans font-bold tracking-[0.25em] text-brand-muted uppercase">
+                      Texto del botón
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={config.featuredSection?.buttonTextColor ?? "#8B7355"}
+                        onChange={(e) => updateFeatured("buttonTextColor", e.target.value)}
+                        className="w-9 h-9 rounded cursor-pointer border border-brand-primary/10"
+                      />
+                      <input
+                        value={config.featuredSection?.buttonTextColor ?? "#8B7355"}
+                        onChange={(e) => updateFeatured("buttonTextColor", e.target.value)}
+                        className="flex-1 px-2 py-1.5 border border-brand-primary/10 rounded font-mono text-[11px]"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 

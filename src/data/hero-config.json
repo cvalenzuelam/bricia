@@ -16,6 +16,18 @@
     }
   ],
   "backgroundColor": "#FAF9F4",
+  "featuredSection": {
+    "imageSrc": "/images/tiradito.png",
+    "imageAlt": "Nuevas recetas cada semana",
+    "panelBackgroundColor": "#8B7355",
+    "heading": "Nuevas Recetas\nCada Semana",
+    "description": "Descubre recetas que tocan el corazón y despiertan tus sentidos. Cada semana traemos algo nuevo para que disfrutes en tu cocina. ¡Explora y déjate inspirar!",
+    "ctaText": "Ver Recetas",
+    "ctaHref": "/recetas",
+    "titleFont": "serif",
+    "buttonBackgroundColor": "#FFFFFF",
+    "buttonTextColor": "#8B7355"
+  },
   "instagramImages": [
     {
       "src": "/images/dessert.png",
