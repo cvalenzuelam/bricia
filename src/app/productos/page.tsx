@@ -154,6 +154,7 @@ export default function ProductosPage() {
                   exit={{ opacity: 0, scale: 0.96 }}
                   transition={{ duration: 0.5, delay: i * 0.07 }}
                   className="group flex flex-col gap-6"
+                  id={`product-${product.id}`}
                 >
                   {/* Image */}
                   <div className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-white border border-brand-primary/5 shadow-sm">

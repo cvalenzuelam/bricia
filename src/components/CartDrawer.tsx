@@ -17,6 +17,11 @@ export default function CartDrawer() {
     router.push("/checkout");
   };
 
+  const goToStore = () => {
+    closeCart();
+    router.push("/productos");
+  };
+
   // Lock scroll when open
   useEffect(() => {
     document.body.style.overflow = isOpen ? "hidden" : "";
@@ -89,7 +94,8 @@ export default function CartDrawer() {
                     </p>
                   </div>
                   <button
-                    onClick={closeCart}
+                    type="button"
+                    onClick={goToStore}
                     className="text-[10px] font-sans font-bold tracking-[0.25em] uppercase text-brand-accent hover:text-brand-primary transition-colors flex items-center gap-2"
                   >
                     Explorar tienda <ArrowRight size={13} />
