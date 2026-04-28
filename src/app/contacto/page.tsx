@@ -1,10 +1,6 @@
-﻿"use client";
-
-import Image from "next/image";
+﻿import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { Mail, ChefHat, Frame, Home, ArrowRight } from "lucide-react";
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { Mail } from "lucide-react";
 
 /* ─── SVG Icons ─────────────────────────────────────────────── */
 const InstagramIcon = ({ size = 20 }: { size?: number }) => (
@@ -59,174 +55,54 @@ const Pill = ({ children }: { children: React.ReactNode }) => (
   </span>
 );
 
-const ACCENT = "#B08D57";
-
-const IDENTITY_QUOTES = [
-  "Los detalles no gritan; ordenan el espacio.",
-  "Una mesa bien puesta es la primera receta.",
-  "Cocinar, para mí, es diseñar con los sentidos.",
-] as const;
-
-const identityPaths = [
-  {
-    href: "/recetas",
-    label: "Recetas",
-    hint: "Sabores del día a día",
-    icon: ChefHat,
-  },
-  {
-    href: "/la-mesa",
-    label: "La mesa",
-    hint: "Historias y estética",
-    icon: Frame,
-  },
-  {
-    href: "/productos",
-    label: "La alacena",
-    hint: "Piezas para tu cocina",
-    icon: Home,
-  },
-] as const;
-
-function IdentityPanel() {
-  const reduceMotion = useReducedMotion();
-  const [quoteIndex, setQuoteIndex] = useState(0);
-
-  useEffect(() => {
-    if (reduceMotion) return;
-    const id = window.setInterval(
-      () => setQuoteIndex((i) => (i + 1) % IDENTITY_QUOTES.length),
-      6200,
-    );
-    return () => window.clearInterval(id);
-  }, [reduceMotion]);
-
+function AboutHeroVisual() {
   return (
-    <div className="relative w-full max-w-xl md:max-w-none">
-      <div
-        className="absolute -inset-6 md:-inset-10 rounded-[2rem] pointer-events-none opacity-90"
-        style={{
-          background:
-            "radial-gradient(ellipse 80% 70% at 70% 60%, rgba(176,141,87,0.14) 0%, transparent 65%)",
-        }}
-      />
-
-      <div
-        className="relative rounded-3xl p-8 md:p-10 overflow-hidden border backdrop-blur-[2px]"
-        style={{
-          borderColor: "rgba(176,141,87,0.14)",
-          background:
-            "linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(176,141,87,0.03) 45%, rgba(0,0,0,0.15) 100%)",
-        }}
+    <div className="relative w-full max-w-[17.5rem] lg:max-w-xs xl:max-w-sm pt-4 md:pt-0">
+      <svg
+        aria-hidden
+        className="pointer-events-none absolute -right-4 md:-right-8 top-1/2 -translate-y-1/2 w-36 h-36 md:w-44 md:h-44 opacity-[0.08]"
+        viewBox="0 0 100 100"
+        fill="none"
       >
-        <motion.div
-          aria-hidden
-          className="absolute top-10 right-8 w-px h-24 origin-top"
-          style={{ backgroundColor: "rgba(176,141,87,0.25)" }}
-          animate={
-            reduceMotion
-              ? { scaleY: 1, opacity: 0.35 }
-              : { scaleY: [0.6, 1, 0.85, 1], opacity: [0.2, 0.45, 0.3, 0.4] }
-          }
-          transition={
-            reduceMotion
-              ? { duration: 0 }
-              : { duration: 10, repeat: Infinity, ease: "easeInOut" }
-          }
+        <path
+          d="M18 78V28h48v50H18z"
+          stroke="#B08D57"
+          strokeWidth="0.35"
         />
+        <path
+          d="M26 38h32M26 48h22M26 58h28"
+          stroke="#B08D57"
+          strokeWidth="0.25"
+        />
+        <ellipse
+          cx="78"
+          cy="52"
+          rx="14"
+          ry="9"
+          stroke="#B08D57"
+          strokeWidth="0.3"
+        />
+      </svg>
 
+      <div className="relative space-y-5">
         <p
-          className="text-[9px] font-sans font-bold tracking-[0.35em] uppercase mb-6"
-          style={{ color: "rgba(176,141,87,0.65)" }}
+          className="text-[10px] font-sans font-bold tracking-[0.4em] uppercase"
+          style={{ color: "rgba(176,141,87,0.5)" }}
         >
           Entre el espacio y la mesa
         </p>
-
-        <div className="min-h-[4.5rem] md:min-h-[5rem] mb-10">
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.p
-              key={reduceMotion ? 0 : quoteIndex}
-              initial={reduceMotion ? false : { opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={reduceMotion ? undefined : { opacity: 0, y: -8 }}
-              transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-              className="font-serif text-lg md:text-xl italic leading-snug text-white/50 text-right pl-4 md:pl-8"
-            >
-              “{IDENTITY_QUOTES[reduceMotion ? 0 : quoteIndex]}”
-            </motion.p>
-          </AnimatePresence>
-          {!reduceMotion && (
-            <div className="flex justify-end gap-1.5 mt-4">
-              {IDENTITY_QUOTES.map((_, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  aria-label={`Cita ${i + 1}`}
-                  onClick={() => setQuoteIndex(i)}
-                  className="h-1 rounded-full transition-all duration-300"
-                  style={{
-                    width: quoteIndex === i ? 22 : 6,
-                    backgroundColor:
-                      quoteIndex === i ? ACCENT : "rgba(176,141,87,0.25)",
-                  }}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-
         <div
-          className="space-y-0.5 pt-2 border-t"
-          style={{ borderColor: "rgba(176,141,87,0.12)" }}
-        >
-          {identityPaths.map((item) => {
-            const Icon = item.icon;
-            return (
-              <motion.div
-                key={item.href}
-                initial={false}
-                whileHover={reduceMotion ? undefined : { x: 4 }}
-                transition={{ type: "spring", stiffness: 380, damping: 28 }}
-              >
-                <Link
-                  href={item.href}
-                  className="group flex items-center gap-4 py-4 border-b last:border-b-0 transition-colors"
-                  style={{ borderColor: "rgba(255,255,255,0.06)" }}
-                >
-                  <div
-                    className="shrink-0 w-11 h-11 rounded-2xl flex items-center justify-center transition-colors duration-300 group-hover:border-brand-accent/40"
-                    style={{
-                      border: "1px solid rgba(176,141,87,0.2)",
-                      background: "rgba(176,141,87,0.06)",
-                    }}
-                  >
-                    <Icon
-                      size={18}
-                      strokeWidth={1.35}
-                      className="text-white/35 group-hover:text-brand-accent transition-colors"
-                    />
-                  </div>
-                  <div className="flex-1 min-w-0 text-left">
-                    <p
-                      className="text-[10px] font-sans font-bold tracking-[0.28em] uppercase mb-0.5"
-                      style={{ color: "rgba(176,141,87,0.75)" }}
-                    >
-                      {item.label}
-                    </p>
-                    <p className="text-xs font-serif text-white/45 group-hover:text-white/65 transition-colors">
-                      {item.hint}
-                    </p>
-                  </div>
-                  <ArrowRight
-                    size={16}
-                    strokeWidth={1.5}
-                    className="shrink-0 text-white/15 group-hover:text-brand-accent group-hover:translate-x-0.5 transition-all"
-                  />
-                </Link>
-              </motion.div>
-            );
-          })}
-        </div>
+          className="w-11 h-px"
+          style={{ backgroundColor: "#B08D57", opacity: 0.35 }}
+        />
+        <blockquote className="space-y-4">
+          <p className="font-serif text-lg md:text-xl italic text-white/48 leading-snug">
+            Cocinar, para mí, es diseñar con los sentidos.
+          </p>
+          <p className="font-serif text-sm italic text-white/32 leading-relaxed pl-1 border-l border-white/[0.12] pl-4">
+            Los detalles ordenan el espacio; la mesa ordena el día.
+          </p>
+        </blockquote>
       </div>
     </div>
   );
@@ -268,9 +144,9 @@ export default function ContactPage() {
 
         {/* ── Columna DERECHA: texto + panel editorial ── */}
         <div
-          className="relative w-full md:w-[55%] flex flex-col md:flex-row md:items-stretch gap-12 lg:gap-14 px-8 md:pl-12 md:pr-10 lg:pl-16 lg:pr-12 xl:pr-16 pb-16 md:pb-20 pt-10 md:pt-64 lg:pt-72 md:min-h-[calc(45vw*1.5)]"
+          className="relative w-full md:w-[55%] flex flex-col md:flex-row md:items-start gap-10 md:gap-x-14 lg:gap-x-20 px-8 md:pl-12 md:pr-12 lg:pl-16 lg:pr-16 xl:pr-24 pb-16 md:pb-24 pt-10 md:pt-64 lg:pt-72 md:min-h-[calc(45vw*1.5)]"
         >
-          <div className="max-w-lg space-y-8 shrink-0 md:self-start w-full">
+          <div className="max-w-lg space-y-8 shrink-0 w-full md:max-w-[min(100%,28rem)]">
             {/* Eyebrow */}
             <p
               className="text-[10px] font-sans font-bold tracking-[0.45em] uppercase"
@@ -315,8 +191,8 @@ export default function ContactPage() {
             </div>
           </div>
 
-          <div className="flex-1 flex flex-col justify-end md:justify-center min-w-0 md:max-w-[min(100%,28rem)] lg:max-w-[min(100%,32rem)] xl:max-w-[36rem] md:pt-8">
-            <IdentityPanel />
+          <div className="flex-1 min-w-0 md:flex md:justify-end lg:justify-start lg:pl-2 xl:pl-6 pt-2 md:pt-1">
+            <AboutHeroVisual />
           </div>
         </div>
 
