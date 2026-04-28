@@ -46,17 +46,24 @@ export default function Header() {
   const pathname = usePathname();
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  const isDarkPage = pathname === "/contacto";
+  /** Hero oscuro: contacto o artículo individual de La Mesa (no el índice /la-mesa). */
+  const isMesaArticlePage = /^\/la-mesa\/.+/.test(pathname);
   const isHome = pathname === "/";
-  const textColor = scrolled ? "text-brand-primary" : (isDarkPage ? "text-white/90" : "text-brand-primary/80");
-  const logoColor = scrolled ? "text-brand-primary" : (isDarkPage ? "text-white" : "text-brand-primary");
-  const iconColor = scrolled ? "text-brand-primary" : (isDarkPage ? "text-white" : "text-brand-primary");
+  const lightNavWhenTransparent = pathname === "/contacto" || (isMesaArticlePage && !scrolled);
+  const textColor = scrolled ? "text-brand-primary" : (lightNavWhenTransparent ? "text-white/90" : "text-brand-primary/80");
+  const logoColor = scrolled ? "text-brand-primary" : (lightNavWhenTransparent ? "text-white" : "text-brand-primary");
+  const iconColor = scrolled ? "text-brand-primary" : (lightNavWhenTransparent ? "text-white" : "text-brand-primary");
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
+    handleScroll();
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  useEffect(() => {
+    setScrolled(typeof window !== "undefined" && window.scrollY > 20);
+  }, [pathname]);
 
   useEffect(() => {
     let cancelled = false;
@@ -126,7 +133,7 @@ export default function Header() {
         className={`fixed top-0 w-full z-50 transition-all duration-500 ${
           scrolled
             ? "bg-brand-secondary/95 backdrop-blur-sm border-b border-brand-primary/5 py-4"
-            : isDarkPage
+            : lightNavWhenTransparent
               ? "bg-transparent py-8 border-b border-white/[0.06]"
               : isHome
                 ? "bg-brand-secondary/90 backdrop-blur-md py-8 border-b border-brand-primary/[0.08]"
