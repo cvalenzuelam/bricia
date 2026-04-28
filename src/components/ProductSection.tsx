@@ -23,7 +23,6 @@ function normalizeForMatch(s: string): string {
     .trim();
 }
 
-/** Enlaza al detalle /productos/[id] emparejando por nombre con la alacena real. */
 function resolveProductHref(heroProduct: Product, catalog: CatalogItem[]): string {
   const target = normalizeForMatch(heroProduct.name);
   const match = catalog.find((c) => normalizeForMatch(c.name) === target);
@@ -46,14 +45,13 @@ export default function ProductSection() {
       .then(([heroData, catalogData]) => {
         if (cancelled || !heroData?.products || !Array.isArray(heroData.products)) return;
         const catalog: CatalogItem[] = Array.isArray(catalogData)
-          ? catalogData
-              .filter(
-                (x: unknown): x is CatalogItem =>
-                  Boolean(x) &&
-                  typeof x === "object" &&
-                  typeof (x as CatalogItem).id === "string" &&
-                  typeof (x as CatalogItem).name === "string"
-              )
+          ? catalogData.filter(
+              (x: unknown): x is CatalogItem =>
+                Boolean(x) &&
+                typeof x === "object" &&
+                typeof (x as CatalogItem).id === "string" &&
+                typeof (x as CatalogItem).name === "string"
+            )
           : [];
         const withHref = (heroData.products as Product[]).map((p) => ({
           ...p,
@@ -70,14 +68,14 @@ export default function ProductSection() {
   if (products.length === 0) return null;
 
   return (
-    <section className="bg-brand-primary text-brand-secondary py-32 px-6 border-t border-white/10">
+    <section className="bg-brand-secondary py-32 px-6 border-t border-brand-primary/5">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-20 space-y-4">
-          <span className="editorial-spacing text-[#C2A878]">LA TIENDA</span>
-          <h2 className="text-4xl md:text-6xl font-serif text-brand-secondary tracking-tight">
+          <span className="editorial-spacing text-brand-accent">LA TIENDA</span>
+          <h2 className="text-4xl md:text-6xl font-serif text-brand-primary tracking-tight">
             Objetos con Alma
             <br />
-            <span className="italic text-[#C2A878]">para Tu Mesa</span>
+            <span className="italic text-brand-accent">para Tu Mesa</span>
           </h2>
         </div>
 
@@ -93,7 +91,7 @@ export default function ProductSection() {
                 transition={{ delay: i * 0.15 }}
                 className="group cursor-pointer space-y-5"
               >
-                <div className="relative aspect-[4/5] rounded-xl overflow-hidden bg-white/5 border border-white/10">
+                <div className="relative aspect-[4/5] rounded-xl overflow-hidden bg-white border border-brand-primary/5">
                   <Image
                     src={product.image}
                     alt={product.name}
@@ -103,10 +101,10 @@ export default function ProductSection() {
                   />
                 </div>
                 <div className="text-center space-y-1.5">
-                  <h4 className="text-lg font-serif text-brand-secondary group-hover:text-[#C2A878] transition-colors duration-300">
+                  <h4 className="text-lg font-serif text-brand-primary group-hover:text-brand-accent transition-colors duration-300">
                     {product.name}
                   </h4>
-                  <p className="text-xs font-sans text-white/45 tracking-widest">{product.price}</p>
+                  <p className="text-xs font-sans text-brand-muted tracking-widest">{product.price}</p>
                 </div>
               </motion.div>
             );

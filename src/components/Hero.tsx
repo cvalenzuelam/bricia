@@ -20,6 +20,25 @@ interface HeroConfig {
   backgroundColor: string;
 }
 
+/** Contenido por defecto (local) para que el landing nunca quede sin título mientras carga el CMS. */
+const HERO_FALLBACK: HeroConfig = {
+  title: "Historias que nacen en la cocina",
+  titleColor: "#5C3D2E",
+  titleFont: "serif",
+  logo: "|BRICIA|",
+  logoColor: "#1D1D1B",
+  logoFont: "aboreto",
+  tagline: "Un blog que celebra la cocina emocional y los placeres cotidianos.",
+  taglineItalic: true,
+  description:
+    "Aquí la cocina cotidiana cobra vida a través de recetas cálidas, deliciosas y pensadas para disfrutarse en casa.",
+  ctaText: "Ven para descubrir recetas inspiradoras cada semana.",
+  collageImages: [
+    { src: "/images/hero-inicio-bricia.jpg", alt: "Bricia en picnic al aire libre" },
+  ],
+  backgroundColor: "#FAF9F4",
+};
+
 const FONT_MAP: Record<string, string> = {
   serif: "var(--font-playfair)",
   sans: "var(--font-inter)",
@@ -51,22 +70,25 @@ function imageOverlayStyle(bgHex: string): CSSProperties {
 }
 
 export default function Hero() {
-  const [config, setConfig] = useState<HeroConfig | null>(null);
+  const [config, setConfig] = useState<HeroConfig>(HERO_FALLBACK);
 
   useEffect(() => {
     fetch("/api/hero")
       .then((res) => res.json())
-      .then(setConfig);
+      .then((data: unknown) => {
+        if (!data || typeof data !== "object") return;
+        const d = data as Partial<HeroConfig>;
+        setConfig((prev) => ({
+          ...prev,
+          ...d,
+          collageImages:
+            Array.isArray(d.collageImages) && d.collageImages.length > 0
+              ? (d.collageImages as HeroConfig["collageImages"])
+              : prev.collageImages,
+        }));
+      })
+      .catch(() => {});
   }, []);
-
-  if (!config) {
-    return (
-      <section
-        className="min-h-screen md:min-h-[calc(62vw*1.12)]"
-        style={{ backgroundColor: DEFAULT_BG }}
-      />
-    );
-  }
 
   const heroImage =
     config.collageImages?.[0]?.src || "/images/hero-inicio-bricia.jpg";
