@@ -215,7 +215,8 @@ function buildOrderConfirmationHTML(order: Order): string {
               </h1>
               <p style="font-family: ${FONT_TITLE}; font-style: italic; font-size: 16px; line-height: 1.65; color: ${COLORS.muted}; margin: 0 auto; max-width: 440px;">
                 Recibimos tu pedido y ya lo estamos preparando con cariño.
-                Te avisaremos en cuanto salga rumbo a tu casa.
+                La preparación toma de 1 a 3 días hábiles, y te avisaremos
+                en cuanto salga rumbo a tu casa.
               </p>
             </td>
           </tr>

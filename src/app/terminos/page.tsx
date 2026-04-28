@@ -28,15 +28,19 @@ const terms = [
     body: "La información publicada tiene fines informativos y de inspiración culinaria. BRICIA no será responsable por daños directos o indirectos derivados del uso del sitio.",
   },
   {
-    title: "7. Cambios y devoluciones",
+    title: "7. Tiempos de preparación y envío",
+    body: "Cada pedido se prepara a mano. La preparación de tu pedido toma de 1 a 3 días hábiles antes de entregarse a la paquetería seleccionada. El tiempo total de entrega depende del servicio de envío que elijas en el checkout y se cuenta a partir del momento en que el paquete sale de nuestro taller. En temporadas altas o por motivos ajenos al servicio (clima, festivos, paquetería) los tiempos pueden variar; te avisaremos por correo si esto sucede.",
+  },
+  {
+    title: "8. Cambios y devoluciones",
     body: "Si un producto presenta defectos de fabricación, puedes solicitar cambio o devolución dentro de los 7 días naturales posteriores a la entrega. Para iniciar el proceso, es necesario compartir evidencia del defecto y datos de compra al correo briciaelizales@gmail.com.",
   },
   {
-    title: "8. Modificaciones",
+    title: "9. Modificaciones",
     body: "Podemos modificar estos términos en cualquier momento. Las actualizaciones aplican desde su publicación en esta página.",
   },
   {
-    title: "9. Contacto",
+    title: "10. Contacto",
     body: "Para dudas relacionadas con estos términos, puedes escribirnos a briciaelizales@gmail.com.",
   },
 ];
