@@ -61,6 +61,14 @@ export interface Order {
   paymentStatus?: string;
   /** Timestamp ISO when the buyer confirmation email was successfully sent. Used for idempotency. */
   confirmationEmailSentAt?: string;
+  /** Número/código de guía proporcionado por la paquetería. */
+  trackingNumber?: string;
+  /** URL de rastreo proporcionada por la paquetería. */
+  trackingUrl?: string;
+  /** Timestamp ISO en que el pedido se marcó como enviado. */
+  shippedAt?: string;
+  /** Timestamp ISO en que se envió correctamente el correo de envío. Idempotencia. */
+  shippingEmailSentAt?: string;
 }
 
 const BLOB_KEY = "bricia/orders.json";

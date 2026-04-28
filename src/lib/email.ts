@@ -461,3 +461,265 @@ export async function sendOrderConfirmationEmail(
     return { ok: false, error };
   }
 }
+
+// ─── Correo de envío ────────────────────────────────────────────────────────
+
+function buildShippingEmailHTML(order: Order): string {
+  const trackingNumber = escapeHtml(order.trackingNumber ?? "");
+  const trackingUrl = order.trackingUrl ?? "";
+  const carrier = order.shippingMethod?.name
+    ? escapeHtml(order.shippingMethod.name)
+    : "";
+  const eta = order.shippingMethod?.eta ? escapeHtml(order.shippingMethod.eta) : "";
+  const orderUrl = `${PUBLIC_BASE_URL}/pago/exito?orderId=${encodeURIComponent(order.id)}`;
+
+  return `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tu pedido va en camino · ${escapeHtml(order.id)}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="${FONT_GOOGLE_HREF}" rel="stylesheet">
+  <style type="text/css">
+    @import url("${FONT_GOOGLE_HREF}");
+  </style>
+</head>
+<body style="margin: 0; padding: 0; background-color: ${COLORS.bg}; font-family: ${FONT_BODY}; color: ${COLORS.ink};">
+  <div style="display:none; max-height:0; overflow:hidden; opacity:0; mso-hide:all;">
+    Tu pedido ${escapeHtml(order.id)} ya va en camino${carrier ? ` con ${carrier}` : ""}.
+  </div>
+
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: ${COLORS.bg}; padding: 40px 20px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width: 600px; background-color: ${COLORS.bg};">
+
+          <!-- Brand mark -->
+          <tr>
+            <td align="center" style="padding: 8px 0 40px 0;">
+              <div style="font-family: ${FONT_LOGO}; font-size: 30px; letter-spacing: 0.32em; color: ${COLORS.ink}; font-weight: 400;">
+                |BRICIA|
+              </div>
+              <div style="height: 1px; width: 40px; background: ${COLORS.accent}; margin: 14px auto 0; opacity: 0.6;"></div>
+            </td>
+          </tr>
+
+          <!-- Hero -->
+          <tr>
+            <td align="center" style="padding: 0 32px 36px;">
+              <p style="font-family: ${FONT_BODY}; font-size: 10px; letter-spacing: 0.32em; text-transform: uppercase; color: ${COLORS.accent}; margin: 0 0 16px; font-weight: 700;">
+                Tu pedido va en camino
+              </p>
+              <h1 style="font-family: ${FONT_TITLE}; font-size: 34px; line-height: 1.15; color: ${COLORS.ink}; margin: 0 0 18px; font-weight: 400;">
+                ${escapeHtml(firstName(order.customer.name))}, ya salió rumbo a tu casa.
+              </h1>
+              <p style="font-family: ${FONT_TITLE}; font-style: italic; font-size: 16px; line-height: 1.65; color: ${COLORS.muted}; margin: 0 auto; max-width: 460px;">
+                Tu pedido salió de nuestro taller${carrier ? ` con <strong style="font-style:normal; color:${COLORS.ink};">${carrier}</strong>` : ""}.
+                Te dejamos los datos de rastreo para que puedas seguirlo.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Tracking card -->
+          <tr>
+            <td style="padding: 0 12px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${COLORS.card}; border:1px solid ${COLORS.border}; border-radius:16px;">
+                <tr>
+                  <td align="center" style="padding: 32px 28px 16px;">
+                    <p style="font-family: ${FONT_BODY}; font-size: 9px; letter-spacing: 0.3em; text-transform: uppercase; color: ${COLORS.muted}; margin: 0 0 10px;">
+                      Número de guía
+                    </p>
+                    <p style="font-family: ${FONT_BODY}; font-size: 22px; letter-spacing: 0.16em; color: ${COLORS.ink}; font-weight: 600; margin: 0; word-break: break-all;">
+                      ${trackingNumber || "—"}
+                    </p>
+                    ${
+                      carrier
+                        ? `<p style="font-family: ${FONT_TITLE}; font-style: italic; font-size: 14px; color: ${COLORS.muted}; margin: 12px 0 0;">
+                            ${carrier}${eta ? ` · ${eta}` : ""}
+                          </p>`
+                        : ""
+                    }
+                  </td>
+                </tr>
+                ${
+                  trackingUrl
+                    ? `<tr>
+                        <td align="center" style="padding: 8px 28px 32px;">
+                          <a href="${trackingUrl}"
+                             style="display:inline-block; padding:14px 32px; font-family: ${FONT_BODY}; font-size:11px; letter-spacing:0.28em; text-transform:uppercase; font-weight:700; color:${COLORS.bg}; background:${COLORS.ink}; text-decoration:none; border-radius:10px;">
+                            Rastrear mi envío
+                          </a>
+                        </td>
+                      </tr>`
+                    : ""
+                }
+              </table>
+            </td>
+          </tr>
+
+          <!-- Order ref -->
+          <tr>
+            <td align="center" style="padding: 28px 32px 0;">
+              <p style="font-family: ${FONT_BODY}; font-size: 11px; color: ${COLORS.muted}; margin: 0 0 6px; letter-spacing: 0.2em; text-transform: uppercase;">
+                Folio del pedido
+              </p>
+              <p style="font-family: ${FONT_BODY}; font-size: 14px; color: ${COLORS.ink}; letter-spacing: 0.18em; margin: 0; font-weight: 600;">
+                ${escapeHtml(order.id)}
+              </p>
+            </td>
+          </tr>
+
+          <!-- Shipping address (recordatorio) -->
+          <tr>
+            <td style="padding: 28px 12px 0;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${COLORS.card}; border:1px solid ${COLORS.border}; border-radius:16px;">
+                <tr>
+                  <td style="padding: 24px 28px;">
+                    <h2 style="font-family: ${FONT_TITLE}; font-size: 18px; color: ${COLORS.ink}; margin: 0 0 14px; font-weight: 400; border-bottom: 1px solid ${COLORS.border}; padding-bottom: 12px;">
+                      Enviamos a
+                    </h2>
+                    <p style="font-family: ${FONT_BODY}; font-size: 14px; line-height: 1.7; color: ${COLORS.ink}; margin: 0;">
+                      <strong style="font-weight: 600;">${escapeHtml(order.customer.name)}</strong><br>
+                      ${escapeHtml(order.shipping.street)} ${escapeHtml(order.shipping.exterior)}${order.shipping.interior ? ` Int. ${escapeHtml(order.shipping.interior)}` : ""}<br>
+                      Col. ${escapeHtml(order.shipping.neighborhood)}<br>
+                      ${escapeHtml(order.shipping.city)}, ${escapeHtml(order.shipping.state)}, C.P. ${escapeHtml(order.shipping.zip)}<br>
+                      ${escapeHtml(order.shipping.country)}
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Secondary CTA -->
+          <tr>
+            <td align="center" style="padding: 28px 32px 8px;">
+              <a href="${orderUrl}" style="font-family: ${FONT_BODY}; font-size:11px; letter-spacing:0.22em; text-transform:uppercase; color:${COLORS.muted}; text-decoration:none;">
+                Ver detalle del pedido
+              </a>
+            </td>
+          </tr>
+
+          <!-- Closing -->
+          <tr>
+            <td align="center" style="padding: 36px 32px 8px;">
+              <div style="height: 1px; width: 40px; background: ${COLORS.accent}; margin: 0 auto 22px; opacity: 0.45;"></div>
+              <p style="font-family: ${FONT_TITLE}; font-style: italic; font-size: 15px; line-height: 1.7; color: ${COLORS.muted}; margin: 0 0 18px;">
+                Cocinar y compartir es un gesto de amor.<br>
+                Disfrútalo cuando llegue.
+              </p>
+              <p style="font-family: ${FONT_TITLE}; font-size: 14px; color: ${COLORS.ink}; margin: 0;">
+                — Bricia
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td align="center" style="padding: 32px; border-top: 1px solid ${COLORS.border}; margin-top: 24px;">
+              <p style="font-family: ${FONT_BODY}; font-size: 11px; color: ${COLORS.muted}; margin: 0 0 8px;">
+                Pedido enviado el ${formatDate(order.shippedAt ?? new Date().toISOString())}
+              </p>
+              <p style="font-family: ${FONT_BODY}; font-size: 11px; color: ${COLORS.muted}; margin: 0;">
+                ¿Alguna pregunta? Escríbenos a
+                <a href="mailto:${SUPPORT_EMAIL}" style="color: ${COLORS.accent}; text-decoration: none;">${SUPPORT_EMAIL}</a>
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
+function buildShippingEmailText(order: Order): string {
+  const lines: string[] = [];
+  lines.push(`Bricia · Tu pedido va en camino`);
+  lines.push(`Folio: ${order.id}`);
+  lines.push("");
+  lines.push(
+    `Hola ${firstName(order.customer.name)}, tu pedido salió de nuestro taller${
+      order.shippingMethod?.name ? ` con ${order.shippingMethod.name}` : ""
+    }.`
+  );
+  lines.push("");
+  if (order.trackingNumber) lines.push(`Número de guía: ${order.trackingNumber}`);
+  if (order.trackingUrl) lines.push(`Rastrea tu envío: ${order.trackingUrl}`);
+  if (order.shippingMethod?.eta) lines.push(`Tiempo estimado: ${order.shippingMethod.eta}`);
+  lines.push("");
+  lines.push("Enviamos a:");
+  lines.push(order.customer.name);
+  const interior = order.shipping.interior ? ` Int. ${order.shipping.interior}` : "";
+  lines.push(`${order.shipping.street} ${order.shipping.exterior}${interior}`);
+  lines.push(`Col. ${order.shipping.neighborhood}`);
+  lines.push(
+    `${order.shipping.city}, ${order.shipping.state}, C.P. ${order.shipping.zip}`
+  );
+  lines.push(order.shipping.country);
+  lines.push("");
+  lines.push("Disfrútalo cuando llegue. — Bricia");
+  return lines.join("\n");
+}
+
+export async function sendShippingNotificationEmail(
+  order: Order
+): Promise<SendEmailResult> {
+  if (!RESEND_API_KEY) {
+    const error = "RESEND_API_KEY no está configurado en el servidor.";
+    console.warn("[email]", error);
+    return { ok: false, error };
+  }
+
+  if (!order.customer?.email) {
+    const error = "La orden no tiene email de cliente.";
+    console.warn("[email]", error);
+    return { ok: false, error };
+  }
+
+  if (!order.trackingNumber) {
+    const error = "La orden no tiene número de guía.";
+    console.warn("[email]", error);
+    return { ok: false, error };
+  }
+
+  try {
+    const resend = new Resend(RESEND_API_KEY);
+    const html = buildShippingEmailHTML(order);
+    const text = buildShippingEmailText(order);
+
+    const result = await resend.emails.send({
+      from: EMAIL_FROM,
+      to: order.customer.email,
+      ...(EMAIL_BCC ? { bcc: EMAIL_BCC } : {}),
+      subject: `Tu pedido va en camino · ${order.id}`,
+      html,
+      text,
+      replyTo: SUPPORT_EMAIL,
+      headers: {
+        "X-Entity-Ref-ID": order.id,
+      },
+      tags: [
+        { name: "type", value: "order-shipping" },
+        { name: "order_id", value: order.id },
+      ],
+    });
+
+    const apiError = (result as { error?: unknown }).error;
+    if (apiError) {
+      const error = summarizeError(apiError);
+      console.error("[email] Resend error (shipping):", apiError);
+      return { ok: false, error };
+    }
+
+    return { ok: true };
+  } catch (err) {
+    const error = summarizeError(err);
+    console.error("[email] excepción al enviar (shipping):", err);
+    return { ok: false, error };
+  }
+}
