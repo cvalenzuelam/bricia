@@ -154,7 +154,7 @@ export function searchSite(
 
     hits.push({
       kind: "product",
-      href: `/productos#product-${p.id}`,
+      href: `/productos/${p.id}`,
       title: p.name,
       subtitle: p.subtitle?.trim() || p.category,
       image: p.image,
@@ -194,7 +194,7 @@ export function mixedSuggestions(
   });
   const productHit = (x: Product): SiteSearchHit => ({
     kind: "product",
-    href: `/productos#product-${x.id}`,
+    href: `/productos/${x.id}`,
     title: x.name,
     subtitle: x.subtitle?.trim() || x.category,
     image: x.image,

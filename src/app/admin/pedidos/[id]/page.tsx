@@ -7,6 +7,7 @@ import Image from "next/image";
 import { ArrowLeft, Loader2, Package, MapPin, User, Mail, Phone, CreditCard, Send, CheckCircle2, Trash2, Truck, ExternalLink, Pencil } from "lucide-react";
 import type { Order, OrderStatus } from "@/data/orders";
 import { formatPrice } from "@/data/products";
+import AdminCmsLoading from "@/components/admin/AdminCmsLoading";
 
 const STATUS_LABEL: Record<OrderStatus, string> = {
   pending: "Pendiente",
@@ -259,11 +260,7 @@ export default function AdminPedidoDetailPage({
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-brand-secondary flex items-center justify-center">
-        <Loader2 size={28} className="animate-spin text-brand-muted" />
-      </div>
-    );
+    return <AdminCmsLoading message="Cargando pedido desde el CMS…" />;
   }
 
   if (notFound || !order) {

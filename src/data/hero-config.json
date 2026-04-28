@@ -1,4 +1,10 @@
 {
+  "landingRecipeSlugs": [
+    "tiradito-atun-salsa-serrano",
+    "ensalada-primavera-fresas",
+    "gazpacho-verano-fresco",
+    "volcan-chocolate-decadente"
+  ],
   "title": "Historias que nacen en la cocina",
   "titleColor": "#5C3D2E",
   "titleFont": "serif",

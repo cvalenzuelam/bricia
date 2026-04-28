@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { uploadCmsImageFile } from "@/lib/cms-upload-image";
 import { ArrowLeft, Upload, Plus, X, Loader2, Save, Video } from "lucide-react";
+import AdminCmsLoading from "@/components/admin/AdminCmsLoading";
 
 const CATEGORIES = ["PRIMAVERA", "VERANO", "OTOÑO", "INVIERNO", "POSTRES"];
 const REQUEST_TIMEOUT_MS = 20000;
@@ -302,11 +303,7 @@ export default function EditRecipePage({ params }: EditPageProps) {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-brand-secondary flex items-center justify-center">
-        <Loader2 size={32} className="animate-spin text-brand-accent" />
-      </div>
-    );
+    return <AdminCmsLoading message="Cargando receta desde el CMS…" />;
   }
 
   return (

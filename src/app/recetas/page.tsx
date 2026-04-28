@@ -22,7 +22,7 @@ export default function RecetasPage() {
       </div>
 
       {/* Full Filterable Grid */}
-      <RecipeGrid />
+      <RecipeGrid variant="full" />
 
       {/* Back link */}
       <div className="text-center mt-20 md:mt-32">

@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { uploadCmsImageFile } from "@/lib/cms-upload-image";
 import { ArrowLeft, Upload, Plus, X, Loader2, Video } from "lucide-react";
+import AdminCmsLoading from "@/components/admin/AdminCmsLoading";
 
 const CATEGORIES = ["PRIMAVERA", "VERANO", "OTOÑO", "INVIERNO", "POSTRES"];
 
@@ -28,6 +29,7 @@ export default function NuevaRecetaPage() {
   const [uploadedImagePath, setUploadedImagePath] = useState("");
   const [gallery, setGallery] = useState<string[]>([]);
   const pendingMainUploadRef = useRef<Promise<string | null> | null>(null);
+  const [authReady, setAuthReady] = useState(false);
 
   const [form, setForm] = useState({
     title: "",
@@ -57,7 +59,11 @@ export default function NuevaRecetaPage() {
   // Auth check
   useEffect(() => {
     const session = sessionStorage.getItem("bricia_admin");
-    if (session !== "true") router.push("/admin");
+    if (session !== "true") {
+      router.push("/admin");
+      return;
+    }
+    setAuthReady(true);
   }, [router]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -170,6 +176,10 @@ export default function NuevaRecetaPage() {
     copy[i] = val;
     setSteps(copy);
   };
+
+  if (!authReady) {
+    return <AdminCmsLoading message="Verificando sesión…" submessage="" />;
+  }
 
   return (
     <div className="min-h-screen bg-brand-secondary pt-20">

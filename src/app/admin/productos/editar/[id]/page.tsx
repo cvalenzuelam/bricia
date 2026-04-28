@@ -7,6 +7,7 @@ import Link from "next/link";
 import { uploadCmsImageFile } from "@/lib/cms-upload-image";
 import { ArrowLeft, Save, Upload, Loader2 } from "lucide-react";
 import type { Product } from "@/data/products";
+import AdminCmsLoading from "@/components/admin/AdminCmsLoading";
 
 const DEFAULT_CATEGORIES = ["COCINA", "MESA", "DESPENSA"] as const;
 const REQUEST_TIMEOUT_MS = 20000;
@@ -68,6 +69,7 @@ export default function EditarProductoPage({
   const [publishing, setPublishing] = useState(false);
   const [publishMessage, setPublishMessage] = useState("");
   const [notFound, setNotFound] = useState(false);
+  const [loadingProduct, setLoadingProduct] = useState(true);
 
   const [form, setForm] = useState({
     name: "",
@@ -82,7 +84,9 @@ export default function EditarProductoPage({
   useEffect(() => {
     const session = sessionStorage.getItem("bricia_admin");
     if (session !== "true") { router.push("/admin"); return; }
-    loadProduct();
+    setNotFound(false);
+    setLoadingProduct(true);
+    void loadProduct();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
@@ -102,6 +106,8 @@ export default function EditarProductoPage({
       });
     } catch {
       setNotFound(true);
+    } finally {
+      setLoadingProduct(false);
     }
   };
 
@@ -167,6 +173,10 @@ export default function EditarProductoPage({
       alert(err instanceof Error ? err.message : "Error al guardar el producto");
     }
   };
+
+  if (loadingProduct) {
+    return <AdminCmsLoading message="Cargando producto desde el CMS…" />;
+  }
 
   if (notFound) {
     return (

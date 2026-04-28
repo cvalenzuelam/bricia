@@ -7,6 +7,7 @@ import Link from "next/link";
 import { uploadCmsImageFile } from "@/lib/cms-upload-image";
 import { ArrowLeft, Plus, X, Loader2, Upload, AlignLeft, Quote, ImageIcon } from "lucide-react";
 import type { ContentBlock } from "@/data/lamesa";
+import AdminCmsLoading from "@/components/admin/AdminCmsLoading";
 
 const ARTICLE_TYPES = ["MESA", "ILUMINACIÓN", "HOSTING", "ESTÉTICA"] as const;
 const REQUEST_TIMEOUT_MS = 20000;
@@ -96,6 +97,7 @@ export default function NuevaMesaPage() {
   const [blocks, setBlocks] = useState<BlockWithId[]>([
     { _id: mkId(), type: "paragraph", text: "" },
   ]);
+  const [authReady, setAuthReady] = useState(false);
 
   useEffect(() => {
     if (!saving && !uploading && !publishing) return;
@@ -109,7 +111,11 @@ export default function NuevaMesaPage() {
 
   useEffect(() => {
     const session = sessionStorage.getItem("bricia_admin");
-    if (session !== "true") router.push("/admin");
+    if (session !== "true") {
+      router.push("/admin");
+      return;
+    }
+    setAuthReady(true);
   }, [router]);
 
   const getFolder = () => {
@@ -212,6 +218,10 @@ export default function NuevaMesaPage() {
       setSaving(false);
     }
   };
+
+  if (!authReady) {
+    return <AdminCmsLoading message="Verificando sesión…" submessage="" />;
+  }
 
   return (
     <div className="min-h-screen bg-brand-secondary pt-20">

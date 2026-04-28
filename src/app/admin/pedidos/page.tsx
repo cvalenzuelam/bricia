@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ArrowLeft, Loader2, Package, Search, Trash2 } from "lucide-react";
 import type { Order, OrderStatus } from "@/data/orders";
 import { formatPrice } from "@/data/products";
+import AdminCmsLoading from "@/components/admin/AdminCmsLoading";
 
 const STATUS_LABEL: Record<OrderStatus, string> = {
   pending: "Pendiente",
@@ -39,6 +40,7 @@ export default function AdminPedidosPage() {
   const router = useRouter();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [initialListReady, setInitialListReady] = useState(false);
   const [filter, setFilter] = useState<OrderStatus | "all">("all");
   const [search, setSearch] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -57,6 +59,7 @@ export default function AdminPedidosPage() {
       if (Array.isArray(data)) setOrders(data);
     } finally {
       setLoading(false);
+      setInitialListReady(true);
     }
   };
 
@@ -108,6 +111,10 @@ export default function AdminPedidosPage() {
       setDeletingId(null);
     }
   };
+
+  if (!initialListReady) {
+    return <AdminCmsLoading message="Cargando pedidos desde el CMS…" />;
+  }
 
   return (
     <div className="min-h-screen bg-brand-secondary pt-20">

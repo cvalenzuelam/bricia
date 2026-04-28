@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeft, Plus, Edit3, Trash2, Loader2, LayoutList } from "lucide-react";
+import AdminCmsLoading from "@/components/admin/AdminCmsLoading";
 
 interface ArticleItem {
   slug: string;
@@ -26,6 +27,8 @@ export default function AdminMesaPage() {
   const router = useRouter();
   const [articles, setArticles] = useState<ArticleItem[]>([]);
   const [loading, setLoading] = useState(true);
+  /** Evita mostrar conteos/lista hasta la primera respuesta del CMS */
+  const [initialListReady, setInitialListReady] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
 
   useEffect(() => {
@@ -42,6 +45,7 @@ export default function AdminMesaPage() {
       if (Array.isArray(data)) setArticles(data);
     } finally {
       setLoading(false);
+      setInitialListReady(true);
     }
   };
 
@@ -52,6 +56,10 @@ export default function AdminMesaPage() {
     await fetchArticles();
     setDeleting(null);
   };
+
+  if (!initialListReady) {
+    return <AdminCmsLoading message="Cargando La Mesa desde el CMS…" />;
+  }
 
   return (
     <div className="min-h-screen bg-brand-secondary pt-20">

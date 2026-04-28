@@ -7,6 +7,7 @@ import Link from "next/link";
 import { uploadCmsImageFile } from "@/lib/cms-upload-image";
 import { ArrowLeft, Save, Upload, Loader2, AlignLeft, Quote, ImageIcon, X } from "lucide-react";
 import type { ContentBlock, MesaArticle } from "@/data/lamesa";
+import AdminCmsLoading from "@/components/admin/AdminCmsLoading";
 
 const ARTICLE_TYPES = ["MESA", "ILUMINACIÓN", "HOSTING", "ESTÉTICA"] as const;
 const REQUEST_TIMEOUT_MS = 20000;
@@ -240,11 +241,7 @@ export default function EditarMesaPage({ params }: EditPageProps) {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-brand-secondary flex items-center justify-center">
-        <Loader2 size={24} className="animate-spin text-brand-muted" />
-      </div>
-    );
+    return <AdminCmsLoading message="Cargando artículo desde el CMS…" />;
   }
 
   return (

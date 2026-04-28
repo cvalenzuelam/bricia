@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import RecipeCard from "./RecipeCard";
 
@@ -11,52 +11,129 @@ interface Recipe {
   image: string;
 }
 
-const CATEGORIES = ["TODAS", "PRIMAVERA", "VERANO", "OTOÑO", "INVIERNO", "POSTRES"];
+const SEASON_CATEGORIES = ["PRIMAVERA", "VERANO", "OTOÑO", "INVIERNO", "POSTRES"] as const;
+const FILTER_ORDER = [...SEASON_CATEGORIES, "TODAS"] as const;
+type SeasonOrAll = (typeof FILTER_ORDER)[number];
 
-export default function RecipeGrid() {
+type ViewMode = "featured" | SeasonOrAll;
+
+function pickLandingFeatured(all: Recipe[], slugs: string[]): Recipe[] {
+  if (slugs.length === 0) {
+    return all.length > 0 ? all.slice(0, 4) : [];
+  }
+  const bySlug = new Map(all.map((r) => [r.slug, r]));
+  const ordered: Recipe[] = [];
+  const seen = new Set<string>();
+  for (const raw of slugs) {
+    const s = typeof raw === "string" ? raw.trim() : "";
+    if (!s || seen.has(s)) continue;
+    const r = bySlug.get(s);
+    if (r) {
+      ordered.push(r);
+      seen.add(s);
+    }
+  }
+  if (ordered.length === 0 && all.length > 0) {
+    return all.slice(0, 4);
+  }
+  return ordered;
+}
+
+function filterByCategory(all: Recipe[], key: SeasonOrAll): Recipe[] {
+  if (key === "TODAS") return all;
+  return all.filter((r) => r.category.toUpperCase() === key);
+}
+
+export type RecipeGridProps = {
+  /**
+   * `landing`: grid por defecto = recetas del hero (sin pestaña “populares”).
+   * `full`: índice /recetas; por defecto “Todas”.
+   */
+  variant?: "landing" | "full";
+};
+
+export default function RecipeGrid({ variant = "landing" }: RecipeGridProps) {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
-  const [activeCategory, setActiveCategory] = useState("TODAS");
+  const [landingSlugs, setLandingSlugs] = useState<string[]>([]);
+  const [viewMode, setViewMode] = useState<ViewMode>(() =>
+    variant === "full" ? "TODAS" : "featured"
+  );
 
   useEffect(() => {
-    fetch("/api/recipes", { cache: "no-store" })
-      .then((res) => res.json())
-      .then(setRecipes);
+    let cancelled = false;
+    Promise.all([
+      fetch("/api/recipes", { cache: "no-store" }).then((r) => r.json()),
+      fetch("/api/hero", { cache: "no-store" }).then((r) => r.json()),
+    ])
+      .then(([recipesData, heroData]) => {
+        if (cancelled) return;
+        if (Array.isArray(recipesData)) setRecipes(recipesData);
+        const slugs = heroData?.landingRecipeSlugs;
+        if (Array.isArray(slugs)) {
+          setLandingSlugs(
+            slugs.filter((x: unknown): x is string => typeof x === "string" && x.trim().length > 0)
+          );
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  const filteredRecipes = activeCategory === "TODAS" 
-    ? recipes 
-    : recipes.filter(r => r.category.toUpperCase() === activeCategory);
+  const filteredRecipes = useMemo(() => {
+    if (viewMode === "featured") {
+      return pickLandingFeatured(recipes, landingSlugs);
+    }
+    return filterByCategory(recipes, viewMode);
+  }, [recipes, landingSlugs, viewMode]);
+
+  const showFeaturedReset = variant === "landing" && viewMode !== "featured";
 
   return (
     <div className="max-w-7xl mx-auto px-6 space-y-16">
-      {/* Dynamic Filter Bar - Improved for mobile display */}
-      <div className="flex justify-start md:justify-center">
-        <div className="flex flex-nowrap items-center gap-6 md:gap-12 overflow-x-auto no-scrollbar pb-4 -mb-4 px-4 w-full md:w-auto scroll-smooth">
-          {CATEGORIES.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setActiveCategory(cat)}
-              className={`group relative py-2 shrink-0 ${cat === "TODAS" ? "hidden md:block" : ""}`}
-            >
-              <span className={`text-[9px] md:text-sm font-sans font-bold tracking-[0.1em] md:tracking-[0.2em] uppercase transition-colors duration-300 ${
-                activeCategory === cat ? "text-brand-accent" : "text-brand-muted hover:text-brand-primary"
-              }`}>
-                {cat}
-              </span>
-              {activeCategory === cat && (
-                <motion.div
-                  layoutId="activeFilter"
-                  className="absolute -bottom-1 left-0 right-0 h-px bg-brand-accent"
-                  transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                />
-              )}
-            </button>
-          ))}
+      <div className="flex flex-col items-center gap-4">
+        <div className="flex justify-start md:justify-center w-full">
+          <div className="flex flex-nowrap items-center gap-6 md:gap-12 overflow-x-auto no-scrollbar pb-4 -mb-4 px-4 w-full md:w-auto scroll-smooth">
+            {FILTER_ORDER.map((key) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setViewMode(key)}
+                className="group relative py-2 shrink-0"
+              >
+                <span
+                  className={`text-[9px] md:text-sm font-sans font-bold tracking-[0.1em] md:tracking-[0.2em] uppercase transition-colors duration-300 ${
+                    viewMode === key
+                      ? "text-brand-accent"
+                      : "text-brand-muted hover:text-brand-primary"
+                  }`}
+                >
+                  {key}
+                </span>
+                {viewMode === key && (
+                  <motion.div
+                    layoutId="activeFilter"
+                    className="absolute -bottom-1 left-0 right-0 h-px bg-brand-accent"
+                    transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                  />
+                )}
+              </button>
+            ))}
+          </div>
         </div>
+        {showFeaturedReset && (
+          <button
+            type="button"
+            onClick={() => setViewMode("featured")}
+            className="text-[10px] font-sans font-bold tracking-[0.22em] uppercase text-brand-muted hover:text-brand-accent transition-colors"
+          >
+            ← Ver las destacadas del inicio
+          </button>
+        )}
       </div>
 
-      {/* Grid with Grid Animation */}
-      <motion.div 
+      <motion.div
         layout
         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-16"
       >
@@ -80,10 +157,12 @@ export default function RecipeGrid() {
           ))}
         </AnimatePresence>
       </motion.div>
-      
+
       {filteredRecipes.length === 0 && (
         <div className="py-20 text-center">
-            <p className="text-brand-muted font-sans italic">Próximamente más sabores de esta temporada...</p>
+          <p className="text-brand-muted font-sans italic">
+            Próximamente más sabores de esta temporada...
+          </p>
         </div>
       )}
     </div>

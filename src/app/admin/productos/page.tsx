@@ -7,6 +7,7 @@ import Image from "next/image";
 import { ArrowLeft, Plus, Edit3, Trash2, Loader2, ShoppingBag } from "lucide-react";
 import { formatPrice } from "@/data/products";
 import type { Product } from "@/data/products";
+import AdminCmsLoading from "@/components/admin/AdminCmsLoading";
 
 const CATEGORY_COLORS: Record<string, string> = {
   COCINA: "#A89F91",
@@ -18,6 +19,7 @@ export default function AdminProductosPage() {
   const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [initialListReady, setInitialListReady] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
 
   useEffect(() => {
@@ -34,6 +36,7 @@ export default function AdminProductosPage() {
       if (Array.isArray(data)) setProducts(data);
     } finally {
       setLoading(false);
+      setInitialListReady(true);
     }
   };
 
@@ -44,6 +47,10 @@ export default function AdminProductosPage() {
     await fetchProducts();
     setDeleting(null);
   };
+
+  if (!initialListReady) {
+    return <AdminCmsLoading message="Cargando productos desde el CMS…" />;
+  }
 
   return (
     <div className="min-h-screen bg-brand-secondary pt-20">

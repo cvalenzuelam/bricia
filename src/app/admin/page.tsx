@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Plus, Edit3, Trash2, Lock, ChefHat, LayoutList, ShoppingBag, Package, Mail, Home, Loader2 } from "lucide-react";
+import { Plus, Edit3, Trash2, Lock, ChefHat, LayoutList, ShoppingBag, Package, Mail, Home } from "lucide-react";
+import AdminCmsLoading from "@/components/admin/AdminCmsLoading";
 
 interface Recipe {
   slug: string;
@@ -22,6 +23,8 @@ export default function AdminPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [recipes, setRecipes] = useState<Recipe[]>([]);
+  /** Primera carga desde /api/recipes tras autenticar; evita mostrar “0 recetas” o listas vacías previas al CMS */
+  const [recipesHydrated, setRecipesHydrated] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
 
   useEffect(() => {
@@ -31,10 +34,24 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (!authChecked || !authenticated) return;
+    setRecipesHydrated(false);
+    let cancelled = false;
     fetch("/api/recipes", { cache: "no-store" })
       .then((res) => res.json())
-      .then((data) => setRecipes(data))
-      .catch(() => {});
+      .then((data) => {
+        if (cancelled) return;
+        if (Array.isArray(data)) setRecipes(data);
+        else setRecipes([]);
+      })
+      .catch(() => {
+        if (!cancelled) setRecipes([]);
+      })
+      .finally(() => {
+        if (!cancelled) setRecipesHydrated(true);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [authChecked, authenticated]);
 
   const handleLogin = (e: React.FormEvent) => {
@@ -54,19 +71,16 @@ export default function AdminPage() {
     await fetch(`/api/recipes/${slug}`, { method: "DELETE" });
     const res = await fetch("/api/recipes", { cache: "no-store" });
     const data = await res.json();
-    setRecipes(data);
+    setRecipes(Array.isArray(data) ? data : []);
     setDeleting(null);
   };
 
   if (!authChecked) {
-    return (
-      <div className="min-h-screen bg-brand-secondary flex items-center justify-center px-6">
-        <div className="flex flex-col items-center gap-3 text-brand-muted">
-          <Loader2 className="animate-spin" size={24} />
-          <p className="text-xs font-sans">Cargando panel…</p>
-        </div>
-      </div>
-    );
+    return <AdminCmsLoading message="Cargando panel…" submessage="" />;
+  }
+
+  if (authenticated && !recipesHydrated) {
+    return <AdminCmsLoading message="Cargando recetas desde el CMS…" />;
   }
 
   // Login screen

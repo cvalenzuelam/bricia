@@ -2,13 +2,9 @@ import Hero from "@/components/Hero";
 import FeaturedRecipe from "@/components/FeaturedRecipe";
 import RecipeGrid from "@/components/RecipeGrid";
 import ProductSection from "@/components/ProductSection";
-import MesaSection from "@/components/MesaSection";
 import InstagramFeed from "@/components/InstagramFeed";
-import { getMesaArticles } from "@/data/lamesa";
 
-export default async function Home() {
-  const mesaArticles = await getMesaArticles();
-
+export default function Home() {
   return (
     <main className="min-h-screen overflow-x-hidden bg-brand-secondary">
       {/* 1. Hero: Wix-style split with bio + photo mosaic */}
@@ -33,13 +29,10 @@ export default async function Home() {
         <RecipeGrid />
       </section>
 
-      {/* 4. Mesa Section */}
-      <MesaSection articles={mesaArticles} />
-
-      {/* 5. Products */}
+      {/* 4. Products (La Tienda) */}
       <ProductSection />
 
-      {/* 6. Final Quote */}
+      {/* 5. Final Quote */}
       <section className="py-16 md:py-32 px-6 bg-brand-secondary text-center">
         <div className="max-w-3xl mx-auto space-y-8">
           <div className="text-6xl text-brand-accent/20 font-serif">"</div>
@@ -55,7 +48,7 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* 7. Instagram Feed */}
+      {/* 6. Instagram Feed */}
       <InstagramFeed />
     </main>
   );

@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { uploadCmsImageFile } from "@/lib/cms-upload-image";
 import { ArrowLeft, Save, Upload, Loader2, Eye } from "lucide-react";
+import AdminCmsLoading from "@/components/admin/AdminCmsLoading";
 
 const FONT_OPTIONS = [
   { value: "serif", label: "Playfair Display (Serif)" },
@@ -94,7 +95,18 @@ interface HeroConfig {
   products: ProductItem[];
   backgroundColor: string;
   featuredSection: FeaturedSectionConfig;
+  /** Slugs de recetas en orden: grid inicial del landing (sin filtro). */
+  landingRecipeSlugs: string[];
 }
+
+const DEFAULT_LANDING_RECIPE_SLUGS = [
+  "tiradito-atun-salsa-serrano",
+  "ensalada-primavera-fresas",
+  "gazpacho-verano-fresco",
+  "volcan-chocolate-decadente",
+] as const;
+
+const LANDING_RECIPE_SLOTS = 4;
 
 export default function AdminInicioPage() {
   const router = useRouter();
@@ -103,12 +115,13 @@ export default function AdminInicioPage() {
   const [publishing, setPublishing] = useState(false);
   const [publishMessage, setPublishMessage] = useState("");
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [saved, setSaved] = useState(false);
   const landingInputRef = useRef<HTMLInputElement | null>(null);
   const featuredInputRef = useRef<HTMLInputElement | null>(null);
   const igInputRefs = useRef<Record<number, HTMLInputElement | null>>({});
   const productInputRefs = useRef<Record<number, HTMLInputElement | null>>({});
-
+  const [cmsRecipes, setCmsRecipes] = useState<{ slug: string; title: string }[]>([]);
   const [config, setConfig] = useState<HeroConfig>({
     title: "",
     titleColor: "#5C3D2E",
@@ -125,15 +138,21 @@ export default function AdminInicioPage() {
     products: [],
     backgroundColor: "#FAF9F4",
     featuredSection: { ...DEFAULT_FEATURED_SECTION },
+    landingRecipeSlugs: [...DEFAULT_LANDING_RECIPE_SLUGS],
   });
 
-  useEffect(() => {
+  const loadHero = useCallback(() => {
     const session = sessionStorage.getItem("bricia_admin");
-    if (session !== "true") { router.push("/admin"); return; }
-
-    fetch("/api/hero")
-      .then((res) => res.json())
-      .then((data) => {
+    if (session !== "true") {
+      router.push("/admin");
+      return;
+    }
+    setLoading(true);
+    setLoadError(false);
+    fetch("/api/hero", { cache: "no-store" })
+      .then(async (res) => {
+        if (!res.ok) throw new Error("fetch");
+        const data = await res.json();
         setConfig({
           ...data,
           featuredSection: {
@@ -142,11 +161,57 @@ export default function AdminInicioPage() {
               ? data.featuredSection
               : {}),
           },
+          landingRecipeSlugs: Array.isArray(data.landingRecipeSlugs)
+            ? (data.landingRecipeSlugs as unknown[])
+                .filter((x): x is string => typeof x === "string" && x.trim().length > 0)
+                .map((s) => s.trim())
+            : [...DEFAULT_LANDING_RECIPE_SLUGS],
         });
-        setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch(() => setLoadError(true))
+      .finally(() => setLoading(false));
   }, [router]);
+
+  useEffect(() => {
+    loadHero();
+  }, [loadHero]);
+
+  useEffect(() => {
+    fetch("/api/recipes", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((data: unknown) => {
+        if (!Array.isArray(data)) return;
+        const list = data
+          .map((item: unknown) => {
+            if (!item || typeof item !== "object") return null;
+            const o = item as Record<string, unknown>;
+            const slug = typeof o.slug === "string" ? o.slug : "";
+            const title = typeof o.title === "string" ? o.title : slug;
+            if (!slug) return null;
+            return { slug, title };
+          })
+          .filter((x): x is { slug: string; title: string } => x !== null);
+        list.sort((a, b) => a.title.localeCompare(b.title, "es"));
+        setCmsRecipes(list);
+      })
+      .catch(() => {});
+  }, []);
+
+  const landingRecipeRow = useMemo(() => {
+    const base = [...(config.landingRecipeSlugs ?? [])];
+    const row = [...base];
+    while (row.length < LANDING_RECIPE_SLOTS) row.push("");
+    return row.slice(0, LANDING_RECIPE_SLOTS);
+  }, [config.landingRecipeSlugs]);
+
+  const setLandingSlot = (index: number, slug: string) => {
+    const row = [...landingRecipeRow];
+    row[index] = slug;
+    setConfig({
+      ...config,
+      landingRecipeSlugs: row.filter((s) => typeof s === "string" && s.trim().length > 0),
+    });
+  };
 
   useEffect(() => {
     if (!saving && !uploading && !publishing) return;
@@ -384,9 +449,25 @@ export default function AdminInicioPage() {
   const landingImage = config.collageImages?.[0] || { src: "", alt: "Foto principal de landing" };
 
   if (loading) {
+    return <AdminCmsLoading message="Cargando inicio desde el CMS…" />;
+  }
+
+  if (loadError) {
     return (
-      <div className="min-h-screen bg-brand-secondary flex items-center justify-center">
-        <Loader2 size={32} className="animate-spin text-brand-accent" />
+      <div className="min-h-screen bg-brand-secondary flex flex-col items-center justify-center gap-4 px-6 pt-20">
+        <p className="text-sm font-sans text-brand-primary text-center max-w-md">
+          No se pudo cargar la configuración del inicio. Revisa la conexión o inténtalo de nuevo.
+        </p>
+        <button
+          type="button"
+          onClick={() => loadHero()}
+          className="bg-brand-primary text-brand-secondary px-6 py-3 rounded-lg text-xs font-sans font-bold tracking-[0.15em] uppercase hover:bg-brand-accent transition-colors"
+        >
+          Reintentar
+        </button>
+        <Link href="/admin" className="text-xs font-sans text-brand-muted hover:text-brand-accent transition-colors">
+          ← Volver al panel
+        </Link>
       </div>
     );
   }
@@ -746,6 +827,45 @@ export default function AdminInicioPage() {
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* ─── RECETAS DESTACADAS (grid inicial del landing) ─── */}
+          <div className="bg-white rounded-2xl p-8 border border-brand-primary/5 space-y-6">
+            <div className="border-b border-brand-primary/5 pb-4">
+              <h2 className="text-lg font-serif text-brand-primary">
+                🍽️ Recetas del inicio (antes de filtrar)
+              </h2>
+              <p className="text-xs font-sans text-brand-muted mt-1 max-w-2xl">
+                Estas recetas son las que ves en la sección &quot;Recetas de Temporada&quot; del home cuando aún no eliges Primavera, Verano, etc.
+                El orden aquí es el orden en la fila. Deja &quot;Ninguna&quot; en un hueco si quieres menos de cuatro.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {landingRecipeRow.map((slug, i) => (
+                <div key={`landing-recipe-${i}`} className="space-y-1.5">
+                  <label className="text-[10px] font-sans font-bold tracking-[0.2em] uppercase text-brand-muted">
+                    Posición {i + 1}
+                  </label>
+                  <select
+                    value={slug}
+                    onChange={(e) => setLandingSlot(i, e.target.value)}
+                    className="w-full px-3 py-2.5 border border-brand-primary/10 rounded-lg bg-brand-secondary text-brand-primary text-sm font-sans focus:outline-none focus:border-brand-accent"
+                  >
+                    <option value="">— Ninguna —</option>
+                    {cmsRecipes.map((r) => (
+                      <option key={r.slug} value={r.slug}>
+                        {r.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ))}
+            </div>
+            {cmsRecipes.length === 0 && (
+              <p className="text-xs font-sans text-brand-muted italic">
+                Cargando listado de recetas… Si no aparece nada, asegúrate de tener recetas publicadas.
+              </p>
+            )}
           </div>
 
           {/* ─── FOTOS DE INSTAGRAM ───────────────── */}

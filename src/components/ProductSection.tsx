@@ -27,14 +27,14 @@ export default function ProductSection() {
   if (products.length === 0) return null;
 
   return (
-    <section className="bg-brand-secondary py-32 px-6 border-t border-brand-primary/5">
+    <section className="bg-brand-primary text-brand-secondary py-32 px-6 border-t border-white/10">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-20 space-y-4">
-          <span className="editorial-spacing text-brand-accent">LA TIENDA</span>
-          <h2 className="text-4xl md:text-6xl font-serif text-brand-primary tracking-tight">
+          <span className="editorial-spacing text-[#C2A878]">LA TIENDA</span>
+          <h2 className="text-4xl md:text-6xl font-serif text-brand-secondary tracking-tight">
             Objetos con Alma
             <br />
-            <span className="italic text-brand-accent">para Tu Mesa</span>
+            <span className="italic text-[#C2A878]">para Tu Mesa</span>
           </h2>
         </div>
 
@@ -48,7 +48,7 @@ export default function ProductSection() {
                 transition={{ delay: i * 0.15 }}
                 className="group cursor-pointer space-y-5"
               >
-                <div className="relative aspect-[4/5] rounded-xl overflow-hidden bg-white border border-brand-primary/5">
+                <div className="relative aspect-[4/5] rounded-xl overflow-hidden bg-white/5 border border-white/10">
                   <Image
                     src={product.image}
                     alt={product.name}
@@ -58,8 +58,10 @@ export default function ProductSection() {
                   />
                 </div>
                 <div className="text-center space-y-1.5">
-                  <h4 className="text-lg font-serif text-brand-primary">{product.name}</h4>
-                  <p className="text-xs font-sans text-brand-muted tracking-widest">{product.price}</p>
+                  <h4 className="text-lg font-serif text-brand-secondary group-hover:text-[#C2A878] transition-colors duration-300">
+                    {product.name}
+                  </h4>
+                  <p className="text-xs font-sans text-white/45 tracking-widest">{product.price}</p>
                 </div>
               </motion.div>
             );

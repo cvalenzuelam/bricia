@@ -1,11 +1,12 @@
 ﻿"use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Eye, Loader2, Save, Upload } from "lucide-react";
 import { uploadCmsImageFile } from "@/lib/cms-upload-image";
+import AdminCmsLoading from "@/components/admin/AdminCmsLoading";
 
 type SocialIcon = "instagram" | "tiktok" | "youtube";
 
@@ -94,21 +95,23 @@ export default function AdminContactoPage() {
   const router = useRouter();
   const [config, setConfig] = useState<ContactConfig>(DEFAULT_CONFIG);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  useEffect(() => {
+  const loadContact = useCallback(() => {
     const session = sessionStorage.getItem("bricia_admin");
     if (session !== "true") {
       router.push("/admin");
-      setLoading(false);
       return;
     }
-
+    setLoading(true);
+    setLoadError(false);
     fetch("/api/contact", { cache: "no-store" })
-      .then((res) => res.json())
-      .then((data) => {
+      .then(async (res) => {
+        if (!res.ok) throw new Error("fetch");
+        const data = await res.json();
         if (data && typeof data === "object") {
           setConfig({
             hero: { ...DEFAULT_CONFIG.hero, ...(data.hero ?? {}) },
@@ -117,9 +120,13 @@ export default function AdminContactoPage() {
           });
         }
       })
-      .catch(() => {})
+      .catch(() => setLoadError(true))
       .finally(() => setLoading(false));
   }, [router]);
+
+  useEffect(() => {
+    loadContact();
+  }, [loadContact]);
 
   const setHero = (patch: Partial<ContactConfig["hero"]>) => {
     setConfig((prev) => ({ ...prev, hero: { ...prev.hero, ...patch } }));
@@ -165,9 +172,25 @@ export default function AdminContactoPage() {
   };
 
   if (loading) {
+    return <AdminCmsLoading message="Cargando contacto desde el CMS…" />;
+  }
+
+  if (loadError) {
     return (
-      <div className="min-h-screen bg-brand-secondary flex items-center justify-center">
-        <Loader2 size={28} className="animate-spin text-brand-accent" />
+      <div className="min-h-screen bg-brand-secondary flex flex-col items-center justify-center gap-4 px-6 pt-20">
+        <p className="text-sm font-sans text-brand-primary text-center max-w-md">
+          No se pudo cargar la página de contacto desde el CMS. Revisa la conexión o inténtalo de nuevo.
+        </p>
+        <button
+          type="button"
+          onClick={() => loadContact()}
+          className="bg-brand-primary text-brand-secondary px-6 py-3 rounded-lg text-xs font-sans font-bold tracking-[0.15em] uppercase hover:bg-brand-accent transition-colors"
+        >
+          Reintentar
+        </button>
+        <Link href="/admin" className="text-xs font-sans text-brand-muted hover:text-brand-accent transition-colors">
+          ← Volver al panel
+        </Link>
       </div>
     );
   }

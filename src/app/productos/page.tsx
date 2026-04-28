@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingBag, Check, Loader2 } from "lucide-react";
 import { formatPrice } from "@/data/products";
@@ -156,14 +157,16 @@ export default function ProductosPage() {
                   className="group flex flex-col gap-6"
                   id={`product-${product.id}`}
                 >
-                  {/* Image */}
-                  <div className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-white border border-brand-primary/5 shadow-sm">
+                  <Link
+                    href={`/productos/${product.id}`}
+                    className="block relative aspect-[4/5] rounded-2xl overflow-hidden bg-white border border-brand-primary/5 shadow-sm group/image"
+                  >
                     <Image
                       src={product.image}
                       alt={product.name}
                       fill
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                      className="object-cover transition-transform duration-[1.4s] ease-out group-hover:scale-105"
+                      className="object-cover transition-transform duration-[1.4s] ease-out group-hover/image:scale-105"
                     />
                     {/* Category badge */}
                     <div className="absolute top-4 left-4">
@@ -171,20 +174,29 @@ export default function ProductosPage() {
                         {product.category}
                       </span>
                     </div>
-                  </div>
+                  </Link>
 
                   {/* Info */}
                   <div className="space-y-4">
                     <div className="space-y-1">
-                      <h3 className="font-serif text-2xl md:text-3xl text-brand-primary lowercase leading-tight group-hover:text-brand-accent transition-colors duration-400">
-                        {product.name}
-                      </h3>
+                      <Link href={`/productos/${product.id}`} className="block">
+                        <h3 className="font-serif text-2xl md:text-3xl text-brand-primary lowercase leading-tight group-hover:text-brand-accent transition-colors duration-400">
+                          {product.name}
+                        </h3>
+                      </Link>
                       <p className="text-xs font-sans text-brand-muted">{product.subtitle}</p>
                     </div>
 
                     <p className="text-sm font-serif italic text-brand-primary/60 leading-relaxed line-clamp-2">
                       {product.description}
                     </p>
+
+                    <Link
+                      href={`/productos/${product.id}`}
+                      className="inline-block editorial-spacing text-brand-accent/90 hover:text-brand-primary transition-colors"
+                    >
+                      Ver pieza →
+                    </Link>
 
                     <div className="flex items-center justify-between pt-1">
                       <span className="font-serif text-2xl text-brand-primary">
