@@ -69,7 +69,7 @@ function AboutHeroVisual() {
         style={{ backgroundColor: "#B08D57", opacity: 0.35 }}
       />
       <div className="space-y-5">
-        <blockquote className="space-y-4">
+        <blockquote className="space-y-4 m-0 border-0 p-0">
           <p className="font-serif text-lg md:text-xl italic text-white/48 leading-snug">
             Cocinar, para mí, es diseñar con los sentidos.
           </p>
@@ -174,11 +174,6 @@ export default function ContactPage() {
 
             <AboutHeroVisual />
           </div>
-        </div>
-
-        {/* Scroll hint */}
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 hidden md:flex flex-col items-center gap-2 opacity-30">
-          <div className="w-px h-12" style={{ backgroundColor: "#B08D57" }} />
         </div>
       </section>
 
