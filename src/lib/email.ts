@@ -77,15 +77,31 @@ const COLORS = {
   border: "#E8E2D6",
 } as const;
 
-// Stacks de fuentes para el correo. Cargamos Aboreto (logo) y Playfair Display
-// (títulos) de Google Fonts en el <head>. Los clientes que sí soportan web
-// fonts (Apple Mail, Gmail web/iOS/Android) los renderizan; el resto cae al
-// fallback (Georgia) que es muy similar visualmente.
+// Stacks de fuentes para el correo. Para el cuerpo y los titulos serif usamos
+// web fonts (Aboreto + Playfair Display) con fallback a Georgia: en Apple Mail,
+// Gmail web, iCloud, Yahoo se ven idénticas a las del sitio; en Gmail mobile
+// y Outlook desktop caen a Georgia. Para el wordmark del header sí garantizamos
+// Aboreto en todos los clientes renderizándolo como imagen (ver buildWordmark()).
 const FONT_LOGO = `'Aboreto', Georgia, 'Times New Roman', serif`;
 const FONT_TITLE = `'Playfair Display', Georgia, 'Times New Roman', serif`;
 const FONT_BODY = `Helvetica, Arial, sans-serif`;
 const FONT_GOOGLE_HREF =
   "https://fonts.googleapis.com/css2?family=Aboreto&family=Playfair+Display:ital,wght@0,400;0,500;1,400&display=swap";
+
+/**
+ * El wordmark `|BRICIA|` se renderiza como imagen PNG generada por
+ * /api/email-assets/wordmark. Esto garantiza que se vea en Aboreto incluso
+ * en Gmail mobile y Outlook desktop, que ignoran las web fonts.
+ */
+function buildWordmarkHTML(): string {
+  const src = `${PUBLIC_BASE_URL}/api/email-assets/wordmark`;
+  return `
+    <a href="${PUBLIC_BASE_URL}" target="_blank" style="text-decoration:none; color: ${COLORS.ink}; display:inline-block;">
+      <img src="${src}" alt="|BRICIA|" width="280" height="62"
+           style="display:block; border:0; outline:none; max-width:100%; height:auto; font-family: ${FONT_LOGO}; font-size: 30px; letter-spacing: 0.32em; color: ${COLORS.ink}; text-decoration:none;" />
+    </a>
+  `;
+}
 
 function formatMXN(amount: number): string {
   return `$${amount.toLocaleString("es-MX")} MXN`;
@@ -197,9 +213,7 @@ function buildOrderConfirmationHTML(order: Order): string {
           <!-- Brand mark -->
           <tr>
             <td align="center" style="padding: 8px 0 40px 0;">
-              <div style="font-family: ${FONT_LOGO}; font-size: 30px; letter-spacing: 0.32em; color: ${COLORS.ink}; font-weight: 400;">
-                |BRICIA|
-              </div>
+              ${buildWordmarkHTML()}
               <div style="height: 1px; width: 40px; background: ${COLORS.accent}; margin: 14px auto 0; opacity: 0.6;"></div>
             </td>
           </tr>
@@ -499,9 +513,7 @@ function buildShippingEmailHTML(order: Order): string {
           <!-- Brand mark -->
           <tr>
             <td align="center" style="padding: 8px 0 40px 0;">
-              <div style="font-family: ${FONT_LOGO}; font-size: 30px; letter-spacing: 0.32em; color: ${COLORS.ink}; font-weight: 400;">
-                |BRICIA|
-              </div>
+              ${buildWordmarkHTML()}
               <div style="height: 1px; width: 40px; background: ${COLORS.accent}; margin: 14px auto 0; opacity: 0.6;"></div>
             </td>
           </tr>
