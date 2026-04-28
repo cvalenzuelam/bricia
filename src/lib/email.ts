@@ -98,14 +98,6 @@ function escapeHtml(s: string): string {
     .replace(/'/g, "&#39;");
 }
 
-function absoluteImageUrl(src: string): string {
-  if (!src) return "";
-  if (/^https?:\/\//i.test(src)) return src;
-  if (src.startsWith("//")) return `https:${src}`;
-  if (src.startsWith("/")) return `${PUBLIC_BASE_URL}${src}`;
-  return `${PUBLIC_BASE_URL}/${src}`;
-}
-
 function firstName(fullName: string): string {
   const trimmed = fullName.trim();
   if (!trimmed) return "";
@@ -115,23 +107,15 @@ function firstName(fullName: string): string {
 function buildOrderConfirmationHTML(order: Order): string {
   const itemsRows = order.items
     .map((item) => {
-      const imageUrl = absoluteImageUrl(item.image);
       const name = escapeHtml(item.name);
       const subtitle = item.subtitle ? escapeHtml(item.subtitle) : "";
       return `
         <tr>
-          <td style="padding: 16px 0; border-bottom: 1px solid ${COLORS.border};" valign="top">
+          <td style="padding: 18px 0; border-bottom: 1px solid ${COLORS.border};" valign="top">
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
               <tr>
-                <td width="84" valign="top" style="padding-right: 16px;">
-                  ${
-                    imageUrl
-                      ? `<img src="${imageUrl}" alt="${name}" width="72" height="72" style="display:block; width:72px; height:72px; border-radius:10px; object-fit:cover; border:1px solid ${COLORS.border}; background:${COLORS.bg};" />`
-                      : ""
-                  }
-                </td>
                 <td valign="top">
-                  <div style="font-family: Georgia, 'Times New Roman', serif; font-size: 16px; color: ${COLORS.ink}; text-transform: lowercase; line-height: 1.3;">
+                  <div style="font-family: Georgia, 'Times New Roman', serif; font-size: 17px; color: ${COLORS.ink}; text-transform: lowercase; line-height: 1.3;">
                     ${name}
                   </div>
                   ${
@@ -143,7 +127,7 @@ function buildOrderConfirmationHTML(order: Order): string {
                     Cantidad · ${item.quantity}
                   </div>
                 </td>
-                <td valign="top" align="right" style="font-family: Georgia, 'Times New Roman', serif; font-size: 15px; color: ${COLORS.ink}; white-space: nowrap;">
+                <td valign="top" align="right" style="font-family: Georgia, 'Times New Roman', serif; font-size: 16px; color: ${COLORS.ink}; white-space: nowrap; padding-left: 16px;">
                   ${formatMXN(item.price * item.quantity)}
                 </td>
               </tr>
