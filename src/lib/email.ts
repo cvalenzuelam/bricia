@@ -2,7 +2,60 @@ import { Resend } from "resend";
 import type { Order } from "@/data/orders";
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const EMAIL_FROM = process.env.EMAIL_FROM || "Bricia López <onboarding@resend.dev>";
+const DEFAULT_EMAIL_FROM = "Bricia López <onboarding@resend.dev>";
+
+/**
+ * Acepta cualquier variante razonable y la normaliza a un valor válido para
+ * Resend. Resend solo admite dos formas:
+ *   1) `correo@dominio.com`
+ *   2) `Nombre <correo@dominio.com>`
+ * Si el usuario pegó comillas (rectas o tipográficas), espacios extra, o se
+ * olvidó de los signos `<` `>`, intentamos arreglarlo. Si no se puede,
+ * regresamos null para que el caller use el default y lo reporte.
+ */
+function sanitizeFromAddress(raw: string | undefined): {
+  value: string;
+  warning?: string;
+} {
+  if (!raw) return { value: DEFAULT_EMAIL_FROM };
+
+  let v = raw.trim();
+  // Normaliza comillas tipográficas a comillas rectas y luego elimina envolturas.
+  v = v.replace(/[\u201C\u201D\u201E\u00AB\u00BB]/g, '"').replace(/[\u2018\u2019]/g, "'");
+  // Quita comillas envolventes (rectas)
+  v = v.replace(/^["']+/, "").replace(/["']+$/, "").trim();
+
+  const emailRe = /^[^\s<>@]+@[^\s<>@]+\.[^\s<>@]+$/;
+
+  // Caso 1: solo el email
+  if (emailRe.test(v)) return { value: v };
+
+  // Caso 2: ya viene con `Nombre <email>`
+  const namedMatch = v.match(/^(.+?)\s*<\s*([^\s<>]+@[^\s<>]+)\s*>\s*$/);
+  if (namedMatch && emailRe.test(namedMatch[2])) {
+    const name = namedMatch[1].replace(/^["']+|["']+$/g, "").trim();
+    return { value: name ? `${name} <${namedMatch[2]}>` : namedMatch[2] };
+  }
+
+  // Caso 3: viene `Nombre email@dominio` sin <>
+  const looseMatch = v.match(/^(.+?)\s+([^\s<>]+@[^\s<>]+)\s*$/);
+  if (looseMatch && emailRe.test(looseMatch[2])) {
+    return { value: `${looseMatch[1].trim()} <${looseMatch[2]}>` };
+  }
+
+  return {
+    value: DEFAULT_EMAIL_FROM,
+    warning: `EMAIL_FROM con formato inválido (${raw}). Usando el default ${DEFAULT_EMAIL_FROM}. Debe ser \"correo@dominio.com\" o \"Nombre <correo@dominio.com>\".`,
+  };
+}
+
+const { value: EMAIL_FROM, warning: EMAIL_FROM_WARNING } = sanitizeFromAddress(
+  process.env.EMAIL_FROM
+);
+if (EMAIL_FROM_WARNING) {
+  console.warn("[email]", EMAIL_FROM_WARNING);
+}
+
 const EMAIL_BCC = process.env.EMAIL_BCC; // optional admin copy
 const PUBLIC_BASE_URL =
   process.env.NEXT_PUBLIC_BASE_URL ||

@@ -1,0 +1,9 @@
+fix(email): sanea EMAIL_FROM para evitar Resend 422 invalid `from` field
+
+- Si la env var trae comillas (rectas o tipograficas), espacios extra o
+  formato `Nombre email@dominio` sin <>, el codigo lo normaliza al formato
+  valido (`Nombre <email@dominio>`).
+- Si el valor es irrecuperable, hace fallback a `Bricia López <onboarding@resend.dev>`
+  y deja un console.warn explicito.
+- Esto resuelve el error 422 de Resend cuando el deploy tenia un EMAIL_FROM
+  copiado con comillas tipograficas o sin angle brackets.
