@@ -66,7 +66,7 @@ const PUBLIC_BASE_URL =
   process.env.NEXT_PUBLIC_BASE_URL ||
   process.env.NEXT_PUBLIC_SITE_URL ||
   (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://casabricia.vercel.app");
-const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || "hola@casabricia.com";
+const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || "casabricia@gmail.com";
 
 const COLORS = {
   bg: "#FAF9F4",
