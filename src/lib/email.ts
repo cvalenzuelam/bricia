@@ -89,16 +89,17 @@ const FONT_GOOGLE_HREF =
   "https://fonts.googleapis.com/css2?family=Aboreto&family=Playfair+Display:ital,wght@0,400;0,500;1,400&display=swap";
 
 /**
- * El wordmark `|BRICIA|` se renderiza como imagen PNG generada por
- * /api/email-assets/wordmark. Esto garantiza que se vea en Aboreto incluso
- * en Gmail mobile y Outlook desktop, que ignoran las web fonts.
+ * El wordmark `|BRICIA|` se renderiza como texto con el font-stack del logo
+ * (Aboreto con fallback a Georgia). En clientes que soportan web fonts se ve
+ * en Aboreto; en los que no, se ve en Georgia, que mantiene una estética
+ * editorial muy similar y nunca se rompe.
  */
 function buildWordmarkHTML(): string {
-  const src = `${PUBLIC_BASE_URL}/api/email-assets/wordmark`;
   return `
-    <a href="${PUBLIC_BASE_URL}" target="_blank" style="text-decoration:none; color: ${COLORS.ink}; display:inline-block;">
-      <img src="${src}" alt="|BRICIA|" width="280" height="62"
-           style="display:block; border:0; outline:none; max-width:100%; height:auto; font-family: ${FONT_LOGO}; font-size: 30px; letter-spacing: 0.32em; color: ${COLORS.ink}; text-decoration:none;" />
+    <a href="${PUBLIC_BASE_URL}" target="_blank" style="text-decoration:none; color: ${COLORS.ink};">
+      <span style="font-family: ${FONT_LOGO}; font-size: 30px; letter-spacing: 0.32em; color: ${COLORS.ink}; font-weight: 400; line-height: 1;">
+        |BRICIA|
+      </span>
     </a>
   `;
 }
