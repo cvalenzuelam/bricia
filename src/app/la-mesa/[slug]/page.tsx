@@ -50,6 +50,16 @@ export default function LaMesaArticlePage({ params }: { params: Promise<{ slug: 
         transition={{ duration: 1.5, ease: "circOut" }}
       />
 
+      {/* Encima del header del sitio (z-50): solo el enlace recibe clics */}
+      <div className="fixed top-0 left-0 right-0 z-[55] p-6 md:p-8 flex justify-between items-center pointer-events-none">
+        <Link
+          href="/la-mesa"
+          className="pointer-events-auto flex items-center gap-3 text-[10px] font-sans font-bold tracking-[0.3em] uppercase mix-blend-difference text-white hover:text-[#C2A878] transition-colors"
+        >
+          <ArrowLeft size={16} strokeWidth={1.5} /> Volver
+        </Link>
+      </div>
+
       <header className="relative w-full h-[70vh] md:h-[90vh] bg-neutral-900 flex flex-col justify-end p-8 md:p-20 overflow-hidden">
         <Image
           src={article.coverImage}
