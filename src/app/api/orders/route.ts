@@ -6,18 +6,11 @@ import {
   type Order,
 } from "@/data/orders";
 import { calculateShipping, getShippingOptionById } from "@/lib/shipping";
+import { validateCheckoutOrderBody } from "@/lib/checkout-validation";
 
 const NO_STORE = {
   "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
 };
-
-function isValidEmail(s: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
-}
-
-function isNonEmpty(s: unknown): s is string {
-  return typeof s === "string" && s.trim().length > 0;
-}
 
 export async function GET() {
   try {
@@ -36,33 +29,14 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { customer, shipping, shippingMethod, items } = body;
 
-    if (
-      !customer ||
-      !isNonEmpty(customer.name) ||
-      !isNonEmpty(customer.email) ||
-      !isValidEmail(customer.email) ||
-      !isNonEmpty(customer.phone)
-    ) {
+    const validated = validateCheckoutOrderBody({ customer, shipping });
+    if (!validated.ok) {
       return NextResponse.json(
-        { error: "Datos del cliente incompletos o inválidos" },
-        { status: 400 }
+        { error: validated.error },
+        { status: 400, headers: NO_STORE }
       );
     }
-
-    if (
-      !shipping ||
-      !isNonEmpty(shipping.street) ||
-      !isNonEmpty(shipping.exterior) ||
-      !isNonEmpty(shipping.neighborhood) ||
-      !isNonEmpty(shipping.city) ||
-      !isNonEmpty(shipping.state) ||
-      !isNonEmpty(shipping.zip)
-    ) {
-      return NextResponse.json(
-        { error: "Dirección de envío incompleta" },
-        { status: 400 }
-      );
-    }
+    const { form } = validated;
 
     if (!Array.isArray(items) || items.length === 0) {
       return NextResponse.json(
@@ -85,20 +59,23 @@ export async function POST(request: NextRequest) {
       createdAt: new Date().toISOString(),
       status: "pending",
       customer: {
-        name: customer.name.trim(),
-        email: customer.email.trim().toLowerCase(),
-        phone: customer.phone.trim(),
+        name: form.name,
+        email: form.email.toLowerCase(),
+        phone: form.phone,
       },
       shipping: {
-        street: shipping.street.trim(),
-        exterior: shipping.exterior.trim(),
-        interior: shipping.interior?.trim() || undefined,
-        neighborhood: shipping.neighborhood.trim(),
-        city: shipping.city.trim(),
-        state: shipping.state.trim(),
-        zip: shipping.zip.trim(),
-        country: shipping.country?.trim() || "México",
-        notes: shipping.notes?.trim() || undefined,
+        street: form.street,
+        exterior: form.exterior,
+        interior: form.interior || undefined,
+        neighborhood: form.neighborhood,
+        city: form.city,
+        state: form.state,
+        zip: form.zip,
+        country:
+          typeof shipping?.country === "string" && shipping.country.trim()
+            ? shipping.country.trim()
+            : "México",
+        notes: form.notes || undefined,
       },
       shippingMethod: {
         id: selectedShippingMethod.id,

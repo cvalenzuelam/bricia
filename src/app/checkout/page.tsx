@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -15,29 +15,17 @@ import {
   SHIPPING_OPTIONS,
   getShippingOptionById,
 } from "@/lib/shipping";
+import {
+  MEXICAN_STATES,
+  CHECKOUT_LIMITS,
+  sanitizeCheckoutField,
+  validateCheckoutForm,
+  type CheckoutFormInput,
+} from "@/lib/checkout-validation";
+import AddressAutocomplete from "@/components/checkout/AddressAutocomplete";
+import type { ParsedPlaceAddress } from "@/components/checkout/AddressAutocomplete";
 
-const MEXICAN_STATES = [
-  "Aguascalientes", "Baja California", "Baja California Sur", "Campeche",
-  "Chiapas", "Chihuahua", "Ciudad de México", "Coahuila", "Colima", "Durango",
-  "Estado de México", "Guanajuato", "Guerrero", "Hidalgo", "Jalisco",
-  "Michoacán", "Morelos", "Nayarit", "Nuevo León", "Oaxaca", "Puebla",
-  "Querétaro", "Quintana Roo", "San Luis Potosí", "Sinaloa", "Sonora",
-  "Tabasco", "Tamaulipas", "Tlaxcala", "Veracruz", "Yucatán", "Zacatecas",
-];
-
-interface FormState {
-  name: string;
-  email: string;
-  phone: string;
-  street: string;
-  exterior: string;
-  interior: string;
-  neighborhood: string;
-  city: string;
-  state: string;
-  zip: string;
-  notes: string;
-}
+type FormState = CheckoutFormInput;
 
 const initialForm: FormState = {
   name: "",
@@ -79,27 +67,43 @@ export default function CheckoutPage() {
   const total = subtotal + shippingCost;
   const remainingForFreeShipping = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
 
-  const setField = <K extends keyof FormState>(key: K, value: FormState[K]) => {
-    setForm((f) => ({ ...f, [key]: value }));
+  const setField = <K extends keyof FormState>(key: K, value: string) => {
+    const cleaned = sanitizeCheckoutField(key, value) as FormState[K];
+    setForm((f) => ({ ...f, [key]: cleaned }));
     if (errors[key]) setErrors((e) => ({ ...e, [key]: undefined }));
   };
 
+  const applyParsedAddress = useCallback((p: ParsedPlaceAddress) => {
+    setErrors((e) => {
+      const next = { ...e };
+      delete next.street;
+      delete next.exterior;
+      delete next.neighborhood;
+      delete next.city;
+      delete next.state;
+      delete next.zip;
+      return next;
+    });
+    setForm((f) => {
+      const inList = MEXICAN_STATES.includes(
+        p.state as (typeof MEXICAN_STATES)[number]
+      );
+      return {
+        ...f,
+        street: sanitizeCheckoutField("street", p.street),
+        exterior: sanitizeCheckoutField("exterior", p.exterior),
+        neighborhood: sanitizeCheckoutField("neighborhood", p.neighborhood),
+        city: sanitizeCheckoutField("city", p.city),
+        state: inList ? p.state : f.state,
+        zip: sanitizeCheckoutField("zip", p.zip),
+      };
+    });
+  }, []);
+
   const validate = (): boolean => {
-    const next: Partial<Record<keyof FormState, string>> = {};
-    if (!form.name.trim()) next.name = "Nombre completo requerido";
-    if (!form.email.trim()) next.email = "Correo requerido";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) next.email = "Correo no válido";
-    if (!form.phone.trim()) next.phone = "Teléfono requerido";
-    else if (form.phone.replace(/\D/g, "").length < 10) next.phone = "Mínimo 10 dígitos";
-    if (!form.street.trim()) next.street = "Calle requerida";
-    if (!form.exterior.trim()) next.exterior = "Número requerido";
-    if (!form.neighborhood.trim()) next.neighborhood = "Colonia requerida";
-    if (!form.city.trim()) next.city = "Ciudad requerida";
-    if (!form.state.trim()) next.state = "Estado requerido";
-    if (!form.zip.trim()) next.zip = "C.P. requerido";
-    else if (!/^\d{5}$/.test(form.zip)) next.zip = "5 dígitos";
+    const { ok, errors: next } = validateCheckoutForm(form);
     setErrors(next);
-    return Object.keys(next).length === 0;
+    return ok;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -118,20 +122,20 @@ export default function CheckoutPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           customer: {
-            name: form.name,
-            email: form.email,
+            name: form.name.trim(),
+            email: form.email.trim().toLowerCase(),
             phone: form.phone,
           },
           shipping: {
-            street: form.street,
-            exterior: form.exterior,
-            interior: form.interior,
-            neighborhood: form.neighborhood,
-            city: form.city,
-            state: form.state,
-            zip: form.zip,
+            street: form.street.trim(),
+            exterior: form.exterior.trim(),
+            interior: form.interior.trim() || undefined,
+            neighborhood: form.neighborhood.trim(),
+            city: form.city.trim(),
+            state: form.state.trim(),
+            zip: form.zip.trim(),
             country: "México",
-            notes: form.notes,
+            notes: form.notes.trim() || undefined,
           },
           shippingMethod: {
             id: selectedShippingOption.id,
@@ -233,6 +237,8 @@ export default function CheckoutPage() {
                   value={form.name}
                   onChange={(e) => setField("name", e.target.value)}
                   placeholder="Bricia López"
+                  maxLength={CHECKOUT_LIMITS.name}
+                  autoComplete="name"
                   className={inputClass(!!errors.name)}
                 />
               </Field>
@@ -244,15 +250,20 @@ export default function CheckoutPage() {
                     value={form.email}
                     onChange={(e) => setField("email", e.target.value)}
                     placeholder="tucorreo@ejemplo.com"
+                    maxLength={CHECKOUT_LIMITS.email}
+                    autoComplete="email"
                     className={inputClass(!!errors.email)}
                   />
                 </Field>
                 <Field label="Teléfono (10 dígitos)" error={errors.phone}>
                   <input
                     type="tel"
+                    inputMode="numeric"
                     value={form.phone}
                     onChange={(e) => setField("phone", e.target.value)}
                     placeholder="55 1234 5678"
+                    maxLength={10}
+                    autoComplete="tel"
                     className={inputClass(!!errors.phone)}
                   />
                 </Field>
@@ -266,6 +277,11 @@ export default function CheckoutPage() {
                 <span className="text-[10px] font-sans text-brand-muted tracking-[0.2em] uppercase">02</span>
               </div>
 
+              <AddressAutocomplete
+                onPlaceSelected={applyParsedAddress}
+                inputClass={inputClass(false)}
+              />
+
               <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr] gap-5">
                 <Field label="Calle" error={errors.street}>
                   <input
@@ -273,6 +289,8 @@ export default function CheckoutPage() {
                     value={form.street}
                     onChange={(e) => setField("street", e.target.value)}
                     placeholder="Av. Reforma"
+                    maxLength={CHECKOUT_LIMITS.street}
+                    autoComplete="address-line1"
                     className={inputClass(!!errors.street)}
                   />
                 </Field>
@@ -282,16 +300,19 @@ export default function CheckoutPage() {
                     value={form.exterior}
                     onChange={(e) => setField("exterior", e.target.value)}
                     placeholder="123"
+                    maxLength={CHECKOUT_LIMITS.exterior}
+                    autoComplete="address-line2"
                     className={inputClass(!!errors.exterior)}
                   />
                 </Field>
-                <Field label="Núm. interior" optional>
+                <Field label="Núm. interior" optional error={errors.interior}>
                   <input
                     type="text"
                     value={form.interior}
                     onChange={(e) => setField("interior", e.target.value)}
                     placeholder="A2"
-                    className={inputClass(false)}
+                    maxLength={CHECKOUT_LIMITS.interior}
+                    className={inputClass(!!errors.interior)}
                   />
                 </Field>
               </div>
@@ -303,6 +324,8 @@ export default function CheckoutPage() {
                     value={form.neighborhood}
                     onChange={(e) => setField("neighborhood", e.target.value)}
                     placeholder="Roma Norte"
+                    maxLength={CHECKOUT_LIMITS.neighborhood}
+                    autoComplete="address-level3"
                     className={inputClass(!!errors.neighborhood)}
                   />
                 </Field>
@@ -312,8 +335,9 @@ export default function CheckoutPage() {
                     inputMode="numeric"
                     maxLength={5}
                     value={form.zip}
-                    onChange={(e) => setField("zip", e.target.value.replace(/\D/g, ""))}
+                    onChange={(e) => setField("zip", e.target.value)}
                     placeholder="06700"
+                    autoComplete="postal-code"
                     className={inputClass(!!errors.zip)}
                   />
                 </Field>
@@ -326,6 +350,8 @@ export default function CheckoutPage() {
                     value={form.city}
                     onChange={(e) => setField("city", e.target.value)}
                     placeholder="Ciudad de México"
+                    maxLength={CHECKOUT_LIMITS.city}
+                    autoComplete="address-level2"
                     className={inputClass(!!errors.city)}
                   />
                 </Field>
@@ -333,6 +359,7 @@ export default function CheckoutPage() {
                   <select
                     value={form.state}
                     onChange={(e) => setField("state", e.target.value)}
+                    autoComplete="address-level1"
                     className={inputClass(!!errors.state)}
                   >
                     <option value="">Selecciona un estado</option>
@@ -343,14 +370,18 @@ export default function CheckoutPage() {
                 </Field>
               </div>
 
-              <Field label="Indicaciones para entrega" optional>
+              <Field label="Indicaciones para entrega" optional error={errors.notes}>
                 <textarea
                   value={form.notes}
                   onChange={(e) => setField("notes", e.target.value)}
                   placeholder="Referencias, color de la fachada, horario preferido…"
                   rows={3}
-                  className={`${inputClass(false)} resize-none`}
+                  maxLength={CHECKOUT_LIMITS.notes}
+                  className={`${inputClass(!!errors.notes)} resize-none`}
                 />
+                <p className="text-[10px] font-sans text-brand-muted text-right">
+                  {form.notes.length}/{CHECKOUT_LIMITS.notes}
+                </p>
               </Field>
 
             </section>
