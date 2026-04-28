@@ -57,10 +57,10 @@ const Pill = ({ children }: { children: React.ReactNode }) => (
 
 function AboutHeroVisual() {
   return (
-    <div className="relative w-full max-w-[17.5rem] lg:max-w-xs xl:max-w-sm pt-4 md:pt-0">
+    <div className="relative w-full">
       <svg
         aria-hidden
-        className="pointer-events-none absolute -right-4 md:-right-8 top-1/2 -translate-y-1/2 w-36 h-36 md:w-44 md:h-44 opacity-[0.08]"
+        className="pointer-events-none absolute -right-2 md:right-0 top-8 w-32 h-32 md:w-40 md:h-40 opacity-[0.08]"
         viewBox="0 0 100 100"
         fill="none"
       >
@@ -84,7 +84,7 @@ function AboutHeroVisual() {
         />
       </svg>
 
-      <div className="relative space-y-5">
+      <div className="relative z-[1] space-y-5 pr-10 md:pr-20">
         <p
           className="text-[10px] font-sans font-bold tracking-[0.4em] uppercase"
           style={{ color: "rgba(176,141,87,0.5)" }}
@@ -142,11 +142,11 @@ export default function ContactPage() {
 
         </div>
 
-        {/* ── Columna DERECHA: texto + panel editorial ── */}
+        {/* ── Columna DERECHA: texto ── */}
         <div
-          className="relative w-full md:w-[55%] flex flex-col md:flex-row md:items-start gap-10 md:gap-x-14 lg:gap-x-20 px-8 md:pl-12 md:pr-12 lg:pl-16 lg:pr-16 xl:pr-24 pb-16 md:pb-24 pt-10 md:pt-64 lg:pt-72 md:min-h-[calc(45vw*1.5)]"
+          className="relative w-full md:w-[55%] px-8 md:pl-12 md:pr-12 lg:pl-16 lg:pr-16 xl:pr-24 pb-16 md:pb-24 pt-10 md:pt-64 lg:pt-72 md:min-h-[calc(45vw*1.5)]"
         >
-          <div className="max-w-lg space-y-8 shrink-0 w-full md:max-w-[min(100%,28rem)]">
+          <div className="max-w-lg space-y-8 w-full">
             {/* Eyebrow */}
             <p
               className="text-[10px] font-sans font-bold tracking-[0.45em] uppercase"
@@ -189,9 +189,7 @@ export default function ContactPage() {
               <Pill>Decoración</Pill>
               <Pill>Estética del hogar</Pill>
             </div>
-          </div>
 
-          <div className="flex-1 min-w-0 md:flex md:justify-end lg:justify-start lg:pl-2 xl:pl-6 pt-2 md:pt-1">
             <AboutHeroVisual />
           </div>
         </div>
