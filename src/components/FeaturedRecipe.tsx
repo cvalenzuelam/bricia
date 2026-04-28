@@ -3,12 +3,31 @@
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
+
+const FONT_MAP: Record<string, string> = {
+  serif: "var(--font-playfair)",
+  sans: "var(--font-inter)",
+  aboreto: "var(--font-aboreto)",
+};
 
 export default function FeaturedRecipe() {
+  const [titleFont, setTitleFont] = useState<string>(FONT_MAP.serif);
+
+  useEffect(() => {
+    fetch("/api/hero")
+      .then((res) => res.json())
+      .then((config) => {
+        const selectedFont = FONT_MAP[config?.titleFont] || FONT_MAP.serif;
+        setTitleFont(selectedFont);
+      })
+      .catch(() => {});
+  }, []);
+
   return (
     <section className="bg-[#8B7355] py-0 overflow-hidden">
       <div className="max-w-[1600px] mx-auto flex flex-col-reverse md:flex-row items-stretch min-h-[70vh]">
-        
+
         {/* Left: Full-bleed image */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -35,23 +54,26 @@ export default function FeaturedRecipe() {
           className="md:w-1/2 flex flex-col justify-center px-12 md:px-20 py-20 text-white"
         >
           <div className="max-w-lg space-y-8">
-            <h2 className="text-4xl md:text-5xl font-serif leading-tight">
+            <h2 className="text-4xl md:text-5xl leading-tight" style={{ fontFamily: titleFont }}>
               Nuevas Recetas
               <br />
               Cada Semana
             </h2>
-            
+
             <div className="w-12 h-px bg-white/30"></div>
-            
-            <p className="text-base font-sans text-white/80 leading-relaxed">
-              Descubre recetas que tocan el corazón y despiertan tus sentidos. 
-              Cada semana traemos algo nuevo para que disfrutes en tu cocina. 
+
+            <p
+              className="text-sm md:text-base text-white/80 leading-relaxed"
+              style={{ fontFamily: "var(--font-inter), system-ui, sans-serif" }}
+            >
+              Descubre recetas que tocan el corazón y despiertan tus sentidos.
+              Cada semana traemos algo nuevo para que disfrutes en tu cocina.
               ¡Explora y déjate inspirar!
             </p>
 
             <div className="pt-4">
               <Link href="/recetas">
-                <button className="bg-white text-[#8B7355] px-8 py-3.5 text-xs font-bold tracking-[0.2em] uppercase hover:bg-brand-accent hover:text-white transition-all duration-300">
+                <button className="bg-white text-[#8B7355] px-8 py-3.5 text-xs font-sans font-bold tracking-[0.2em] uppercase hover:bg-brand-accent hover:text-white transition-all duration-300">
                   Ver Recetas
                 </button>
               </Link>

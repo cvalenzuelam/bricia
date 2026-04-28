@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -66,17 +66,18 @@ export default function ContactPage() {
           HERO — foto + presentación en split editorial
       ══════════════════════════════════════════════════════ */}
       <section
-        className="relative min-h-screen flex flex-col md:flex-row"
-        style={{ backgroundColor: "#3D2B1F" }}
+        className="relative min-h-screen md:min-h-[calc(45vw*1.5)] flex flex-col md:flex-row"
+        style={{ backgroundColor: "#1D1D1B" }}
       >
         {/* ── Columna IZQUIERDA: foto ── */}
-        <div className="relative w-full md:w-[45%] min-h-[60svh] md:min-h-screen overflow-hidden">
+        <div className="relative w-full md:w-[45%] aspect-[2/3] md:aspect-auto min-h-[60svh] md:min-h-[calc(45vw*1.5)] overflow-hidden">
           <Image
-            src="/images/bricia_real.jpg"
-            alt="Bricia Elizalde cocinando"
+            src="/images/bricia-contacto-original.jpg"
+            alt="Bricia Elizalde"
             fill
             sizes="(max-width: 768px) 100vw, 45vw"
-            className="object-cover object-top"
+            quality={95}
+            className="object-cover object-center"
             priority
           />
           {/* Overlay degradado para fundir con el texto en mobile */}
@@ -84,14 +85,14 @@ export default function ContactPage() {
             className="absolute inset-0"
             style={{
               background:
-                "linear-gradient(to top, #3D2B1F 0%, transparent 50%), linear-gradient(to right, transparent 70%, #3D2B1F 100%)",
+                "linear-gradient(to top, rgba(29,29,27,0.45) 0%, transparent 22%), linear-gradient(to right, transparent 55%, rgba(29,29,27,0.6) 80%, #1D1D1B 100%)",
             }}
           />
 
         </div>
 
         {/* ── Columna DERECHA: texto ── */}
-        <div className="relative w-full md:w-[55%] flex items-center px-8 md:px-16 lg:px-24 pb-20 pt-8 md:pt-40">
+        <div className="relative w-full md:w-[55%] flex items-start px-8 md:px-16 lg:px-24 pb-20 pt-8 md:pt-64 lg:pt-72">
           <div className="max-w-lg space-y-8">
             {/* Eyebrow */}
             <p
@@ -221,7 +222,7 @@ export default function ContactPage() {
       ══════════════════════════════════════════════════════ */}
       <section
         className="relative py-28 md:py-40 px-6 overflow-hidden"
-        style={{ backgroundColor: "#3D2B1F" }}
+        style={{ backgroundColor: "#1D1D1B" }}
       >
         {/* Decorative blurred orbs */}
         <div
@@ -377,7 +378,7 @@ export default function ContactPage() {
       {/* Back link */}
       <div
         className="text-center py-10 border-t"
-        style={{ backgroundColor: "#3D2B1F", borderColor: "rgba(176,141,87,0.1)" }}
+        style={{ backgroundColor: "#1D1D1B", borderColor: "rgba(176,141,87,0.1)" }}
       >
         <Link
           href="/"

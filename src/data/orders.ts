@@ -37,6 +37,13 @@ export interface ShippingAddress {
   notes?: string;
 }
 
+export interface ShippingMethodSelection {
+  id: string;
+  name: string;
+  eta: string;
+  basePrice: number;
+}
+
 export interface Order {
   id: string;
   createdAt: string;
@@ -44,6 +51,7 @@ export interface Order {
   status: OrderStatus;
   customer: CustomerInfo;
   shipping: ShippingAddress;
+  shippingMethod?: ShippingMethodSelection;
   items: OrderItem[];
   subtotal: number;
   shippingCost: number;

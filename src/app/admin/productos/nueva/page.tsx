@@ -7,7 +7,7 @@ import Link from "next/link";
 import { uploadCmsImageFile } from "@/lib/cms-upload-image";
 import { ArrowLeft, Save, Upload, Loader2 } from "lucide-react";
 
-const CATEGORIES = ["COCINA", "MESA", "DESPENSA"] as const;
+const DEFAULT_CATEGORIES = ["COCINA", "MESA", "DESPENSA"] as const;
 const REQUEST_TIMEOUT_MS = 20000;
 const FRONT_SYNC_TIMEOUT_MS = 60000;
 const FRONT_SYNC_INTERVAL_MS = 2500;
@@ -77,7 +77,7 @@ export default function NuevoProductoPage() {
     subtitle: "",
     price: "",
     description: "",
-    category: "COCINA" as typeof CATEGORIES[number],
+    category: "COCINA",
     stock: "0",
     image: "/images/mesa_setting.png",
   });
@@ -108,6 +108,7 @@ export default function NuevoProductoPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name.trim()) { alert("El nombre es obligatorio."); return; }
+    if (!form.category.trim()) { alert("La etiqueta o categoría es obligatoria."); return; }
 
     setPublishing(true);
     setPublishMessage("Subiendo imagen…");
@@ -121,7 +122,7 @@ export default function NuevoProductoPage() {
       subtitle: form.subtitle.trim(),
       price: Number(form.price) || 0,
       description: form.description.trim(),
-      category: form.category,
+      category: form.category.trim().toUpperCase(),
       stock: Number(form.stock) || 0,
       image: imagePath,
     };
@@ -253,20 +254,45 @@ export default function NuevoProductoPage() {
           </div>
 
           {/* Category + Price + Stock */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:items-start">
             <div className="space-y-2">
               <label className="text-[10px] font-sans font-bold tracking-[0.2em] uppercase text-brand-muted block">
-                Categoría
+                Etiqueta / categoría
               </label>
-              <select
+              <input
+                type="text"
                 value={form.category}
-                onChange={(e) => setForm({ ...form, category: e.target.value as typeof CATEGORIES[number] })}
-                className="w-full px-4 py-3 border border-brand-primary/10 rounded-lg bg-white text-brand-primary font-sans text-sm focus:outline-none focus:border-brand-accent transition-colors"
-              >
-                {CATEGORIES.map((cat) => (
-                  <option key={cat} value={cat}>{cat}</option>
+                onChange={(e) => setForm({ ...form, category: e.target.value })}
+                onBlur={(e) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    category: e.target.value.trim().toUpperCase(),
+                  }))
+                }
+                placeholder="Ej. COCINA, REGALOS, VAJILLA…"
+                autoComplete="off"
+                spellCheck={false}
+                className="w-full px-4 py-3 border border-brand-primary/10 rounded-lg bg-white text-brand-primary font-sans text-sm uppercase focus:outline-none focus:border-brand-accent transition-colors"
+              />
+              <p className="text-[10px] font-sans text-brand-muted">
+                Escribe la etiqueta que quieras. Atajos:
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {DEFAULT_CATEGORIES.map((cat) => (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setForm((prev) => ({ ...prev, category: cat }))}
+                    className={`text-[9px] font-sans font-bold tracking-[0.15em] uppercase px-3 py-1.5 rounded-full border transition-colors ${
+                      form.category === cat
+                        ? "bg-brand-primary text-brand-secondary border-brand-primary"
+                        : "border-brand-primary/15 text-brand-muted hover:border-brand-accent hover:text-brand-accent"
+                    }`}
+                  >
+                    {cat}
+                  </button>
                 ))}
-              </select>
+              </div>
             </div>
             <div className="space-y-2">
               <label className="text-[10px] font-sans font-bold tracking-[0.2em] uppercase text-brand-muted block">

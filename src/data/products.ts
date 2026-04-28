@@ -5,7 +5,7 @@ export interface Product {
   price: number; // MXN
   description: string;
   image: string;
-  category: "COCINA" | "MESA" | "DESPENSA";
+  category: string;
   stock: number;
 }
 

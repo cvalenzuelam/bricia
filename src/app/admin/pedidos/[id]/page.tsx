@@ -181,6 +181,16 @@ export default function AdminPedidoDetailPage({
 
             {/* Shipping */}
             <Card title="Dirección de envío" icon={<MapPin size={16} />}>
+              {order.shippingMethod && (
+                <div className="mb-4 p-3 bg-brand-secondary rounded-lg">
+                  <p className="text-[10px] font-sans font-bold tracking-[0.2em] uppercase text-brand-muted mb-1">
+                    Método de envío
+                  </p>
+                  <p className="font-sans text-sm text-brand-primary">
+                    {order.shippingMethod.name} · {order.shippingMethod.eta}
+                  </p>
+                </div>
+              )}
               <p className="font-sans text-sm text-brand-primary leading-relaxed">
                 {order.shipping.street} {order.shipping.exterior}
                 {order.shipping.interior ? ` Int. ${order.shipping.interior}` : ""}<br />

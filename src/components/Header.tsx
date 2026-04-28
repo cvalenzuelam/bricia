@@ -38,6 +38,7 @@ export default function Header() {
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const isDarkPage = pathname === "/contacto";
+  const isHome = pathname === "/";
   const textColor = scrolled ? "text-brand-primary" : (isDarkPage ? "text-white/90" : "text-brand-primary/80");
   const logoColor = scrolled ? "text-brand-primary" : (isDarkPage ? "text-white" : "text-brand-primary");
   const iconColor = scrolled ? "text-brand-primary" : (isDarkPage ? "text-white" : "text-brand-primary");
@@ -104,10 +105,15 @@ export default function Header() {
   return (
     <>
       <header
-        className={`fixed top-0 w-full z-50 transition-all duration-500 ${scrolled
+        className={`fixed top-0 w-full z-50 transition-all duration-500 ${
+          scrolled
             ? "bg-brand-secondary/95 backdrop-blur-sm border-b border-brand-primary/5 py-4"
-            : "bg-transparent py-8"
-          }`}
+            : isDarkPage
+              ? "bg-transparent py-8 border-b border-white/[0.06]"
+              : isHome
+                ? "bg-brand-secondary/90 backdrop-blur-md py-8 border-b border-brand-primary/[0.08]"
+                : "bg-transparent py-8"
+        }`}
       >
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-3 items-center">
           {/* Left Links (Desktop) */}

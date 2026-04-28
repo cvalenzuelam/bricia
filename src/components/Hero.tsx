@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { ArrowDown } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, type CSSProperties } from "react";
 
 interface HeroConfig {
   title: string;
@@ -26,6 +26,30 @@ const FONT_MAP: Record<string, string> = {
   aboreto: "var(--font-aboreto)",
 };
 
+const DEFAULT_BG = "#FAF9F4";
+
+function hexToRgb(
+  hex: string
+): { r: number; g: number; b: number } {
+  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex.trim());
+  if (!m) return { r: 250, g: 249, b: 244 };
+  return {
+    r: parseInt(m[1], 16),
+    g: parseInt(m[2], 16),
+    b: parseInt(m[3], 16),
+  };
+}
+
+function imageOverlayStyle(bgHex: string): CSSProperties {
+  const { r, g, b } = hexToRgb(bgHex);
+  return {
+    background: [
+      `linear-gradient(to top, rgba(${r},${g},${b},0.25) 0%, transparent 30%)`,
+      `linear-gradient(to left, transparent 42%, rgba(${r},${g},${b},0.5) 72%, ${bgHex} 100%)`,
+    ].join(", "),
+  };
+}
+
 export default function Hero() {
   const [config, setConfig] = useState<HeroConfig | null>(null);
 
@@ -36,39 +60,51 @@ export default function Hero() {
   }, []);
 
   if (!config) {
-    return <section className="min-h-screen bg-brand-secondary" />;
+    return (
+      <section
+        className="min-h-screen md:min-h-[calc(62vw*1.12)]"
+        style={{ backgroundColor: DEFAULT_BG }}
+      />
+    );
   }
 
   const heroImage =
-    config.collageImages?.[0]?.src || "/images/hero-landing-picnic.png";
+    config.collageImages?.[0]?.src || "/images/hero-inicio-bricia.jpg";
   const heroImageAlt =
     config.collageImages?.[0]?.alt || "Foto principal de Bricia";
 
+  const bg = config.backgroundColor || DEFAULT_BG;
+  const overlayStyle = imageOverlayStyle(bg);
+  const sectionMinH = "min-h-screen md:min-h-[calc(62vw*1.12)]";
+
   return (
     <section
-      className="relative min-h-screen flex flex-col md:flex-row overflow-hidden"
-      style={{ backgroundColor: config.backgroundColor }}
+      className={`relative ${sectionMinH} flex flex-col md:flex-row overflow-hidden`}
+      style={{ backgroundColor: bg }}
     >
-      {/* Left Column: Text Content */}
-      <div className="w-full md:w-[45%] flex flex-col justify-center items-center px-8 md:px-16 pt-0 pb-6 md:py-0 text-center">
+      {/* Texto — izquierda (móvil: arriba), columna más estrecha */}
+      <div
+        className={`relative w-full md:w-[38%] flex flex-col items-center justify-center px-8 md:px-10 lg:px-14 pb-16 pt-14 md:pt-5 md:pb-2 md:min-h-[calc(62vw*1.12)] text-center`}
+      >
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1 }}
-          className="max-w-md space-y-6 md:space-y-10"
+          className="max-w-lg w-full"
         >
-          <div className="space-y-6">
+          <div className="space-y-6 md:space-y-8 -translate-y-8 md:-translate-y-28 lg:-translate-y-36">
+          <div className="space-y-4 md:space-y-6">
             <h1
-              className="text-2xl md:text-3xl leading-tight mb-8"
+              className="text-3xl md:text-4xl lg:text-5xl leading-tight"
               style={{
-                color: config.titleColor,
                 fontFamily: FONT_MAP[config.titleFont] || FONT_MAP.serif,
+                color: config.titleColor,
               }}
             >
               {config.title}
             </h1>
             <span
-              className="hidden md:block text-5xl md:text-6xl tracking-[0.2em] mt-0"
+              className="block text-4xl md:text-5xl lg:text-6xl tracking-[0.2em]"
               style={{
                 color: config.logoColor,
                 fontFamily: FONT_MAP[config.logoFont] || FONT_MAP.aboreto,
@@ -78,11 +114,10 @@ export default function Hero() {
             </span>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-4 md:space-y-6">
             <p
-              className="text-base font-serif leading-relaxed whitespace-normal md:whitespace-nowrap px-4 md:px-0"
+              className="text-base md:text-lg font-serif leading-relaxed text-brand-primary/85"
               style={{
-                color: config.titleColor + "cc",
                 fontStyle: config.taglineItalic ? "italic" : "normal",
               }}
             >
@@ -91,7 +126,7 @@ export default function Hero() {
             <p className="hidden md:block text-sm font-sans text-brand-muted leading-relaxed">
               {config.description}
             </p>
-            <p className="text-xs font-sans text-brand-accent tracking-widest uppercase font-medium">
+            <p className="text-xs font-sans tracking-[0.2em] md:tracking-[0.25em] uppercase font-medium text-brand-accent">
               {config.ctaText}
             </p>
           </div>
@@ -99,30 +134,31 @@ export default function Hero() {
           <motion.div
             animate={{ y: [0, 8, 0] }}
             transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-            className="hidden md:block pt-6 text-brand-primary/20"
+            className="hidden md:block pt-4 text-brand-primary/20"
           >
             <ArrowDown size={28} strokeWidth={1} className="mx-auto" />
           </motion.div>
+          </div>
         </motion.div>
       </div>
 
-      {/* Right Column: Single Hero Image */}
-      <div className="w-full md:w-[55%] h-[70vh] md:h-screen p-1.5 md:pl-0 md:pr-24">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.98 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-          className="relative h-full w-full overflow-hidden rounded-lg bg-brand-secondary"
-        >
-          <Image
-            src={heroImage}
-            alt={heroImageAlt}
-            fill
-            priority
-            sizes="(max-width: 768px) 100vw, 55vw"
-            className="object-cover md:object-contain md:object-left hover:scale-[1.02] transition-transform duration-[1.5s] ease-out"
-          />
-        </motion.div>
+      {/* Foto — derecha (móvil: debajo del texto), columna más ancha */}
+      <div
+        className={`relative w-full md:w-[62%] aspect-[5/4] md:aspect-auto min-h-[48svh] md:min-h-[calc(62vw*1.12)] overflow-hidden`}
+      >
+        <Image
+          src={heroImage}
+          alt={heroImageAlt}
+          fill
+          priority
+          sizes="(max-width: 768px) 100vw, 62vw"
+          quality={92}
+          className="object-cover object-center"
+        />
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={overlayStyle}
+        />
       </div>
     </section>
   );

@@ -5,7 +5,7 @@ import {
   getOrders,
   type Order,
 } from "@/data/orders";
-import { calculateShipping } from "@/lib/shipping";
+import { calculateShipping, getShippingOptionById } from "@/lib/shipping";
 
 const NO_STORE = {
   "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
@@ -34,7 +34,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { customer, shipping, items } = body;
+    const { customer, shipping, shippingMethod, items } = body;
 
     if (
       !customer ||
@@ -76,7 +76,8 @@ export async function POST(request: NextRequest) {
         sum + it.price * it.quantity,
       0
     );
-    const shippingCost = calculateShipping(subtotal);
+    const selectedShippingMethod = getShippingOptionById(shippingMethod?.id);
+    const shippingCost = calculateShipping(subtotal, selectedShippingMethod.price);
     const total = subtotal + shippingCost;
 
     const order: Order = {
@@ -98,6 +99,12 @@ export async function POST(request: NextRequest) {
         zip: shipping.zip.trim(),
         country: shipping.country?.trim() || "México",
         notes: shipping.notes?.trim() || undefined,
+      },
+      shippingMethod: {
+        id: selectedShippingMethod.id,
+        name: selectedShippingMethod.name,
+        eta: selectedShippingMethod.eta,
+        basePrice: selectedShippingMethod.price,
       },
       items: items.map(
         (it: {

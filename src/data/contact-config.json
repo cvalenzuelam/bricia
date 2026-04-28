@@ -1,0 +1,71 @@
+﻿{
+  "hero": {
+    "backgroundColor": "#1D1D1B",
+    "photoSrc": "/images/bricia-contacto-original.jpg",
+    "photoAlt": "Bricia Elizalde",
+    "eyebrow": "Quién soy",
+    "titleLine1": "Hola,",
+    "titleHighlight": "soy Bricia",
+    "bioPrimary": "Soy arquitecta e interiorista de profesión, pero cocinera de corazón.",
+    "bioSecondary": "Desde hace años he encontrado en el diseño una forma de transformar espacios, y en la cocina una manera de crear momentos.",
+    "pills": [
+      "Arquitecta",
+      "Interiorista",
+      "Cocina con intención",
+      "Decoración",
+      "Estética del hogar"
+    ]
+  },
+  "about": {
+    "eyebrow": "Por qué BRICIA",
+    "titleLine1": "Donde el diseño",
+    "titleHighlight": "llega a la mesa",
+    "description": "BRICIA nace de esa conexión entre dos pasiones: el amor por los detalles, la estética y la calidez del hogar, llevados también a la mesa. Así como diseñamos espacios para habitarlos, también podemos crear experiencias a través de lo que cocinamos.",
+    "reasons": [
+      {
+        "num": "01",
+        "title": "Cocina cotidiana con intención",
+        "body": "Este espacio es una invitación a disfrutar la cocina del día a día con creatividad, estética y mucho sabor. Sin complicar, sin perder el alma."
+      },
+      {
+        "num": "02",
+        "title": "El ojo de la interiorista",
+        "body": "La misma sensibilidad con la que diseño un espacio la pongo en cada receta: los colores, la textura, la presentación. Todo comunica."
+      },
+      {
+        "num": "03",
+        "title": "Cocina y hogar, inseparables",
+        "body": "Porque el espacio que rodea la mesa importa tanto como lo que hay en ella. Aquí encontrarás recetas, pero también ideas para que tu hogar se sienta más tuyo."
+      }
+    ]
+  },
+  "contact": {
+    "backgroundColor": "#1D1D1B",
+    "eyebrow": "Conectemos",
+    "titleLine1": "Hablemos de",
+    "titleHighlight": "sobremesa",
+    "description": "Para colaboraciones, preguntas sobre recetas, decoración del hogar o simplemente para platicar con calma.",
+    "email": "briciaelizaldes@gmail.com",
+    "emailCaption": "Respondo con mucho cariño ✦",
+    "socials": [
+      {
+        "name": "Instagram",
+        "handle": "@briciaelizalde",
+        "url": "https://www.instagram.com/briciaelizalde/",
+        "icon": "instagram"
+      },
+      {
+        "name": "TikTok",
+        "handle": "@bricia.elizalde",
+        "url": "https://www.tiktok.com/@bricia.elizalde",
+        "icon": "tiktok"
+      },
+      {
+        "name": "YouTube",
+        "handle": "@briciaelizaldes",
+        "url": "https://www.youtube.com/@briciaelizaldes",
+        "icon": "youtube"
+      }
+    ]
+  }
+}

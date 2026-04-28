@@ -80,8 +80,8 @@ export async function POST(request: NextRequest) {
   // Agregar envío como item separado si no es gratis
   if (order.shippingCost > 0) {
     items.push({
-      id: "envio",
-      title: "Envío a domicilio",
+      id: `envio_${order.shippingMethod?.id ?? "estandar"}`,
+      title: `${order.shippingMethod?.name ?? "Envio a domicilio"}${order.shippingMethod?.eta ? ` (${order.shippingMethod.eta})` : ""}`,
       quantity: 1,
       unit_price: order.shippingCost,
       currency_id: "MXN",

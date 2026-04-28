@@ -1,9 +1,9 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Plus, Edit3, Trash2, Lock, ChefHat, LayoutList, ShoppingBag, Package } from "lucide-react";
+import { Plus, Edit3, Trash2, Lock, ChefHat, LayoutList, ShoppingBag, Package, Mail, Home, Loader2 } from "lucide-react";
 
 interface Recipe {
   slug: string;
@@ -16,6 +16,8 @@ interface Recipe {
 const ADMIN_PASSWORD = "bricia2026";
 
 export default function AdminPage() {
+  // Same initial state on server and client avoids hydration mismatch; session is read after mount.
+  const [authChecked, setAuthChecked] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -23,22 +25,17 @@ export default function AdminPage() {
   const [deleting, setDeleting] = useState<string | null>(null);
 
   useEffect(() => {
-    if (authenticated) {
-      fetchRecipes();
-    }
-  }, [authenticated]);
-
-  // Check session
-  useEffect(() => {
-    const session = sessionStorage.getItem("bricia_admin");
-    if (session === "true") setAuthenticated(true);
+    setAuthenticated(sessionStorage.getItem("bricia_admin") === "true");
+    setAuthChecked(true);
   }, []);
 
-  const fetchRecipes = async () => {
-    const res = await fetch("/api/recipes", { cache: "no-store" });
-    const data = await res.json();
-    setRecipes(data);
-  };
+  useEffect(() => {
+    if (!authChecked || !authenticated) return;
+    fetch("/api/recipes", { cache: "no-store" })
+      .then((res) => res.json())
+      .then((data) => setRecipes(data))
+      .catch(() => {});
+  }, [authChecked, authenticated]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,14 +49,27 @@ export default function AdminPage() {
   };
 
   const handleDelete = async (slug: string) => {
-    if (!confirm("¿Estás segura de que quieres eliminar esta receta?")) return;
+    if (!confirm("Estas segura de que quieres eliminar esta receta?")) return;
     setDeleting(slug);
     await fetch(`/api/recipes/${slug}`, { method: "DELETE" });
-    await fetchRecipes();
+    const res = await fetch("/api/recipes", { cache: "no-store" });
+    const data = await res.json();
+    setRecipes(data);
     setDeleting(null);
   };
 
-  // ─── LOGIN SCREEN ─────────────────────────────────────
+  if (!authChecked) {
+    return (
+      <div className="min-h-screen bg-brand-secondary flex items-center justify-center px-6">
+        <div className="flex flex-col items-center gap-3 text-brand-muted">
+          <Loader2 className="animate-spin" size={24} />
+          <p className="text-xs font-sans">Cargando panel…</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Login screen
   if (!authenticated) {
     return (
       <div className="min-h-screen bg-brand-secondary flex items-center justify-center px-6">
@@ -101,49 +111,58 @@ export default function AdminPage() {
     );
   }
 
-  // ─── ADMIN DASHBOARD ──────────────────────────────────
+  // Admin dashboard
   return (
     <div className="min-h-screen bg-brand-secondary pt-20">
       <div className="max-w-5xl mx-auto px-6 py-12">
         {/* Header */}
-        <div className="flex items-center justify-between mb-12">
-          <div className="space-y-1">
-            <h1 className="text-3xl font-serif text-brand-primary flex items-center gap-3">
-              <ChefHat size={28} className="text-brand-accent" />
-              Mis Recetas
-            </h1>
-            <p className="text-sm font-sans text-brand-muted">
-              {recipes.length} recetas publicadas
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <Link href="/admin/inicio">
-              <button className="flex items-center gap-2 border border-brand-primary/10 text-brand-primary px-6 py-3 rounded-lg text-xs font-sans font-bold tracking-[0.15em] uppercase hover:border-brand-accent hover:text-brand-accent transition-colors">
-                🎨 Inicio
-              </button>
-            </Link>
-            <Link href="/admin/mesa">
-              <button className="flex items-center gap-2 border border-brand-primary/10 text-brand-primary px-6 py-3 rounded-lg text-xs font-sans font-bold tracking-[0.15em] uppercase hover:border-brand-accent hover:text-brand-accent transition-colors">
-                <LayoutList size={16} />
-                La Mesa
-              </button>
-            </Link>
-            <Link href="/admin/productos">
-              <button className="flex items-center gap-2 border border-brand-primary/10 text-brand-primary px-6 py-3 rounded-lg text-xs font-sans font-bold tracking-[0.15em] uppercase hover:border-brand-accent hover:text-brand-accent transition-colors">
-                <ShoppingBag size={16} />
-                Productos
-              </button>
-            </Link>
-            <Link href="/admin/pedidos">
-              <button className="flex items-center gap-2 border border-brand-primary/10 text-brand-primary px-6 py-3 rounded-lg text-xs font-sans font-bold tracking-[0.15em] uppercase hover:border-brand-accent hover:text-brand-accent transition-colors">
-                <Package size={16} />
-                Pedidos
-              </button>
-            </Link>
+        <div className="flex flex-col gap-6 mb-12">
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <h1 className="text-3xl font-serif text-brand-primary flex items-center gap-3">
+                <ChefHat size={28} className="text-brand-accent" />
+                Mis Recetas
+              </h1>
+              <p className="text-sm font-sans text-brand-muted">
+                {recipes.length} recetas publicadas
+              </p>
+            </div>
             <Link href="/admin/nueva">
               <button className="flex items-center gap-2 bg-brand-primary text-brand-secondary px-6 py-3 rounded-lg text-xs font-sans font-bold tracking-[0.15em] uppercase hover:bg-brand-accent transition-colors">
                 <Plus size={16} />
                 Nueva Receta
+              </button>
+            </Link>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Link href="/admin/inicio">
+              <button className="flex items-center gap-2 border border-brand-primary/10 text-brand-primary px-4 py-2.5 rounded-lg text-xs font-sans font-bold tracking-[0.15em] uppercase hover:border-brand-accent hover:text-brand-accent transition-colors">
+                <Home size={14} />
+                Inicio
+              </button>
+            </Link>
+            <Link href="/admin/mesa">
+              <button className="flex items-center gap-2 border border-brand-primary/10 text-brand-primary px-4 py-2.5 rounded-lg text-xs font-sans font-bold tracking-[0.15em] uppercase hover:border-brand-accent hover:text-brand-accent transition-colors">
+                <LayoutList size={14} />
+                La Mesa
+              </button>
+            </Link>
+            <Link href="/admin/productos">
+              <button className="flex items-center gap-2 border border-brand-primary/10 text-brand-primary px-4 py-2.5 rounded-lg text-xs font-sans font-bold tracking-[0.15em] uppercase hover:border-brand-accent hover:text-brand-accent transition-colors">
+                <ShoppingBag size={14} />
+                Productos
+              </button>
+            </Link>
+            <Link href="/admin/pedidos">
+              <button className="flex items-center gap-2 border border-brand-primary/10 text-brand-primary px-4 py-2.5 rounded-lg text-xs font-sans font-bold tracking-[0.15em] uppercase hover:border-brand-accent hover:text-brand-accent transition-colors">
+                <Package size={14} />
+                Pedidos
+              </button>
+            </Link>
+            <Link href="/admin/contacto">
+              <button className="flex items-center gap-2 border border-brand-primary/10 text-brand-primary px-4 py-2.5 rounded-lg text-xs font-sans font-bold tracking-[0.15em] uppercase hover:border-brand-accent hover:text-brand-accent transition-colors">
+                <Mail size={14} />
+                Contacto
               </button>
             </Link>
           </div>
@@ -211,10 +230,11 @@ export default function AdminPage() {
             }}
             className="text-xs font-sans text-brand-muted hover:text-red-500 transition-colors"
           >
-            Cerrar Sesión
+            Cerrar sesion
           </button>
         </div>
       </div>
     </div>
   );
 }
+

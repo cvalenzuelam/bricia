@@ -64,8 +64,13 @@ export default function Footer() {
               className="text-brand-primary/50 hover:text-brand-accent transition-all hover:scale-110" aria-label="YouTube">
               <YouTubeIcon />
             </a>
-            <a href="mailto:briciaelizaldes@gmail.com"
-              className="text-brand-primary/50 hover:text-brand-accent transition-all hover:scale-110" aria-label="Correo electrónico">
+            <a
+              href="https://mail.google.com/mail/?view=cm&fs=1&to=briciaelizales@gmail.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-brand-primary/50 hover:text-brand-accent transition-all hover:scale-110"
+              aria-label="Enviar correo por Gmail"
+            >
               <Mail size={22} strokeWidth={1.5} />
             </a>
           </div>

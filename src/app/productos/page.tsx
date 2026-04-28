@@ -8,9 +8,6 @@ import { formatPrice } from "@/data/products";
 import type { Product } from "@/data/products";
 import { useCart } from "@/context/CartContext";
 
-const CATEGORIES = ["TODOS", "COCINA", "MESA", "DESPENSA"] as const;
-type FilterCategory = typeof CATEGORIES[number];
-
 function AddButton({ product }: { product: Product }) {
   const { addItem } = useCart();
   const [added, setAdded] = useState(false);
@@ -58,7 +55,7 @@ function AddButton({ product }: { product: Product }) {
 }
 
 export default function ProductosPage() {
-  const [filter, setFilter] = useState<FilterCategory>("TODOS");
+  const [filter, setFilter] = useState("TODOS");
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -71,6 +68,11 @@ export default function ProductosPage() {
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
+
+  const categories = [
+    "TODOS",
+    ...Array.from(new Set(products.map((p) => p.category?.trim()).filter(Boolean))),
+  ];
 
   const filtered = filter === "TODOS"
     ? products
@@ -115,7 +117,7 @@ export default function ProductosPage() {
       {/* ── FILTER ── */}
       <div className="max-w-7xl mx-auto px-6 mb-16 flex justify-center">
         <div className="flex gap-2 flex-wrap justify-center">
-          {CATEGORIES.map((cat) => (
+          {categories.map((cat) => (
             <button
               key={cat}
               onClick={() => setFilter(cat)}

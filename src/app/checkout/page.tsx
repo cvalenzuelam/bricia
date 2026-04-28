@@ -8,7 +8,13 @@ import { motion } from "framer-motion";
 import { ArrowLeft, Lock, Loader2, CheckCircle2 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { formatPrice } from "@/data/products";
-import { calculateShipping, FREE_SHIPPING_THRESHOLD } from "@/lib/shipping";
+import {
+  calculateShipping,
+  DEFAULT_SHIPPING_OPTION_ID,
+  FREE_SHIPPING_THRESHOLD,
+  SHIPPING_OPTIONS,
+  getShippingOptionById,
+} from "@/lib/shipping";
 
 const MEXICAN_STATES = [
   "Aguascalientes", "Baja California", "Baja California Sur", "Campeche",
@@ -55,6 +61,7 @@ export default function CheckoutPage() {
   const [submitMessage, setSubmitMessage] = useState("");
   const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
   const [hydrated, setHydrated] = useState(false);
+  const [shippingOptionId, setShippingOptionId] = useState(DEFAULT_SHIPPING_OPTION_ID);
 
   useEffect(() => {
     setHydrated(true);
@@ -67,7 +74,8 @@ export default function CheckoutPage() {
     }
   }, [hydrated, items.length, submitting, router]);
 
-  const shippingCost = calculateShipping(subtotal);
+  const selectedShippingOption = getShippingOptionById(shippingOptionId);
+  const shippingCost = calculateShipping(subtotal, selectedShippingOption.price);
   const total = subtotal + shippingCost;
   const remainingForFreeShipping = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
 
@@ -124,6 +132,9 @@ export default function CheckoutPage() {
             zip: form.zip,
             country: "México",
             notes: form.notes,
+          },
+          shippingMethod: {
+            id: selectedShippingOption.id,
           },
           items: items.map(({ product, quantity }) => ({
             productId: product.id,
@@ -341,6 +352,7 @@ export default function CheckoutPage() {
                   className={`${inputClass(false)} resize-none`}
                 />
               </Field>
+
             </section>
 
             {/* Submit */}
@@ -408,6 +420,22 @@ export default function CheckoutPage() {
 
               <div className="space-y-2 pt-5 border-t border-brand-primary/5">
                 <Row label="Subtotal" value={formatPrice(subtotal)} />
+                <div className="space-y-2">
+                  <label className="text-[10px] font-sans font-bold tracking-[0.2em] uppercase text-brand-muted block">
+                    Método de envío
+                  </label>
+                  <select
+                    value={shippingOptionId}
+                    onChange={(e) => setShippingOptionId(e.target.value)}
+                    className={inputClass(false)}
+                  >
+                    {SHIPPING_OPTIONS.map((option) => (
+                      <option key={option.id} value={option.id}>
+                        {option.name} - {formatPrice(option.price)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 <Row
                   label="Envío"
                   value={shippingCost === 0
@@ -415,6 +443,11 @@ export default function CheckoutPage() {
                     : formatPrice(shippingCost)
                   }
                 />
+                {shippingCost > 0 && (
+                  <p className="text-[11px] font-sans text-brand-muted">
+                    {selectedShippingOption.name} · {selectedShippingOption.eta}
+                  </p>
+                )}
                 {remainingForFreeShipping > 0 && (
                   <p className="text-[10px] font-sans text-brand-muted/80 italic font-serif pt-1 leading-relaxed">
                     Te faltan {formatPrice(remainingForFreeShipping)} para envío gratis.

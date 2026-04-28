@@ -6,7 +6,9 @@
   --color-brand-accent: #B08D57;
   --color-brand-muted: #7A7A78;
 
-  --font-serif: var(--font-playfair), Georgia, serif;
+  /* Titulares: Playfair + respaldo editorial */
+  --font-title: var(--font-playfair), Georgia, "Times New Roman", ui-serif, serif;
+  --font-serif: var(--font-title);
   --font-sans: var(--font-inter), system-ui, sans-serif;
 }
 
@@ -26,7 +28,7 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-serif);
+    font-family: var(--font-title);
     font-weight: 400;
     line-height: 1.2;
   }
