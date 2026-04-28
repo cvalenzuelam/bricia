@@ -24,42 +24,14 @@ export default function InstagramFeed() {
   if (images.length === 0) return null;
   return (
     <section className="bg-brand-secondary pb-0 border-t border-brand-primary/5">
-      <div className="pt-20 max-w-7xl mx-auto px-6 mb-16 text-center md:text-left flex flex-col md:flex-row md:items-end justify-between gap-8">
-        <div>
-          <h2 className="text-4xl md:text-5xl font-serif text-brand-primary mb-4 tracking-tight">
-            Cocina, inspiración y comunidad
-          </h2>
-          <p className="text-brand-muted/80 font-sans text-sm md:text-base max-w-2xl leading-relaxed">
-            Encuéntrame en YouTube, Instagram y TikTok: recetas, ideas para la mesa y el día a día.
-            Comparte tus creaciones y acompáñanos en la comunidad.
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 shrink-0 pb-2 justify-center md:justify-end">
-          <a
-            href="https://www.youtube.com/@briciaelizaldes"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="editorial-spacing border-b border-brand-accent/30 hover:border-brand-accent text-brand-primary hover:text-brand-accent transition-all text-sm"
-          >
-            YouTube
-          </a>
-          <a
-            href="https://www.instagram.com/briciaelizalde/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="editorial-spacing border-b border-brand-accent/30 hover:border-brand-accent text-brand-primary hover:text-brand-accent transition-all text-sm"
-          >
-            Instagram
-          </a>
-          <a
-            href="https://www.tiktok.com/@bricia.elizalde"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="editorial-spacing border-b border-brand-accent/30 hover:border-brand-accent text-brand-primary hover:text-brand-accent transition-all text-sm"
-          >
-            TikTok
-          </a>
-        </div>
+      <div className="pt-20 max-w-7xl mx-auto px-6 mb-16 text-center md:text-left">
+        <h2 className="text-4xl md:text-5xl font-serif text-brand-primary mb-4 tracking-tight">
+          Cocina, inspiración y comunidad
+        </h2>
+        <p className="text-brand-muted/80 font-sans text-sm md:text-base max-w-2xl mx-auto md:mx-0 leading-relaxed">
+          Encuéntrame en mis redes: recetas, ideas para la mesa y el día a día. Comparte tus creaciones y
+          acompáñanos en la comunidad.
+        </p>
       </div>
 
       {/* Grid of 5 columns, perfectly hugging each other */}

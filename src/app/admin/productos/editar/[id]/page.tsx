@@ -76,6 +76,8 @@ export default function EditarProductoPage({
     subtitle: "",
     price: "",
     description: "",
+    dimensions: "",
+    material: "",
     category: "COCINA",
     stock: "0",
     image: "/images/mesa_setting.png",
@@ -100,6 +102,8 @@ export default function EditarProductoPage({
         subtitle: product.subtitle,
         price: String(product.price),
         description: product.description,
+        dimensions: product.dimensions ?? "",
+        material: product.material ?? "",
         category: product.category,
         stock: String(product.stock),
         image: product.image,
@@ -146,6 +150,8 @@ export default function EditarProductoPage({
       subtitle: form.subtitle.trim(),
       price: Number(form.price) || 0,
       description: form.description.trim(),
+      dimensions: form.dimensions.trim(),
+      material: form.material.trim(),
       category: form.category.trim().toUpperCase(),
       stock: Number(form.stock) || 0,
       image: imagePath,
@@ -286,6 +292,39 @@ export default function EditarProductoPage({
               rows={4}
               className="w-full px-4 py-3 border border-brand-primary/10 rounded-lg bg-white text-brand-primary font-serif text-sm italic focus:outline-none focus:border-brand-accent transition-colors resize-none leading-relaxed"
             />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-[10px] font-sans font-bold tracking-[0.2em] uppercase text-brand-muted block">
+                Dimensiones
+              </label>
+              <input
+                type="text"
+                value={form.dimensions}
+                onChange={(e) => setForm({ ...form, dimensions: e.target.value })}
+                placeholder='Ej. 42 × 28 × 2 cm o "diám. 22 cm · alto 9 cm"'
+                className="w-full px-4 py-3 border border-brand-primary/10 rounded-lg bg-white text-brand-primary font-sans text-sm focus:outline-none focus:border-brand-accent transition-colors"
+              />
+              <p className="text-[10px] font-sans text-brand-muted leading-relaxed">
+                Opcional · cómo aparece en la ficha del producto
+              </p>
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-sans font-bold tracking-[0.2em] uppercase text-brand-muted block">
+                Material
+              </label>
+              <input
+                type="text"
+                value={form.material}
+                onChange={(e) => setForm({ ...form, material: e.target.value })}
+                placeholder="Ej. Madera de olivo · gres cerámico"
+                className="w-full px-4 py-3 border border-brand-primary/10 rounded-lg bg-white text-brand-primary font-sans text-sm focus:outline-none focus:border-brand-accent transition-colors"
+              />
+              <p className="text-[10px] font-sans text-brand-muted leading-relaxed">
+                Opcional · textura, acabado o contenido principal
+              </p>
+            </div>
           </div>
 
           {/* Category + Price + Stock */}

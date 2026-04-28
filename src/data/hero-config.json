@@ -92,8 +92,18 @@
       "price": "$850 MXN",
       "image": "/images/producto_tabla.png",
       "link": "/productos/tabla-mezquite"
+    },
+    {
+      "name": "Cucharas de Olivo",
       "price": "$220 MXN",
       "image": "/images/producto_cuchara.png",
       "link": "/productos/cucharas-olivo"
+    },
+    {
+      "name": "Cerámica Artesanal",
       "price": "$1,200 MXN",
+      "image": "/images/producto_ceramica.png",
       "link": "/productos/ceramica-artesanal"
+    }
+  ]
+}

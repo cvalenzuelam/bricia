@@ -7,6 +7,10 @@ export interface Product {
   image: string;
   category: string;
   stock: number;
+  /** Medidas habituales, p. ej. "42 × 28 × 2 cm" o diámetro y alto */
+  dimensions?: string;
+  /** Materiales principalmente utilizados */
+  material?: string;
 }
 
 export const products: Product[] = [
@@ -17,8 +21,10 @@ export const products: Product[] = [
     price: 850,
     description: "Tallada a mano en madera de mezquite del Valle de Oaxaca y acabada con aceite de linaza. Cada pieza tiene veta única. Ideal para servir, cortar y presentar en la mesa.",
     image: "/images/producto_tabla.png",
-    category: "COCINA",
+    category: "DECORACIÓN",
     stock: 8,
+    dimensions: "Aprox. 42 × 28 × 2,5 cm",
+    material: "Madera de mezquite · acabado con aceite de linaza apto para alimentos",
   },
   {
     id: "cucharas-olivo",
@@ -29,6 +35,9 @@ export const products: Product[] = [
     image: "/images/producto_cuchara.png",
     category: "COCINA",
     stock: 15,
+    dimensions:
+      "Piezas desde aprox. 20 hasta 31 cm de largo (set de tamaños diferentes)",
+    material: "Madera de olivo",
   },
   {
     id: "ceramica-artesanal",
@@ -39,6 +48,8 @@ export const products: Product[] = [
     image: "/images/producto_ceramica.png",
     category: "MESA",
     stock: 5,
+    dimensions: "Diámetro aprox. 22 cm · alto 9 cm",
+    material: "Gres cerámico · esmalte cremoso",
   },
   {
     id: "mantel-lino",
@@ -49,6 +60,8 @@ export const products: Product[] = [
     image: "/images/mesa_setting.png",
     category: "MESA",
     stock: 10,
+    dimensions: "140 × 250 cm",
+    material: "Lino belga sin blanquear (100%)",
   },
   {
     id: "especias-temporada",
@@ -59,6 +72,9 @@ export const products: Product[] = [
     image: "/images/mesa_details.png",
     category: "DESPENSA",
     stock: 20,
+    dimensions:
+      "5 frascos de vidrio (alturas variables aprox. 8–11 cm)",
+    material: "Frasco de vidrio reciclado · tapa metálica · especias en grano enteras",
   },
   {
     id: "aceite-oliva",
@@ -69,6 +85,8 @@ export const products: Product[] = [
     image: "/images/mesa_hosting.png",
     category: "DESPENSA",
     stock: 30,
+    dimensions: "Botella de 500 ml (alto aprox. 26 cm)",
+    material: "Vidrio oscuro · aceite de oliva extra virgen",
   },
 ];
 

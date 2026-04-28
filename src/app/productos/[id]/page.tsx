@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, Package } from "lucide-react";
+import { ArrowLeft, Layers, Package, Ruler } from "lucide-react";
 import { getProducts } from "@/data/products-server";
 import { formatPrice } from "@/data/products";
 import type { Product } from "@/data/products";
@@ -12,6 +12,7 @@ const CATEGORY_TINT: Record<string, string> = {
   COCINA: "#A89F91",
   MESA: "#C2A878",
   DESPENSA: "#B5A18C",
+  DECORACIÓN: "#9A9078",
 };
 
 function categoryColor(category: string): string {
@@ -75,6 +76,12 @@ function productJsonLd(product: Product, origin: string) {
       ? `${origin}${product.image.startsWith("/") ? product.image : `/${product.image}`}`
       : product.image;
 
+  const additional: { "@type": "PropertyValue"; name: string; value: string }[] = [];
+  const dim = product.dimensions?.trim();
+  const mat = product.material?.trim();
+  if (dim) additional.push({ "@type": "PropertyValue", name: "Dimensiones", value: dim });
+  if (mat) additional.push({ "@type": "PropertyValue", name: "Material", value: mat });
+
   return {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -82,6 +89,7 @@ function productJsonLd(product: Product, origin: string) {
     description: product.description,
     image: imageAbsolute,
     sku: product.id,
+    ...(additional.length > 0 ? { additionalProperty: additional } : {}),
     offers: {
       "@type": "Offer",
       priceCurrency: "MXN",
@@ -117,6 +125,8 @@ export default async function ProductoDetallePage({ params }: PageProps) {
   const relatedHeadingSameCategory = sameCategory.length > 0;
 
   const tint = categoryColor(product.category);
+  const dim = product.dimensions?.trim();
+  const mat = product.material?.trim();
 
   return (
     <article className="min-h-screen bg-brand-secondary pt-28 pb-24 md:pt-32 md:pb-32">
@@ -182,6 +192,34 @@ export default async function ProductoDetallePage({ params }: PageProps) {
                 {product.description}
               </p>
             </div>
+
+            {(dim || mat) && (
+              <div className="rounded-2xl border border-brand-primary/10 bg-white/35 px-6 py-5 space-y-4">
+                <p className="text-[10px] font-sans font-bold tracking-[0.25em] uppercase text-brand-muted">
+                  Detalles
+                </p>
+                <dl className="space-y-4">
+                  {dim && (
+                    <div className="flex gap-3 md:gap-4">
+                      <dt className="shrink-0 flex items-start gap-2 text-[11px] font-sans font-bold uppercase tracking-[0.12em] text-brand-primary/55">
+                        <Ruler size={14} strokeWidth={1.5} className="mt-0.5 text-brand-accent/80 shrink-0" aria-hidden />
+                        Dimensiones
+                      </dt>
+                      <dd className="text-sm md:text-[15px] font-sans text-brand-primary/85 leading-snug">{dim}</dd>
+                    </div>
+                  )}
+                  {mat && (
+                    <div className="flex gap-3 md:gap-4">
+                      <dt className="shrink-0 flex items-start gap-2 text-[11px] font-sans font-bold uppercase tracking-[0.12em] text-brand-primary/55">
+                        <Layers size={14} strokeWidth={1.5} className="mt-0.5 text-brand-accent/80 shrink-0" aria-hidden />
+                        Material
+                      </dt>
+                      <dd className="text-sm md:text-[15px] font-sans text-brand-primary/85 leading-snug">{mat}</dd>
+                    </div>
+                  )}
+                </dl>
+              </div>
+            )}
 
             <div className="rounded-2xl border border-brand-primary/8 bg-white/60 p-8 space-y-6 backdrop-blur-sm">
               <div className="flex flex-wrap items-end justify-between gap-4">

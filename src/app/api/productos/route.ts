@@ -21,7 +21,8 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, subtitle, price, description, image, category, stock } = body;
+    const { name, subtitle, price, description, image, category, stock, dimensions, material } =
+      body;
 
     if (!name || !category) {
       return NextResponse.json(
@@ -29,6 +30,9 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    const dim = typeof dimensions === "string" ? dimensions.trim() : "";
+    const mat = typeof material === "string" ? material.trim() : "";
 
     const id = generateProductId(name);
     const product: Product = {
@@ -40,6 +44,8 @@ export async function POST(request: NextRequest) {
       image: image || "/images/mesa_setting.png",
       category: category as Product["category"],
       stock: Number(stock) ?? 0,
+      ...(dim ? { dimensions: dim } : {}),
+      ...(mat ? { material: mat } : {}),
     };
 
     await addProduct(product);
