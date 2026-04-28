@@ -4,7 +4,7 @@ import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowLeft, Loader2, Package, MapPin, User, Mail, Phone, CreditCard } from "lucide-react";
+import { ArrowLeft, Loader2, Package, MapPin, User, Mail, Phone, CreditCard, Send, CheckCircle2 } from "lucide-react";
 import type { Order, OrderStatus } from "@/data/orders";
 import { formatPrice } from "@/data/products";
 
@@ -48,6 +48,8 @@ export default function AdminPedidoDetailPage({
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [notFound, setNotFound] = useState(false);
+  const [resendingEmail, setResendingEmail] = useState(false);
+  const [emailFeedback, setEmailFeedback] = useState<{ ok: boolean; msg: string } | null>(null);
 
   useEffect(() => {
     const session = sessionStorage.getItem("bricia_admin");
@@ -73,7 +75,17 @@ export default function AdminPedidoDetailPage({
   const updateStatus = async (status: OrderStatus) => {
     if (!order) return;
     if (status === "cancelled" && !confirm("¿Marcar el pedido como cancelado?")) return;
+    if (
+      status === "paid" &&
+      !order.confirmationEmailSentAt &&
+      !confirm(
+        "Marcar como pagado enviará el correo de confirmación al cliente. ¿Continuar?"
+      )
+    ) {
+      return;
+    }
     setUpdating(true);
+    setEmailFeedback(null);
     try {
       const res = await fetch(`/api/orders/${order.id}`, {
         method: "PUT",
@@ -83,9 +95,36 @@ export default function AdminPedidoDetailPage({
       if (res.ok) {
         const data = await res.json();
         setOrder(data.order);
+        if (data.emailJustSent) {
+          setEmailFeedback({ ok: true, msg: "Correo de confirmación enviado al cliente." });
+        }
       }
     } finally {
       setUpdating(false);
+    }
+  };
+
+  const resendEmail = async () => {
+    if (!order) return;
+    if (!confirm(`Reenviar el correo de confirmación a ${order.customer.email}?`)) return;
+    setResendingEmail(true);
+    setEmailFeedback(null);
+    try {
+      const res = await fetch(`/api/orders/${order.id}/resend-email`, { method: "POST" });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setEmailFeedback({ ok: true, msg: "Correo enviado nuevamente." });
+        if (data.order) setOrder(data.order);
+      } else {
+        setEmailFeedback({
+          ok: false,
+          msg: data?.error || "No se pudo enviar el correo. Revisa los logs del servidor.",
+        });
+      }
+    } catch {
+      setEmailFeedback({ ok: false, msg: "Error de red al reenviar el correo." });
+    } finally {
+      setResendingEmail(false);
     }
   };
 
@@ -287,6 +326,50 @@ export default function AdminPedidoDetailPage({
                     <span className="text-brand-muted">Acreditado: </span>
                     <span className="text-brand-primary">{formatDate(order.paidAt)}</span>
                   </div>
+                )}
+              </div>
+            </Card>
+
+            <Card title="Correo al cliente" icon={<Mail size={16} />}>
+              <div className="space-y-3 text-sm font-sans">
+                {order.confirmationEmailSentAt ? (
+                  <div className="flex items-start gap-2 text-brand-primary">
+                    <CheckCircle2 size={14} className="text-emerald-600 mt-0.5 shrink-0" />
+                    <span>
+                      Enviado a{" "}
+                      <span className="text-brand-primary">{order.customer.email}</span> el{" "}
+                      {formatDate(order.confirmationEmailSentAt)}
+                    </span>
+                  </div>
+                ) : (
+                  <p className="text-brand-muted leading-relaxed">
+                    Aún no se ha enviado el correo de confirmación. Marca el pedido como{" "}
+                    <strong className="text-brand-primary">Pagado</strong> o usa el botón
+                    de abajo para enviarlo manualmente.
+                  </p>
+                )}
+
+                <button
+                  onClick={resendEmail}
+                  disabled={resendingEmail}
+                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-brand-primary/10 text-[10px] font-sans font-bold tracking-[0.2em] uppercase text-brand-primary hover:border-brand-accent/40 hover:text-brand-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {resendingEmail ? (
+                    <Loader2 size={13} className="animate-spin" />
+                  ) : (
+                    <Send size={13} />
+                  )}
+                  {order.confirmationEmailSentAt ? "Reenviar correo" : "Enviar correo"}
+                </button>
+
+                {emailFeedback && (
+                  <p
+                    className={`text-xs ${
+                      emailFeedback.ok ? "text-emerald-700" : "text-red-700"
+                    }`}
+                  >
+                    {emailFeedback.msg}
+                  </p>
                 )}
               </div>
             </Card>

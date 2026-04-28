@@ -15,6 +15,12 @@ const ACCESS_TOKEN = process.env.MERCADOPAGO_ACCESS_TOKEN;
  * Validamos consultando directamente a la API de MP en lugar de confiar en el body.
  */
 export async function POST(request: NextRequest) {
+  console.log("[webhook MP] hit", {
+    ua: request.headers.get("user-agent"),
+    contentType: request.headers.get("content-type"),
+    url: request.url,
+  });
+
   if (!ACCESS_TOKEN) {
     console.warn("[webhook MP] MERCADOPAGO_ACCESS_TOKEN no configurado");
     return NextResponse.json({ ok: false }, { status: 200 });
@@ -26,6 +32,7 @@ export async function POST(request: NextRequest) {
   } catch {
     return NextResponse.json({ ok: false, reason: "invalid body" }, { status: 200 });
   }
+  console.log("[webhook MP] body", body);
 
   // MP envía notificaciones de varios tipos. Solo nos interesan pagos.
   const isPayment =
