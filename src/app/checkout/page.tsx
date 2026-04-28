@@ -242,7 +242,7 @@ export default function CheckoutPage() {
                   type="text"
                   value={form.name}
                   onChange={(e) => setField("name", e.target.value)}
-                  placeholder="Bricia López"
+                  placeholder="Bricia Elizalde"
                   maxLength={CHECKOUT_LIMITS.name}
                   autoComplete="name"
                   className={inputClass(!!errors.name)}

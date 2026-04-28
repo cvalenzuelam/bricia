@@ -129,7 +129,7 @@ export async function POST(request: NextRequest) {
           pending: `${baseUrl}/pago/pendiente?orderId=${order.id}`,
         },
         auto_return: "approved",
-        statement_descriptor: "Bricia Lopez",
+        statement_descriptor: "Bricia Elizalde",
         external_reference: order.id,
         notification_url: `${baseUrl}/api/webhooks/mercadopago`,
       },
