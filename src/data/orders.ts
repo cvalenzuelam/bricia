@@ -192,3 +192,11 @@ export async function findOrderByExternalReference(
   const orders = await getOrders();
   return orders.find((o) => o.id === externalRef) ?? null;
 }
+
+export async function deleteOrder(id: string): Promise<boolean> {
+  const orders = await getOrders();
+  const next = orders.filter((o) => o.id !== id);
+  if (next.length === orders.length) return false;
+  await saveOrders(next);
+  return true;
+}

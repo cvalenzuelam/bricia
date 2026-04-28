@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getOrderById, updateOrder, type Order, type OrderStatus } from "@/data/orders";
+import { getOrderById, updateOrder, deleteOrder, type Order, type OrderStatus } from "@/data/orders";
 import { sendOrderConfirmationEmail } from "@/lib/email";
 
 const NO_STORE = {
@@ -96,6 +96,29 @@ export async function PUT(
     return NextResponse.json(
       { error: "Error al actualizar pedido" },
       { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const deleted = await deleteOrder(id);
+    if (!deleted) {
+      return NextResponse.json(
+        { error: "Pedido no encontrado" },
+        { status: 404, headers: NO_STORE }
+      );
+    }
+    return NextResponse.json({ success: true }, { headers: NO_STORE });
+  } catch (err) {
+    console.error("[orders DELETE]", err);
+    return NextResponse.json(
+      { error: "Error al eliminar pedido" },
+      { status: 500, headers: NO_STORE }
     );
   }
 }

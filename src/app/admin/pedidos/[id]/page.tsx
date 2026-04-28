@@ -4,7 +4,7 @@ import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowLeft, Loader2, Package, MapPin, User, Mail, Phone, CreditCard, Send, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Loader2, Package, MapPin, User, Mail, Phone, CreditCard, Send, CheckCircle2, Trash2 } from "lucide-react";
 import type { Order, OrderStatus } from "@/data/orders";
 import { formatPrice } from "@/data/products";
 
@@ -50,6 +50,7 @@ export default function AdminPedidoDetailPage({
   const [notFound, setNotFound] = useState(false);
   const [resendingEmail, setResendingEmail] = useState(false);
   const [emailFeedback, setEmailFeedback] = useState<{ ok: boolean; msg: string } | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const session = sessionStorage.getItem("bricia_admin");
@@ -125,6 +126,36 @@ export default function AdminPedidoDetailPage({
       setEmailFeedback({ ok: false, msg: "Error de red al reenviar el correo." });
     } finally {
       setResendingEmail(false);
+    }
+  };
+
+  const deleteOrderPermanently = async () => {
+    if (!order) return;
+    if (
+      !confirm(
+        `¿Eliminar permanentemente el pedido ${order.id}? Esta acción no se puede deshacer y se quitará del listado en Vercel Blob.`
+      )
+    ) {
+      return;
+    }
+    const typed = window.prompt(`Escribe el folio exacto para confirmar:\n${order.id}`);
+    if (typed !== order.id) {
+      window.alert("El folio no coincide. No se eliminó nada.");
+      return;
+    }
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/orders/${order.id}`, { method: "DELETE" });
+      if (res.ok) {
+        router.push("/admin/pedidos");
+        return;
+      }
+      const data = await res.json().catch(() => ({}));
+      window.alert(data?.error || "No se pudo eliminar el pedido.");
+    } catch {
+      window.alert("Error de red al eliminar.");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -374,6 +405,26 @@ export default function AdminPedidoDetailPage({
               </div>
             </Card>
           </aside>
+        </div>
+
+        {/* Zona peligro — eliminar */}
+        <div className="mt-14 border border-red-900/10 rounded-xl p-6 bg-red-900/[0.03]">
+          <p className="text-[10px] font-sans font-bold tracking-[0.2em] uppercase text-red-900/70 mb-2">
+            Eliminar pedido
+          </p>
+          <p className="text-sm font-sans text-brand-muted mb-4 max-w-2xl leading-relaxed">
+            Usa esto solo para pruebas o pedidos duplicados. El pedido desaparece del panel y de los datos guardados
+            (Blob o archivo local). No cancela cobros en Mercado Pago: revisa ahí si hubo un pago real.
+          </p>
+          <button
+            type="button"
+            onClick={deleteOrderPermanently}
+            disabled={deleting || updating}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-red-800/20 text-[10px] font-sans font-bold tracking-[0.2em] uppercase text-red-900 hover:bg-red-900/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {deleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+            Eliminar permanentemente
+          </button>
         </div>
       </div>
     </div>

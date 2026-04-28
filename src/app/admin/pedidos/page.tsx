@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Loader2, Package, Search } from "lucide-react";
+import { ArrowLeft, Loader2, Package, Search, Trash2 } from "lucide-react";
 import type { Order, OrderStatus } from "@/data/orders";
 import { formatPrice } from "@/data/products";
 
@@ -41,6 +41,7 @@ export default function AdminPedidosPage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<OrderStatus | "all">("all");
   const [search, setSearch] = useState("");
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     const session = sessionStorage.getItem("bricia_admin");
@@ -81,6 +82,37 @@ export default function AdminPedidosPage() {
     }
     return c;
   }, [orders]);
+
+  const handleDeleteFromList = async (order: Order, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (
+      !confirm(
+        `¿Eliminar permanentemente el pedido ${order.id}? No se puede deshacer.`
+      )
+    ) {
+      return;
+    }
+    const typed = window.prompt(`Escribe el folio exacto para confirmar:\n${order.id}`);
+    if (typed !== order.id) {
+      window.alert("El folio no coincide.");
+      return;
+    }
+    setDeletingId(order.id);
+    try {
+      const res = await fetch(`/api/orders/${order.id}`, { method: "DELETE" });
+      if (res.ok) {
+        setOrders((prev) => prev.filter((o) => o.id !== order.id));
+        return;
+      }
+      const data = await res.json().catch(() => ({}));
+      window.alert(data?.error || "No se pudo eliminar.");
+    } catch {
+      window.alert("Error de red.");
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-brand-secondary pt-20">
@@ -144,44 +176,63 @@ export default function AdminPedidosPage() {
         ) : (
           <div className="space-y-3">
             {filtered.map((order) => (
-              <Link
+              <div
                 key={order.id}
-                href={`/admin/pedidos/${order.id}`}
-                className="block bg-white rounded-xl p-5 border border-brand-primary/5 hover:border-brand-accent/30 transition-colors group"
+                className="flex items-stretch gap-2 sm:gap-3"
               >
-                <div className="flex items-center justify-between gap-6 flex-wrap">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3 mb-1">
-                      <span
-                        className="text-[9px] font-sans font-bold tracking-[0.2em] uppercase px-2.5 py-1 rounded-full"
-                        style={{
-                          color: STATUS_COLOR[order.status],
-                          backgroundColor: `${STATUS_COLOR[order.status]}15`,
-                        }}
-                      >
-                        {STATUS_LABEL[order.status]}
-                      </span>
-                      <span className="text-[11px] font-sans text-brand-muted">
-                        {formatDate(order.createdAt)}
-                      </span>
+                <Link
+                  href={`/admin/pedidos/${order.id}`}
+                  className="flex-1 min-w-0 block bg-white rounded-xl p-5 border border-brand-primary/5 hover:border-brand-accent/30 transition-colors group"
+                >
+                  <div className="flex items-center justify-between gap-6 flex-wrap">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-3 mb-1">
+                        <span
+                          className="text-[9px] font-sans font-bold tracking-[0.2em] uppercase px-2.5 py-1 rounded-full"
+                          style={{
+                            color: STATUS_COLOR[order.status],
+                            backgroundColor: `${STATUS_COLOR[order.status]}15`,
+                          }}
+                        >
+                          {STATUS_LABEL[order.status]}
+                        </span>
+                        <span className="text-[11px] font-sans text-brand-muted">
+                          {formatDate(order.createdAt)}
+                        </span>
+                      </div>
+                      <h3 className="font-serif text-lg text-brand-primary group-hover:text-brand-accent transition-colors">
+                        {order.customer.name}
+                      </h3>
+                      <p className="text-xs font-sans text-brand-muted truncate">
+                        {order.customer.email} · {order.items.length}{" "}
+                        {order.items.length === 1 ? "artículo" : "artículos"}
+                      </p>
                     </div>
-                    <h3 className="font-serif text-lg text-brand-primary group-hover:text-brand-accent transition-colors">
-                      {order.customer.name}
-                    </h3>
-                    <p className="text-xs font-sans text-brand-muted truncate">
-                      {order.customer.email} · {order.items.length} {order.items.length === 1 ? "artículo" : "artículos"}
-                    </p>
+                    <div className="text-right shrink-0">
+                      <p className="text-[10px] font-sans tracking-[0.2em] uppercase text-brand-muted mb-1">
+                        {order.id}
+                      </p>
+                      <p className="text-2xl font-serif text-brand-primary">
+                        {formatPrice(order.total)}
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-right shrink-0">
-                    <p className="text-[10px] font-sans tracking-[0.2em] uppercase text-brand-muted mb-1">
-                      {order.id}
-                    </p>
-                    <p className="text-2xl font-serif text-brand-primary">
-                      {formatPrice(order.total)}
-                    </p>
-                  </div>
-                </div>
-              </Link>
+                </Link>
+                <button
+                  type="button"
+                  title="Eliminar pedido"
+                  aria-label={`Eliminar pedido ${order.id}`}
+                  onClick={(e) => handleDeleteFromList(order, e)}
+                  disabled={deletingId === order.id}
+                  className="shrink-0 self-stretch flex items-center justify-center w-12 sm:w-14 rounded-xl border border-brand-primary/10 bg-white text-brand-muted hover:text-red-800 hover:border-red-800/25 hover:bg-red-900/[0.04] transition-colors disabled:opacity-50"
+                >
+                  {deletingId === order.id ? (
+                    <Loader2 size={18} className="animate-spin" />
+                  ) : (
+                    <Trash2 size={18} strokeWidth={1.5} />
+                  )}
+                </button>
+              </div>
             ))}
           </div>
         )}
