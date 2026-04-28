@@ -81,11 +81,13 @@ export async function POST(request: NextRequest) {
 
       // Enviar correo de confirmación una sola vez
       if (!working.confirmationEmailSentAt) {
-        const sent = await sendOrderConfirmationEmail(working);
-        if (sent) {
+        const result = await sendOrderConfirmationEmail(working);
+        if (result.ok) {
           await updateOrder(working.id, {
             confirmationEmailSentAt: new Date().toISOString(),
           });
+        } else {
+          console.error("[webhook MP] email no enviado:", result.error);
         }
       }
     } else if (status && order.status === "pending") {

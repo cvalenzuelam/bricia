@@ -328,15 +328,42 @@ function buildOrderConfirmationText(order: Order): string {
   return lines.join("\n");
 }
 
-export async function sendOrderConfirmationEmail(order: Order): Promise<boolean> {
+export interface SendEmailResult {
+  ok: boolean;
+  error?: string;
+}
+
+function summarizeError(err: unknown): string {
+  if (!err) return "Error desconocido";
+  if (typeof err === "string") return err;
+  if (err instanceof Error) return err.message;
+  if (typeof err === "object") {
+    const e = err as { message?: unknown; name?: unknown; statusCode?: unknown };
+    const parts = [
+      typeof e.statusCode === "number" || typeof e.statusCode === "string"
+        ? `HTTP ${e.statusCode}`
+        : null,
+      typeof e.name === "string" ? e.name : null,
+      typeof e.message === "string" ? e.message : null,
+    ].filter(Boolean);
+    return parts.join(" · ") || JSON.stringify(err).slice(0, 240);
+  }
+  return String(err);
+}
+
+export async function sendOrderConfirmationEmail(
+  order: Order
+): Promise<SendEmailResult> {
   if (!RESEND_API_KEY) {
-    console.warn("[email] RESEND_API_KEY no configurado — skip email");
-    return false;
+    const error = "RESEND_API_KEY no está configurado en el servidor.";
+    console.warn("[email]", error);
+    return { ok: false, error };
   }
 
   if (!order.customer?.email) {
-    console.warn("[email] orden sin email de cliente — skip");
-    return false;
+    const error = "La orden no tiene email de cliente.";
+    console.warn("[email]", error);
+    return { ok: false, error };
   }
 
   try {
@@ -361,14 +388,17 @@ export async function sendOrderConfirmationEmail(order: Order): Promise<boolean>
       ],
     });
 
-    if ((result as { error?: unknown }).error) {
-      console.error("[email] Resend error:", (result as { error: unknown }).error);
-      return false;
+    const apiError = (result as { error?: unknown }).error;
+    if (apiError) {
+      const error = summarizeError(apiError);
+      console.error("[email] Resend error:", apiError);
+      return { ok: false, error };
     }
 
-    return true;
+    return { ok: true };
   } catch (err) {
+    const error = summarizeError(err);
     console.error("[email] excepción al enviar:", err);
-    return false;
+    return { ok: false, error };
   }
 }

@@ -25,12 +25,13 @@ export async function POST(
       );
     }
 
-    const sent = await sendOrderConfirmationEmail(order);
-    if (!sent) {
+    const result = await sendOrderConfirmationEmail(order);
+    if (!result.ok) {
       return NextResponse.json(
         {
-          error:
-            "No se pudo enviar el correo. Revisa RESEND_API_KEY/EMAIL_FROM en el servidor.",
+          error: result.error || "No se pudo enviar el correo.",
+          hint:
+            "Revisa RESEND_API_KEY y que EMAIL_FROM use un dominio verificado en Resend.",
         },
         { status: 500, headers: NO_STORE }
       );

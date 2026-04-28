@@ -44,14 +44,17 @@ export async function POST(
 
     // Enviar correo una sola vez (idempotente entre webhook + landing de éxito)
     let emailSent = Boolean(working.confirmationEmailSentAt);
+    let emailError: string | undefined;
     if (!emailSent) {
-      const sent = await sendOrderConfirmationEmail(working);
-      if (sent) {
+      const result = await sendOrderConfirmationEmail(working);
+      if (result.ok) {
         const stamped = await updateOrder(id, {
           confirmationEmailSentAt: new Date().toISOString(),
         });
         if (stamped) working = stamped;
         emailSent = true;
+      } else {
+        emailError = result.error;
       }
     }
 
@@ -61,6 +64,7 @@ export async function POST(
         order: working,
         alreadyConfirmed: order.status === "paid",
         emailSent,
+        emailError,
       },
       { headers: NO_STORE }
     );

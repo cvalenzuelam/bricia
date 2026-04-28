@@ -72,23 +72,26 @@ export async function PUT(
 
     // Si la transición es a "paid" y aún no se ha enviado el correo, dispararlo.
     let emailJustSent = false;
+    let emailError: string | undefined;
     if (
       updates.status === "paid" &&
       current.status !== "paid" &&
       !updated.confirmationEmailSentAt
     ) {
-      const sent = await sendOrderConfirmationEmail(updated);
-      if (sent) {
+      const result = await sendOrderConfirmationEmail(updated);
+      if (result.ok) {
         const stamped = await updateOrder(id, {
           confirmationEmailSentAt: new Date().toISOString(),
         });
         if (stamped) updated = stamped;
         emailJustSent = true;
+      } else {
+        emailError = result.error;
       }
     }
 
     return NextResponse.json(
-      { success: true, order: updated, emailJustSent },
+      { success: true, order: updated, emailJustSent, emailError },
       { headers: NO_STORE }
     );
   } catch (err) {

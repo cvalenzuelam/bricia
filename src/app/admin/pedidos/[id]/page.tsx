@@ -117,9 +117,10 @@ export default function AdminPedidoDetailPage({
         setEmailFeedback({ ok: true, msg: "Correo enviado nuevamente." });
         if (data.order) setOrder(data.order);
       } else {
+        const hint = data?.hint ? ` ${data.hint}` : "";
         setEmailFeedback({
           ok: false,
-          msg: data?.error || "No se pudo enviar el correo. Revisa los logs del servidor.",
+          msg: `${data?.error || "No se pudo enviar el correo."}${hint}`.trim(),
         });
       }
     } catch {
