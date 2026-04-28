@@ -28,8 +28,15 @@ function formatProductTitle(name: string): string {
     .join(" ");
 }
 
-export default function ProductSection(): JSX.Element | null {
-  const [products, setProducts] = useState<Product[]>([]);
+export default function ProductSection({
+  initialProducts,
+}: {
+  /** Precargados en el servidor = evita otro GET /api/productos en cliente */
+  initialProducts?: Product[];
+}): JSX.Element | null {
+  const [products, setProducts] = useState<Product[]>(() =>
+    Array.isArray(initialProducts) ? initialProducts : []
+  );
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canPrev, setCanPrev] = useState(false);
   const [canNext, setCanNext] = useState(false);
@@ -44,8 +51,10 @@ export default function ProductSection(): JSX.Element | null {
   }, []);
 
   useEffect(() => {
+    if (initialProducts !== undefined) return;
+
     let cancelled = false;
-    fetch("/api/productos", { cache: "no-store" })
+    fetch("/api/productos")
       .then((res) => res.json())
       .then((data: unknown) => {
         if (cancelled || !Array.isArray(data)) return;
@@ -63,7 +72,7 @@ export default function ProductSection(): JSX.Element | null {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [initialProducts]);
 
   useEffect(() => {
     const el = scrollRef.current;

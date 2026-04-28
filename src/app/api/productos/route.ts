@@ -6,10 +6,15 @@ const NO_STORE = {
   "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
 };
 
+/** Alineado con /api/recipes: menos invocations y mejor acierto CDN en Hobby */
+const PUBLIC_CACHE_HEADERS = {
+  "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
+};
+
 export async function GET() {
   try {
     const products = await getProducts();
-    return NextResponse.json(products, { headers: NO_STORE });
+    return NextResponse.json(products, { headers: PUBLIC_CACHE_HEADERS });
   } catch {
     return NextResponse.json(
       { error: "Error al cargar productos" },

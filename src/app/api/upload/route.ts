@@ -3,6 +3,7 @@ import { mkdir, writeFile } from "fs/promises";
 import path from "path";
 import crypto from "crypto";
 import { put } from "@vercel/blob";
+import { localJsonInDev } from "@/lib/dev-data-source";
 
 export const runtime = "nodejs";
 
@@ -53,11 +54,8 @@ export async function POST(request: NextRequest) {
     if (ext === "jfif" || ext === "jpeg") ext = "jpg";
     if (!ext) ext = "png";
 
-    const onVercel = Boolean(process.env.VERCEL);
-    const useDevDisk =
-      !onVercel && !BLOB_TOKEN && process.env.NODE_ENV === "development";
-
-    if (useDevDisk) {
+    /** En desarrollo local priorizamos disco (sin put a Blob → menos advanced ops). */
+    if (localJsonInDev()) {
       const publicPath = await saveDevUpload(file, ext);
       return NextResponse.json({
         success: true,

@@ -19,6 +19,13 @@ const nextConfig: NextConfig = {
     },
   },
   images: {
+    /** Menos regeneraciones nuevas ante muchos tamaños viewport (presupuesto Hobby Image Optimization). */
+    deviceSizes: [640, 750, 1080, 1200],
+    imageSizes: [16, 32, 48, 64, 96, 128, 240, 384],
+    /** Una sola derivada por petición donde el navegador lo admite vs avif+webp (menos transformations). */
+    formats: ["image/webp"],
+    /** Reutiliza el mismo archivo optimizado en CDN más tiempo. */
+    minimumCacheTTL: 60 * 60 * 24 * 14,
     remotePatterns: [
       {
         protocol: "https",

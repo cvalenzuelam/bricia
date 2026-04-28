@@ -7,10 +7,22 @@ interface Config {
   instagramImages: { src: string; caption?: string; isVideo?: boolean }[];
 }
 
-export default function InstagramFeed() {
-  const [images, setImages] = useState<{ src: string; caption?: string; isVideo?: boolean }[]>([]);
+export default function InstagramFeed({
+  initialInstagramImages,
+  /** true cuando el home SSR ya cargó instagramImages desde hero */
+  fromServer = false,
+}: {
+  initialInstagramImages?: { src: string; caption?: string; isVideo?: boolean }[];
+  fromServer?: boolean;
+}) {
+  const [images, setImages] = useState<
+    { src: string; caption?: string; isVideo?: boolean }[]
+  >(() =>
+    Array.isArray(initialInstagramImages) ? initialInstagramImages : []
+  );
 
   useEffect(() => {
+    if (fromServer) return;
     fetch("/api/hero")
       .then((res) => res.json())
       .then((data: Config) => {
@@ -19,7 +31,7 @@ export default function InstagramFeed() {
         }
       })
       .catch(() => {});
-  }, []);
+  }, [fromServer]);
 
   if (images.length === 0) return null;
   return (

@@ -69,26 +69,41 @@ function imageOverlayStyle(bgHex: string): CSSProperties {
   };
 }
 
-export default function Hero() {
-  const [config, setConfig] = useState<HeroConfig>(HERO_FALLBACK);
+function mergeHeroResponse(
+  base: HeroConfig,
+  patch: unknown
+): HeroConfig {
+  if (!patch || typeof patch !== "object") return base;
+  const d = patch as Partial<HeroConfig>;
+  return {
+    ...base,
+    ...d,
+    collageImages:
+      Array.isArray(d.collageImages) && d.collageImages.length > 0
+        ? (d.collageImages as HeroConfig["collageImages"])
+        : base.collageImages,
+  };
+}
+
+export default function Hero({
+  initialHero,
+}: {
+  /** Si llega desde el servidor (ej. página de inicio), no hacemos fetch extra a /api/hero */
+  initialHero?: unknown;
+}) {
+  const [config, setConfig] = useState<HeroConfig>(() =>
+    mergeHeroResponse(HERO_FALLBACK, initialHero)
+  );
 
   useEffect(() => {
+    if (initialHero !== undefined) return;
     fetch("/api/hero")
       .then((res) => res.json())
       .then((data: unknown) => {
-        if (!data || typeof data !== "object") return;
-        const d = data as Partial<HeroConfig>;
-        setConfig((prev) => ({
-          ...prev,
-          ...d,
-          collageImages:
-            Array.isArray(d.collageImages) && d.collageImages.length > 0
-              ? (d.collageImages as HeroConfig["collageImages"])
-              : prev.collageImages,
-        }));
+        setConfig((prev) => mergeHeroResponse(prev, data));
       })
       .catch(() => {});
-  }, []);
+  }, [initialHero]);
 
   const heroImage =
     config.collageImages?.[0]?.src || "/images/hero-inicio-bricia.jpg";

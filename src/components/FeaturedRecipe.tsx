@@ -49,17 +49,27 @@ function mergeFeatured(raw: unknown): FeaturedSectionConfig {
   };
 }
 
-export default function FeaturedRecipe() {
-  const [featured, setFeatured] = useState<FeaturedSectionConfig>(DEFAULT_FEATURED);
+export default function FeaturedRecipe({
+  initialFeatured,
+  /** true en la página de inicio SSR: evita segundo fetch incluso si featured viene vacío */
+  fromServer = false,
+}: {
+  initialFeatured?: unknown;
+  fromServer?: boolean;
+}) {
+  const [featured, setFeatured] = useState<FeaturedSectionConfig>(() =>
+    mergeFeatured(initialFeatured)
+  );
 
   useEffect(() => {
+    if (fromServer) return;
     fetch("/api/hero")
       .then((res) => res.json())
       .then((config) => {
         setFeatured(mergeFeatured(config?.featuredSection));
       })
       .catch(() => {});
-  }, []);
+  }, [fromServer]);
 
   const titleFont = FONT_MAP[featured.titleFont] || FONT_MAP.serif;
   const headingLines = featured.heading.split(/\r?\n/).filter((line) => line.length > 0);

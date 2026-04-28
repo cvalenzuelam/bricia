@@ -50,20 +50,36 @@ export type RecipeGridProps = {
    * `full`: índice /recetas; por defecto “Todas”.
    */
   variant?: "landing" | "full";
+  /** Precargado desde el servidor para no duplicar /api/recipes ni /api/hero */
+  initialRecipes?: Recipe[];
+  initialLandingSlugs?: string[];
 };
 
-export default function RecipeGrid({ variant = "landing" }: RecipeGridProps) {
-  const [recipes, setRecipes] = useState<Recipe[]>([]);
-  const [landingSlugs, setLandingSlugs] = useState<string[]>([]);
+export default function RecipeGrid({
+  variant = "landing",
+  initialRecipes,
+  initialLandingSlugs,
+}: RecipeGridProps) {
+  const [recipes, setRecipes] = useState<Recipe[]>(() =>
+    initialRecipes && initialRecipes.length > 0 ? initialRecipes : []
+  );
+  const [landingSlugs, setLandingSlugs] = useState<string[]>(() =>
+    Array.isArray(initialLandingSlugs) ? initialLandingSlugs : []
+  );
   const [viewMode, setViewMode] = useState<ViewMode>(() =>
     variant === "full" ? "TODAS" : "featured"
   );
 
   useEffect(() => {
+    if (initialRecipes !== undefined && initialLandingSlugs !== undefined) {
+      return;
+    }
+
     let cancelled = false;
+
     Promise.all([
-      fetch("/api/recipes", { cache: "no-store" }).then((r) => r.json()),
-      fetch("/api/hero", { cache: "no-store" }).then((r) => r.json()),
+      fetch("/api/recipes").then((r) => r.json()),
+      fetch("/api/hero").then((r) => r.json()),
     ])
       .then(([recipesData, heroData]) => {
         if (cancelled) return;
@@ -79,7 +95,7 @@ export default function RecipeGrid({ variant = "landing" }: RecipeGridProps) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [initialRecipes, initialLandingSlugs]);
 
   const filteredRecipes = useMemo(() => {
     if (viewMode === "featured") {

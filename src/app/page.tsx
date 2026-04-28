@@ -3,15 +3,49 @@ import FeaturedRecipe from "@/components/FeaturedRecipe";
 import RecipeGrid from "@/components/RecipeGrid";
 import ProductSection from "@/components/ProductSection";
 import InstagramFeed from "@/components/InstagramFeed";
+import { loadHeroPayload } from "@/data/hero-config-loader";
+import { getProducts } from "@/data/products-server";
+import { getRecipes } from "@/data/recipes";
 
 export default async function Home() {
+  const [products, recipes, heroRaw] = await Promise.all([
+    getProducts(),
+    getRecipes(),
+    loadHeroPayload(),
+  ]);
+
+  const hero =
+    heroRaw && typeof heroRaw === "object"
+      ? (heroRaw as Record<string, unknown>)
+      : {};
+
+  const landingSlugList = hero["landingRecipeSlugs"];
+  const landingSlugs = Array.isArray(landingSlugList)
+    ? landingSlugList.filter(
+        (x): x is string =>
+          typeof x === "string" && x.trim().length > 0
+      )
+    : [];
+
+  const instagramRaw = hero["instagramImages"];
+  const instagramImages = Array.isArray(instagramRaw)
+    ? (instagramRaw as {
+        src: string;
+        caption?: string;
+        isVideo?: boolean;
+      }[])
+    : undefined;
+
   return (
     <main className="min-h-screen overflow-x-hidden bg-brand-secondary">
-      {/* 1. Hero: Wix-style split with bio + photo mosaic */}
-      <Hero />
-      
-      {/* 2. Featured CTA: "Nuevas Recetas Cada Semana" */}
-      <FeaturedRecipe />
+      {/* 1. Hero — datos ya resueltos en servidor → sin 5× /api/hero */}
+      <Hero initialHero={heroRaw} />
+
+      {/* 2. Featured CTA */}
+      <FeaturedRecipe
+        initialFeatured={hero.featuredSection}
+        fromServer
+      />
 
       {/* 3. Recipe Grid */}
       <section className="py-12 md:py-28">
@@ -22,15 +56,19 @@ export default async function Home() {
           </h2>
           <div className="w-12 h-px bg-brand-accent mx-auto my-6 opacity-30"></div>
           <p className="text-sm font-sans text-brand-muted max-w-lg mx-auto">
-            Descubre los sabores que acompañan el clima de hoy. 
+            Descubre los sabores que acompañan el clima de hoy.
             Recetas frescas, caseras y llenas de historia.
           </p>
         </div>
-        <RecipeGrid />
+        <RecipeGrid
+          variant="landing"
+          initialRecipes={recipes}
+          initialLandingSlugs={landingSlugs}
+        />
       </section>
 
-      {/* 4. La Tienda — carrusel de productos */}
-      <ProductSection />
+      {/* 4. Tienda — carrusel */}
+      <ProductSection initialProducts={products} />
 
       {/* 5. Final Quote */}
       <section className="py-16 md:py-32 px-6 bg-brand-secondary text-center">
@@ -40,16 +78,19 @@ export default async function Home() {
             Cocina con amor, mesas que conectan.
           </h3>
           <p className="text-sm font-sans text-brand-muted max-w-xl mx-auto leading-relaxed">
-            Cada receta en este blog tiene un origen, y cada mesa que montamos 
-            tiene una intención. No solo cocinamos para comer, diseñamos espacios 
+            Cada receta en este blog tiene un origen, y cada mesa que montamos
+            tiene una intención. No solo cocinamos para comer, diseñamos espacios
             para conectar los corazones.
           </p>
           <div className="w-16 h-px bg-brand-accent mx-auto opacity-30"></div>
         </div>
       </section>
 
-      {/* 6. Instagram Feed */}
-      <InstagramFeed />
+      {/* 6. Instagram */}
+      <InstagramFeed
+        initialInstagramImages={instagramImages}
+        fromServer
+      />
     </main>
   );
 }
