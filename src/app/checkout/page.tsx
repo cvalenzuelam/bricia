@@ -62,6 +62,12 @@ export default function CheckoutPage() {
     }
   }, [hydrated, items.length, submitting, router]);
 
+  useEffect(() => {
+    if (subtotal >= FREE_SHIPPING_THRESHOLD) {
+      setShippingOptionId(DEFAULT_SHIPPING_OPTION_ID);
+    }
+  }, [subtotal]);
+
   const selectedShippingOption = getShippingOptionById(shippingOptionId);
   const shippingCost = calculateShipping(subtotal, selectedShippingOption.price);
   const total = subtotal + shippingCost;
@@ -451,22 +457,33 @@ export default function CheckoutPage() {
 
               <div className="space-y-2 pt-5 border-t border-brand-primary/5">
                 <Row label="Subtotal" value={formatPrice(subtotal)} />
-                <div className="space-y-2">
-                  <label className="text-[10px] font-sans font-bold tracking-[0.2em] uppercase text-brand-muted block">
-                    Método de envío
-                  </label>
-                  <select
-                    value={shippingOptionId}
-                    onChange={(e) => setShippingOptionId(e.target.value)}
-                    className={inputClass(false)}
-                  >
-                    {SHIPPING_OPTIONS.map((option) => (
-                      <option key={option.id} value={option.id}>
-                        {option.name} - {formatPrice(option.price)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                {subtotal >= FREE_SHIPPING_THRESHOLD ? (
+                  <div className="rounded-lg border border-brand-accent/25 bg-brand-accent/5 px-3 py-3">
+                    <p className="text-[10px] font-sans font-bold tracking-[0.2em] uppercase text-brand-accent mb-1.5">
+                      Envío gratis
+                    </p>
+                    <p className="text-[11px] font-sans text-brand-muted leading-relaxed">
+                      Tu compra supera {formatPrice(FREE_SHIPPING_THRESHOLD)} en productos; el envío va por nuestra cuenta. No debes elegir paquetería.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-sans font-bold tracking-[0.2em] uppercase text-brand-muted block">
+                      Método de envío
+                    </label>
+                    <select
+                      value={shippingOptionId}
+                      onChange={(e) => setShippingOptionId(e.target.value)}
+                      className={inputClass(false)}
+                    >
+                      {SHIPPING_OPTIONS.map((option) => (
+                        <option key={option.id} value={option.id}>
+                          {option.name} - {formatPrice(option.price)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
                 <Row
                   label="Envío"
                   value={shippingCost === 0
