@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Menu, X, Search, ShoppingBag } from "lucide-react";
+import { Menu, X, Search, ShoppingBag, ArrowLeft } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
 import { useCart } from "@/context/CartContext";
@@ -141,24 +141,40 @@ export default function Header() {
         }`}
       >
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-3 items-center">
-          <nav className="hidden md:flex gap-10">
-            {leftLinks.map((link) => (
+          <div className="flex items-center gap-4 md:gap-6 justify-start min-w-0">
+            {isMesaArticlePage && (
               <Link
-                key={link.name}
-                href={link.href}
-                className={`editorial-spacing ${textColor} hover:text-brand-accent transition-colors`}
+                href="/la-mesa"
+                className={`flex items-center gap-2 shrink-0 text-[10px] font-sans font-bold tracking-[0.28em] uppercase ${textColor} hover:text-brand-accent transition-colors`}
               >
-                {link.name}
+                <ArrowLeft size={16} strokeWidth={1.5} className="shrink-0" />
+                <span className="hidden sm:inline">Volver</span>
               </Link>
-            ))}
-          </nav>
+            )}
+            <nav
+              className={`hidden md:flex gap-10 items-center ${
+                isMesaArticlePage ? "border-l border-current/15 pl-6 md:pl-10" : ""
+              }`}
+            >
+              {leftLinks.map((link) => (
+                <Link
+                  key={link.name}
+                  href={link.href}
+                  className={`editorial-spacing ${textColor} hover:text-brand-accent transition-colors`}
+                >
+                  {link.name}
+                </Link>
+              ))}
+            </nav>
 
-          <button
-            className={`md:hidden ${iconColor} z-[70] relative`}
-            onClick={() => setIsOpen(!isOpen)}
-          >
-            {isOpen ? <X size={20} /> : <Menu size={20} />}
-          </button>
+            <button
+              className={`md:hidden ${iconColor} z-[70] relative shrink-0`}
+              onClick={() => setIsOpen(!isOpen)}
+              aria-label={isOpen ? "Cerrar menú" : "Abrir menú"}
+            >
+              {isOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+          </div>
 
           <div className="flex justify-center">
             <Link

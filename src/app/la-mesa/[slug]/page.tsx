@@ -44,23 +44,12 @@ export default function LaMesaArticlePage({ params }: { params: Promise<{ slug: 
     <article className="min-h-screen bg-[#FDFCF8] overflow-x-hidden">
       {/* ── PROGRESS BAR ── */}
       <motion.div
-        className="fixed top-0 left-0 right-0 h-1 bg-[#C2A878] origin-left z-50 mix-blend-multiply opacity-50"
+        className="fixed top-0 left-0 right-0 h-1 bg-[#C2A878] origin-left z-[45] mix-blend-multiply opacity-50"
         initial={{ scaleX: 0 }}
         animate={{ scaleX: 1 }}
         transition={{ duration: 1.5, ease: "circOut" }}
       />
 
-      {/* ── TOP NAV ── */}
-      <div className="fixed top-0 left-0 right-0 z-40 p-6 md:p-8 flex justify-between items-center mix-blend-difference text-white pointer-events-none">
-        <Link
-          href="/la-mesa"
-          className="pointer-events-auto flex items-center gap-3 text-[10px] font-sans font-bold tracking-[0.3em] uppercase hover:text-[#C2A878] transition-colors"
-        >
-          <ArrowLeft size={16} strokeWidth={1.5} /> Volver
-        </Link>
-      </div>
-
-      {/* ── HERO HEADER ── */}
       <header className="relative w-full h-[70vh] md:h-[90vh] bg-neutral-900 flex flex-col justify-end p-8 md:p-20 overflow-hidden">
         <Image
           src={article.coverImage}
