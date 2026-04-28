@@ -57,44 +57,18 @@ const Pill = ({ children }: { children: React.ReactNode }) => (
 
 function AboutHeroVisual() {
   return (
-    <div className="relative w-full">
-      <svg
-        aria-hidden
-        className="pointer-events-none absolute -right-2 md:right-0 top-8 w-32 h-32 md:w-40 md:h-40 opacity-[0.08]"
-        viewBox="0 0 100 100"
-        fill="none"
+    <div className="w-full space-y-6">
+      <p
+        className="text-[10px] font-sans font-bold tracking-[0.4em] uppercase"
+        style={{ color: "rgba(176,141,87,0.5)" }}
       >
-        <path
-          d="M18 78V28h48v50H18z"
-          stroke="#B08D57"
-          strokeWidth="0.35"
-        />
-        <path
-          d="M26 38h32M26 48h22M26 58h28"
-          stroke="#B08D57"
-          strokeWidth="0.25"
-        />
-        <ellipse
-          cx="78"
-          cy="52"
-          rx="14"
-          ry="9"
-          stroke="#B08D57"
-          strokeWidth="0.3"
-        />
-      </svg>
-
-      <div className="relative z-[1] space-y-5 pr-10 md:pr-20">
-        <p
-          className="text-[10px] font-sans font-bold tracking-[0.4em] uppercase"
-          style={{ color: "rgba(176,141,87,0.5)" }}
-        >
-          Entre el espacio y la mesa
-        </p>
-        <div
-          className="w-11 h-px"
-          style={{ backgroundColor: "#B08D57", opacity: 0.35 }}
-        />
+        Entre el espacio y la mesa
+      </p>
+      <div
+        className="w-11 h-px"
+        style={{ backgroundColor: "#B08D57", opacity: 0.35 }}
+      />
+      <div className="space-y-5">
         <blockquote className="space-y-4">
           <p className="font-serif text-lg md:text-xl italic text-white/48 leading-snug">
             Cocinar, para mí, es diseñar con los sentidos.
@@ -103,6 +77,14 @@ function AboutHeroVisual() {
             Los detalles ordenan el espacio; la mesa ordena el día.
           </p>
         </blockquote>
+        <div className="space-y-3 pt-1 border-t border-white/[0.06]">
+          <p className="text-sm font-sans text-white/45 leading-relaxed">
+            Me gusta pensar que una receta y un rincón del hogar se componen con el mismo instinto: cuidar proporciones sin perder calidez, y ordenar sin perder el alma.
+          </p>
+          <p className="text-sm font-sans text-white/38 leading-relaxed">
+            Aquí comparto lo que llevo años explorando: cocinar con intención, rodearte de belleza cotidiana y recordar que un plato bien pensado y un espacio bien vivido cuentan la misma historia.
+          </p>
+        </div>
       </div>
     </div>
   );
