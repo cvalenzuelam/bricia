@@ -186,10 +186,11 @@ export default function CartDrawer() {
                 </p>
 
                 <button
+                  type="button"
                   onClick={handleCheckout}
                   className="w-full bg-brand-primary text-brand-secondary py-4 rounded-xl text-xs font-sans font-bold tracking-[0.2em] uppercase hover:bg-brand-accent transition-colors flex items-center justify-center gap-2"
                 >
-                  Continuar con la compra
+                  Siguiente: datos y envío
                   <ArrowRight size={13} />
                 </button>
 
