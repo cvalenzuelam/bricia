@@ -13,6 +13,7 @@ import {
   DEFAULT_SHIPPING_OPTION_ID,
   FREE_SHIPPING_THRESHOLD,
   SHIPPING_OPTIONS,
+  TEMP_ZERO_SHIPPING_MXN,
   getShippingOptionById,
 } from "@/lib/shipping";
 
@@ -448,7 +449,7 @@ export default function CheckoutPage() {
                     {selectedShippingOption.name} · {selectedShippingOption.eta}
                   </p>
                 )}
-                {remainingForFreeShipping > 0 && (
+                {remainingForFreeShipping > 0 && !TEMP_ZERO_SHIPPING_MXN && (
                   <p className="text-[10px] font-sans text-brand-muted/80 italic font-serif pt-1 leading-relaxed">
                     Te faltan {formatPrice(remainingForFreeShipping)} para envío gratis.
                   </p>

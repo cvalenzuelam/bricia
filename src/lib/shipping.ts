@@ -1,5 +1,10 @@
 export const FREE_SHIPPING_THRESHOLD = 1500;
 
+/**
+ * Pruebas: envío siempre $0. Cambiar a `false` cuando vuelvan costos reales.
+ */
+export const TEMP_ZERO_SHIPPING_MXN = true;
+
 export interface ShippingOption {
   id: string;
   name: string;
@@ -29,6 +34,7 @@ export function getShippingOptionById(id?: string): ShippingOption {
 }
 
 export function calculateShipping(subtotal: number, baseShippingPrice: number): number {
+  if (TEMP_ZERO_SHIPPING_MXN) return 0;
   if (subtotal <= 0) return 0;
   return subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : baseShippingPrice;
 }

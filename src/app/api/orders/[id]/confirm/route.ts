@@ -25,27 +25,43 @@ export async function POST(
       );
     }
 
-    if (order.status === "paid" || order.status === "shipped" || order.status === "delivered") {
-      return NextResponse.json(
-        { success: true, alreadyConfirmed: true, order },
-        { headers: NO_STORE }
-      );
+    const body = await request.json().catch(() => ({}));
+
+    let working = order;
+    if (
+      order.status !== "paid" &&
+      order.status !== "shipped" &&
+      order.status !== "delivered"
+    ) {
+      const updated = await updateOrder(id, {
+        status: "paid",
+        paidAt: new Date().toISOString(),
+        paymentId: body.paymentId,
+        paymentStatus: body.paymentStatus,
+      });
+      if (updated) working = updated;
     }
 
-    const body = await request.json().catch(() => ({}));
-    const updated = await updateOrder(id, {
-      status: "paid",
-      paidAt: new Date().toISOString(),
-      paymentId: body.paymentId,
-      paymentStatus: body.paymentStatus,
-    });
-
-    if (updated) {
-      await sendOrderConfirmationEmail(updated);
+    // Enviar correo una sola vez (idempotente entre webhook + landing de éxito)
+    let emailSent = Boolean(working.confirmationEmailSentAt);
+    if (!emailSent) {
+      const sent = await sendOrderConfirmationEmail(working);
+      if (sent) {
+        const stamped = await updateOrder(id, {
+          confirmationEmailSentAt: new Date().toISOString(),
+        });
+        if (stamped) working = stamped;
+        emailSent = true;
+      }
     }
 
     return NextResponse.json(
-      { success: true, order: updated },
+      {
+        success: true,
+        order: working,
+        alreadyConfirmed: order.status === "paid",
+        emailSent,
+      },
       { headers: NO_STORE }
     );
   } catch (err) {

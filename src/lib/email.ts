@@ -4,6 +4,20 @@ import type { Order } from "@/data/orders";
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const EMAIL_FROM = process.env.EMAIL_FROM || "Bricia López <onboarding@resend.dev>";
 const EMAIL_BCC = process.env.EMAIL_BCC; // optional admin copy
+const PUBLIC_BASE_URL =
+  process.env.NEXT_PUBLIC_BASE_URL ||
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://casabricia.vercel.app");
+const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || "hola@casabricia.com";
+
+const COLORS = {
+  bg: "#FAF9F4",
+  card: "#FFFFFF",
+  ink: "#1D1D1B",
+  muted: "#7A7A78",
+  accent: "#B08D57",
+  border: "#E8E2D6",
+} as const;
 
 function formatMXN(amount: number): string {
   return `$${amount.toLocaleString("es-MX")} MXN`;
@@ -17,70 +31,131 @@ function formatDate(iso: string): string {
   });
 }
 
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function absoluteImageUrl(src: string): string {
+  if (!src) return "";
+  if (/^https?:\/\//i.test(src)) return src;
+  if (src.startsWith("//")) return `https:${src}`;
+  if (src.startsWith("/")) return `${PUBLIC_BASE_URL}${src}`;
+  return `${PUBLIC_BASE_URL}/${src}`;
+}
+
+function firstName(fullName: string): string {
+  const trimmed = fullName.trim();
+  if (!trimmed) return "";
+  return trimmed.split(/\s+/)[0];
+}
+
 function buildOrderConfirmationHTML(order: Order): string {
   const itemsRows = order.items
-    .map(
-      (item) => `
+    .map((item) => {
+      const imageUrl = absoluteImageUrl(item.image);
+      const name = escapeHtml(item.name);
+      const subtitle = item.subtitle ? escapeHtml(item.subtitle) : "";
+      return `
         <tr>
-          <td style="padding: 16px 0; border-bottom: 1px solid #E8E2D6;">
-            <div style="font-family: Georgia, serif; font-size: 16px; color: #1D1D1B; text-transform: lowercase; line-height: 1.3;">
-              ${item.name}
-            </div>
-            ${
-              item.subtitle
-                ? `<div style="font-family: Helvetica, Arial, sans-serif; font-size: 12px; color: #7A7A78; margin-top: 4px;">${item.subtitle}</div>`
-                : ""
-            }
-          </td>
-          <td style="padding: 16px 0; border-bottom: 1px solid #E8E2D6; text-align: center; font-family: Helvetica, Arial, sans-serif; font-size: 13px; color: #7A7A78;">
-            ${item.quantity}
-          </td>
-          <td style="padding: 16px 0; border-bottom: 1px solid #E8E2D6; text-align: right; font-family: Georgia, serif; font-size: 14px; color: #1D1D1B;">
-            ${formatMXN(item.price * item.quantity)}
+          <td style="padding: 16px 0; border-bottom: 1px solid ${COLORS.border};" valign="top">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td width="84" valign="top" style="padding-right: 16px;">
+                  ${
+                    imageUrl
+                      ? `<img src="${imageUrl}" alt="${name}" width="72" height="72" style="display:block; width:72px; height:72px; border-radius:10px; object-fit:cover; border:1px solid ${COLORS.border}; background:${COLORS.bg};" />`
+                      : ""
+                  }
+                </td>
+                <td valign="top">
+                  <div style="font-family: Georgia, 'Times New Roman', serif; font-size: 16px; color: ${COLORS.ink}; text-transform: lowercase; line-height: 1.3;">
+                    ${name}
+                  </div>
+                  ${
+                    subtitle
+                      ? `<div style="font-family: Helvetica, Arial, sans-serif; font-size: 12px; color: ${COLORS.muted}; margin-top: 4px; line-height: 1.5;">${subtitle}</div>`
+                      : ""
+                  }
+                  <div style="font-family: Helvetica, Arial, sans-serif; font-size: 11px; color: ${COLORS.muted}; margin-top: 8px; letter-spacing: 0.08em; text-transform: uppercase;">
+                    Cantidad · ${item.quantity}
+                  </div>
+                </td>
+                <td valign="top" align="right" style="font-family: Georgia, 'Times New Roman', serif; font-size: 15px; color: ${COLORS.ink}; white-space: nowrap;">
+                  ${formatMXN(item.price * item.quantity)}
+                </td>
+              </tr>
+            </table>
           </td>
         </tr>
-      `
-    )
+      `;
+    })
     .join("");
 
-  const shippingLine = order.shippingCost === 0
-    ? `<span style="font-family: Georgia, serif; font-style: italic; color: #B08D57;">Cortesía</span>`
-    : formatMXN(order.shippingCost);
+  const shippingLine =
+    order.shippingCost === 0
+      ? `<span style="font-family: Georgia, 'Times New Roman', serif; font-style: italic; color: ${COLORS.accent};">Cortesía</span>`
+      : formatMXN(order.shippingCost);
 
-  return `
-<!DOCTYPE html>
+  const shippingMethodBlock = order.shippingMethod
+    ? `
+      <tr>
+        <td style="padding: 4px 0 12px; font-family: Helvetica, Arial, sans-serif; font-size: 12px; color: ${COLORS.muted};">
+          ${escapeHtml(order.shippingMethod.name)} · ${escapeHtml(order.shippingMethod.eta)}
+        </td>
+      </tr>
+    `
+    : "";
+
+  const notesBlock = order.shipping.notes
+    ? `<p style="font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-size: 13px; color: ${COLORS.muted}; margin: 12px 0 0; padding: 12px 14px; background: ${COLORS.bg}; border-radius: 8px; border-left: 2px solid ${COLORS.accent};">"${escapeHtml(order.shipping.notes)}"</p>`
+    : "";
+
+  const orderUrl = `${PUBLIC_BASE_URL}/pago/exito?orderId=${encodeURIComponent(order.id)}`;
+  const shopUrl = `${PUBLIC_BASE_URL}/productos`;
+
+  return `<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tu pedido en Bricia · ${order.id}</title>
+  <title>Tu pedido en Bricia · ${escapeHtml(order.id)}</title>
 </head>
-<body style="margin: 0; padding: 0; background-color: #FAF9F4; font-family: Helvetica, Arial, sans-serif; color: #1D1D1B;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #FAF9F4; padding: 40px 20px;">
+<body style="margin: 0; padding: 0; background-color: ${COLORS.bg}; font-family: Helvetica, Arial, sans-serif; color: ${COLORS.ink};">
+  <!-- Pre-header (oculto, mejora la previsualización en clientes) -->
+  <div style="display:none; max-height:0; overflow:hidden; opacity:0; mso-hide:all;">
+    Pedido ${escapeHtml(order.id)} confirmado · ${formatMXN(order.total)} · Lo preparamos con cariño.
+  </div>
+
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: ${COLORS.bg}; padding: 40px 20px;">
     <tr>
       <td align="center">
-        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width: 600px; background-color: #FAF9F4;">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width: 600px; background-color: ${COLORS.bg};">
 
           <!-- Brand mark -->
           <tr>
-            <td align="center" style="padding: 8px 0 48px 0;">
-              <div style="font-family: Georgia, serif; font-size: 32px; letter-spacing: 0.3em; color: #1D1D1B; font-weight: 400;">
-                BRICIA
+            <td align="center" style="padding: 8px 0 40px 0;">
+              <div style="font-family: Georgia, 'Times New Roman', serif; font-size: 30px; letter-spacing: 0.32em; color: ${COLORS.ink}; font-weight: 400;">
+                |BRICIA|
               </div>
-              <div style="height: 1px; width: 40px; background: #B08D57; margin: 16px auto 0; opacity: 0.5;"></div>
+              <div style="height: 1px; width: 40px; background: ${COLORS.accent}; margin: 14px auto 0; opacity: 0.6;"></div>
             </td>
           </tr>
 
           <!-- Hero -->
           <tr>
-            <td align="center" style="padding: 0 32px 40px;">
-              <p style="font-family: Helvetica, Arial, sans-serif; font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase; color: #B08D57; margin: 0 0 16px;">
+            <td align="center" style="padding: 0 32px 36px;">
+              <p style="font-family: Helvetica, Arial, sans-serif; font-size: 10px; letter-spacing: 0.32em; text-transform: uppercase; color: ${COLORS.accent}; margin: 0 0 16px; font-weight: 700;">
                 Pedido confirmado
               </p>
-              <h1 style="font-family: Georgia, serif; font-size: 36px; line-height: 1.15; color: #1D1D1B; margin: 0 0 20px; font-weight: 400;">
-                Gracias, ${order.customer.name.split(" ")[0]}.
+              <h1 style="font-family: Georgia, 'Times New Roman', serif; font-size: 34px; line-height: 1.15; color: ${COLORS.ink}; margin: 0 0 18px; font-weight: 400;">
+                Gracias, ${escapeHtml(firstName(order.customer.name))}.
               </h1>
-              <p style="font-family: Georgia, serif; font-style: italic; font-size: 16px; line-height: 1.6; color: #7A7A78; margin: 0; max-width: 440px;">
+              <p style="font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-size: 16px; line-height: 1.65; color: ${COLORS.muted}; margin: 0 auto; max-width: 440px;">
                 Recibimos tu pedido y ya lo estamos preparando con cariño.
                 Te avisaremos en cuanto salga rumbo a tu casa.
               </p>
@@ -89,81 +164,110 @@ function buildOrderConfirmationHTML(order: Order): string {
 
           <!-- Order ref -->
           <tr>
-            <td align="center" style="padding: 0 32px 40px;">
-              <div style="display: inline-block; background: #FFFFFF; border: 1px solid #E8E2D6; border-radius: 12px; padding: 18px 28px;">
-                <div style="font-family: Helvetica, Arial, sans-serif; font-size: 9px; letter-spacing: 0.3em; text-transform: uppercase; color: #7A7A78; margin-bottom: 6px;">
+            <td align="center" style="padding: 0 32px 36px;">
+              <div style="display: inline-block; background: ${COLORS.card}; border: 1px solid ${COLORS.border}; border-radius: 12px; padding: 16px 28px;">
+                <div style="font-family: Helvetica, Arial, sans-serif; font-size: 9px; letter-spacing: 0.3em; text-transform: uppercase; color: ${COLORS.muted}; margin-bottom: 6px;">
                   Folio del pedido
                 </div>
-                <div style="font-family: Helvetica, Arial, sans-serif; font-size: 18px; letter-spacing: 0.15em; color: #1D1D1B; font-weight: 600;">
-                  ${order.id}
+                <div style="font-family: Helvetica, Arial, sans-serif; font-size: 18px; letter-spacing: 0.18em; color: ${COLORS.ink}; font-weight: 600;">
+                  ${escapeHtml(order.id)}
                 </div>
               </div>
             </td>
           </tr>
 
-          <!-- Items -->
+          <!-- Items card -->
           <tr>
-            <td style="padding: 0 32px;">
-              <h2 style="font-family: Georgia, serif; font-size: 18px; color: #1D1D1B; margin: 0 0 16px; font-weight: 400; border-bottom: 1px solid #E8E2D6; padding-bottom: 12px;">
-                Tu selección
-              </h2>
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-                ${itemsRows}
+            <td style="padding: 0 12px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${COLORS.card}; border:1px solid ${COLORS.border}; border-radius:16px;">
+                <tr>
+                  <td style="padding: 24px 28px 8px;">
+                    <h2 style="font-family: Georgia, 'Times New Roman', serif; font-size: 18px; color: ${COLORS.ink}; margin: 0 0 4px; font-weight: 400;">
+                      Tu selección
+                    </h2>
+                    <div style="height:1px; background:${COLORS.border}; margin: 14px 0 0;"></div>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 0 28px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                      ${itemsRows}
+                    </table>
+                  </td>
+                </tr>
+
+                <!-- Totals -->
+                <tr>
+                  <td style="padding: 16px 28px 0;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="padding: 6px 0; font-family: Helvetica, Arial, sans-serif; font-size: 11px; color: ${COLORS.muted}; text-transform: uppercase; letter-spacing: 0.18em;">Subtotal</td>
+                        <td style="padding: 6px 0; text-align: right; font-family: Georgia, 'Times New Roman', serif; font-size: 14px; color: ${COLORS.ink};">${formatMXN(order.subtotal)}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 6px 0; font-family: Helvetica, Arial, sans-serif; font-size: 11px; color: ${COLORS.muted}; text-transform: uppercase; letter-spacing: 0.18em;">Envío</td>
+                        <td style="padding: 6px 0; text-align: right; font-family: Georgia, 'Times New Roman', serif; font-size: 14px; color: ${COLORS.ink};">${shippingLine}</td>
+                      </tr>
+                      ${shippingMethodBlock}
+                      <tr>
+                        <td style="padding: 14px 0 22px; border-top: 1px solid ${COLORS.border}; font-family: Helvetica, Arial, sans-serif; font-size: 11px; color: ${COLORS.ink}; text-transform: uppercase; letter-spacing: 0.22em; font-weight: 700;">Total</td>
+                        <td style="padding: 14px 0 22px; border-top: 1px solid ${COLORS.border}; text-align: right; font-family: Georgia, 'Times New Roman', serif; font-size: 22px; color: ${COLORS.ink};">${formatMXN(order.total)}</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
               </table>
             </td>
           </tr>
 
-          <!-- Totals -->
+          <!-- Shipping address card -->
           <tr>
-            <td style="padding: 24px 32px 0;">
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+            <td style="padding: 24px 12px 0;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${COLORS.card}; border:1px solid ${COLORS.border}; border-radius:16px;">
                 <tr>
-                  <td style="padding: 6px 0; font-family: Helvetica, Arial, sans-serif; font-size: 12px; color: #7A7A78; text-transform: uppercase; letter-spacing: 0.15em;">Subtotal</td>
-                  <td style="padding: 6px 0; text-align: right; font-family: Georgia, serif; font-size: 14px; color: #1D1D1B;">${formatMXN(order.subtotal)}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 6px 0; font-family: Helvetica, Arial, sans-serif; font-size: 12px; color: #7A7A78; text-transform: uppercase; letter-spacing: 0.15em;">Envío</td>
-                  <td style="padding: 6px 0; text-align: right; font-family: Georgia, serif; font-size: 14px; color: #1D1D1B;">${shippingLine}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 14px 0 0; border-top: 1px solid #E8E2D6; font-family: Helvetica, Arial, sans-serif; font-size: 11px; color: #1D1D1B; text-transform: uppercase; letter-spacing: 0.2em; font-weight: 700;">Total</td>
-                  <td style="padding: 14px 0 0; border-top: 1px solid #E8E2D6; text-align: right; font-family: Georgia, serif; font-size: 22px; color: #1D1D1B;">${formatMXN(order.total)}</td>
+                  <td style="padding: 24px 28px;">
+                    <h2 style="font-family: Georgia, 'Times New Roman', serif; font-size: 18px; color: ${COLORS.ink}; margin: 0 0 14px; font-weight: 400; border-bottom: 1px solid ${COLORS.border}; padding-bottom: 12px;">
+                      Dirección de envío
+                    </h2>
+                    <p style="font-family: Helvetica, Arial, sans-serif; font-size: 14px; line-height: 1.7; color: ${COLORS.ink}; margin: 0;">
+                      <strong style="font-weight: 600;">${escapeHtml(order.customer.name)}</strong><br>
+                      ${escapeHtml(order.shipping.street)} ${escapeHtml(order.shipping.exterior)}${order.shipping.interior ? ` Int. ${escapeHtml(order.shipping.interior)}` : ""}<br>
+                      Col. ${escapeHtml(order.shipping.neighborhood)}<br>
+                      ${escapeHtml(order.shipping.city)}, ${escapeHtml(order.shipping.state)}, C.P. ${escapeHtml(order.shipping.zip)}<br>
+                      ${escapeHtml(order.shipping.country)}<br>
+                      <span style="color: ${COLORS.muted}; font-size: 13px;">Tel. ${escapeHtml(order.customer.phone)}</span>
+                    </p>
+                    ${notesBlock}
+                  </td>
                 </tr>
               </table>
             </td>
           </tr>
 
-          <!-- Shipping -->
+          <!-- CTA -->
           <tr>
-            <td style="padding: 48px 32px 0;">
-              <h2 style="font-family: Georgia, serif; font-size: 18px; color: #1D1D1B; margin: 0 0 16px; font-weight: 400; border-bottom: 1px solid #E8E2D6; padding-bottom: 12px;">
-                Dirección de envío
-              </h2>
-              <p style="font-family: Helvetica, Arial, sans-serif; font-size: 14px; line-height: 1.7; color: #1D1D1B; margin: 0;">
-                <strong style="font-weight: 600;">${order.customer.name}</strong><br>
-                ${order.shipping.street} ${order.shipping.exterior}${order.shipping.interior ? ` Int. ${order.shipping.interior}` : ""}<br>
-                Col. ${order.shipping.neighborhood}<br>
-                ${order.shipping.city}, ${order.shipping.state}, C.P. ${order.shipping.zip}<br>
-                ${order.shipping.country}<br>
-                <span style="color: #7A7A78; font-size: 13px;">Tel. ${order.customer.phone}</span>
-              </p>
-              ${
-                order.shipping.notes
-                  ? `<p style="font-family: Georgia, serif; font-style: italic; font-size: 13px; color: #7A7A78; margin: 12px 0 0; padding: 12px; background: #FFFFFF; border-radius: 8px;">"${order.shipping.notes}"</p>`
-                  : ""
-              }
+            <td align="center" style="padding: 36px 32px 8px;">
+              <a href="${orderUrl}"
+                 style="display:inline-block; padding:14px 28px; font-family: Helvetica, Arial, sans-serif; font-size:11px; letter-spacing:0.28em; text-transform:uppercase; font-weight:700; color:${COLORS.bg}; background:${COLORS.ink}; text-decoration:none; border-radius:10px;">
+                Ver mi pedido
+              </a>
+              <div style="margin-top:16px;">
+                <a href="${shopUrl}" style="font-family: Helvetica, Arial, sans-serif; font-size:11px; letter-spacing:0.22em; text-transform:uppercase; color:${COLORS.muted}; text-decoration:none;">
+                  Seguir explorando
+                </a>
+              </div>
             </td>
           </tr>
 
           <!-- Closing -->
           <tr>
-            <td align="center" style="padding: 56px 32px 32px;">
-              <div style="height: 1px; width: 40px; background: #B08D57; margin: 0 auto 24px; opacity: 0.4;"></div>
-              <p style="font-family: Georgia, serif; font-style: italic; font-size: 15px; line-height: 1.7; color: #7A7A78; margin: 0 0 24px;">
-                Cocinar y compartir es un gesto de amor.
+            <td align="center" style="padding: 40px 32px 8px;">
+              <div style="height: 1px; width: 40px; background: ${COLORS.accent}; margin: 0 auto 22px; opacity: 0.45;"></div>
+              <p style="font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-size: 15px; line-height: 1.7; color: ${COLORS.muted}; margin: 0 0 18px;">
+                Cocinar y compartir es un gesto de amor.<br>
                 Gracias por dejarnos ser parte de tu mesa.
               </p>
-              <p style="font-family: Georgia, serif; font-size: 14px; color: #1D1D1B; margin: 0;">
+              <p style="font-family: Georgia, 'Times New Roman', serif; font-size: 14px; color: ${COLORS.ink}; margin: 0;">
                 — Bricia
               </p>
             </td>
@@ -171,12 +275,13 @@ function buildOrderConfirmationHTML(order: Order): string {
 
           <!-- Footer -->
           <tr>
-            <td align="center" style="padding: 32px; border-top: 1px solid #E8E2D6;">
-              <p style="font-family: Helvetica, Arial, sans-serif; font-size: 11px; color: #7A7A78; margin: 0 0 8px;">
+            <td align="center" style="padding: 32px; border-top: 1px solid ${COLORS.border}; margin-top: 24px;">
+              <p style="font-family: Helvetica, Arial, sans-serif; font-size: 11px; color: ${COLORS.muted}; margin: 0 0 8px;">
                 Pedido realizado el ${formatDate(order.createdAt)}
               </p>
-              <p style="font-family: Helvetica, Arial, sans-serif; font-size: 11px; color: #7A7A78; margin: 0;">
-                ¿Alguna pregunta? Escríbenos a <a href="mailto:hola@bricia.com" style="color: #B08D57; text-decoration: none;">hola@bricia.com</a>
+              <p style="font-family: Helvetica, Arial, sans-serif; font-size: 11px; color: ${COLORS.muted}; margin: 0;">
+                ¿Alguna pregunta? Escríbenos a
+                <a href="mailto:${SUPPORT_EMAIL}" style="color: ${COLORS.accent}; text-decoration: none;">${SUPPORT_EMAIL}</a>
               </p>
             </td>
           </tr>
@@ -186,28 +291,84 @@ function buildOrderConfirmationHTML(order: Order): string {
     </tr>
   </table>
 </body>
-</html>
-  `.trim();
+</html>`;
 }
 
-export async function sendOrderConfirmationEmail(order: Order): Promise<void> {
+function buildOrderConfirmationText(order: Order): string {
+  const lines: string[] = [];
+  lines.push(`Bricia · Pedido confirmado`);
+  lines.push(`Folio: ${order.id}`);
+  lines.push("");
+  lines.push(`Hola ${firstName(order.customer.name)}, recibimos tu pedido.`);
+  lines.push("");
+  lines.push("Tu selección:");
+  for (const item of order.items) {
+    lines.push(`- ${item.name} x${item.quantity} — ${formatMXN(item.price * item.quantity)}`);
+  }
+  lines.push("");
+  lines.push(`Subtotal: ${formatMXN(order.subtotal)}`);
+  lines.push(
+    `Envío: ${order.shippingCost === 0 ? "Cortesía" : formatMXN(order.shippingCost)}`
+  );
+  lines.push(`Total: ${formatMXN(order.total)}`);
+  lines.push("");
+  lines.push("Enviaremos a:");
+  lines.push(order.customer.name);
+  const interior = order.shipping.interior ? ` Int. ${order.shipping.interior}` : "";
+  lines.push(`${order.shipping.street} ${order.shipping.exterior}${interior}`);
+  lines.push(`Col. ${order.shipping.neighborhood}`);
+  lines.push(
+    `${order.shipping.city}, ${order.shipping.state}, C.P. ${order.shipping.zip}`
+  );
+  lines.push(order.shipping.country);
+  lines.push("");
+  lines.push(`Sigue tu pedido: ${PUBLIC_BASE_URL}/pago/exito?orderId=${encodeURIComponent(order.id)}`);
+  lines.push("");
+  lines.push("Gracias por dejarnos ser parte de tu mesa. — Bricia");
+  return lines.join("\n");
+}
+
+export async function sendOrderConfirmationEmail(order: Order): Promise<boolean> {
   if (!RESEND_API_KEY) {
     console.warn("[email] RESEND_API_KEY no configurado — skip email");
-    return;
+    return false;
+  }
+
+  if (!order.customer?.email) {
+    console.warn("[email] orden sin email de cliente — skip");
+    return false;
   }
 
   try {
     const resend = new Resend(RESEND_API_KEY);
     const html = buildOrderConfirmationHTML(order);
+    const text = buildOrderConfirmationText(order);
 
-    await resend.emails.send({
+    const result = await resend.emails.send({
       from: EMAIL_FROM,
       to: order.customer.email,
       ...(EMAIL_BCC ? { bcc: EMAIL_BCC } : {}),
       subject: `Tu pedido en Bricia · ${order.id}`,
       html,
+      text,
+      replyTo: SUPPORT_EMAIL,
+      headers: {
+        "X-Entity-Ref-ID": order.id,
+      },
+      tags: [
+        { name: "type", value: "order-confirmation" },
+        { name: "order_id", value: order.id },
+      ],
     });
+
+    if ((result as { error?: unknown }).error) {
+      console.error("[email] Resend error:", (result as { error: unknown }).error);
+      return false;
+    }
+
+    return true;
   } catch (err) {
-    console.error("[email] error al enviar:", err);
+    console.error("[email] excepción al enviar:", err);
+    return false;
   }
 }

@@ -58,6 +58,8 @@ export interface Order {
   total: number;
   paymentId?: string;
   paymentStatus?: string;
+  /** Timestamp ISO when the buyer confirmation email was successfully sent. Used for idempotency. */
+  confirmationEmailSentAt?: string;
 }
 
 const BLOB_KEY = "bricia/orders.json";

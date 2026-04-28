@@ -59,19 +59,30 @@ export async function POST(request: NextRequest) {
 
     const status = payment.status; // "approved", "pending", "rejected", etc.
 
-    // Solo confirmar y enviar correo si está aprobado y no ya confirmado
-    if (status === "approved" && order.status === "pending") {
-      const updated = await updateOrder(order.id, {
-        status: "paid",
-        paidAt: new Date().toISOString(),
-        paymentId: String(paymentId),
-        paymentStatus: status,
-      });
-      if (updated) {
-        await sendOrderConfirmationEmail(updated);
+    if (status === "approved") {
+      // Marcar como pagado solo si aún no lo está (idempotente)
+      let working = order;
+      if (order.status === "pending") {
+        const updated = await updateOrder(order.id, {
+          status: "paid",
+          paidAt: new Date().toISOString(),
+          paymentId: String(paymentId),
+          paymentStatus: status,
+        });
+        if (updated) working = updated;
       }
-    } else if (status && status !== "approved" && order.status === "pending") {
-      // Persistir el estado de pago aunque no sea aprobado, para visibilidad en admin
+
+      // Enviar correo de confirmación una sola vez
+      if (!working.confirmationEmailSentAt) {
+        const sent = await sendOrderConfirmationEmail(working);
+        if (sent) {
+          await updateOrder(working.id, {
+            confirmationEmailSentAt: new Date().toISOString(),
+          });
+        }
+      }
+    } else if (status && order.status === "pending") {
+      // Persistir el estado aunque no sea aprobado para visibilidad en admin
       await updateOrder(order.id, {
         paymentId: String(paymentId),
         paymentStatus: status,
