@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { MercadoPagoConfig, Preference } from "mercadopago";
 import { getOrderById } from "@/data/orders";
+import type { Order } from "@/data/orders";
 
 const ACCESS_TOKEN = process.env.MERCADOPAGO_ACCESS_TOKEN;
 
@@ -22,7 +23,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  let body: { orderId?: string };
+  let body: { orderId?: string; orderSnapshot?: Order };
   try {
     body = await request.json();
   } catch {
@@ -32,7 +33,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { orderId } = body;
+  const { orderId, orderSnapshot } = body;
   if (!orderId) {
     return NextResponse.json(
       { error: "Falta el identificador del pedido" },
@@ -40,7 +41,20 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const order = await getOrderById(orderId);
+  // Blob puede tardar unos ms en reflejar escrituras recientes; reintentamos.
+  let order = await getOrderById(orderId);
+  if (!order) {
+    for (let i = 0; i < 3; i += 1) {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      order = await getOrderById(orderId);
+      if (order) break;
+    }
+  }
+
+  if (!order && orderSnapshot?.id === orderId) {
+    order = orderSnapshot;
+  }
+
   if (!order) {
     return NextResponse.json(
       { error: "Pedido no encontrado" },

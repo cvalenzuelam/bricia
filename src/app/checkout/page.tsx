@@ -145,7 +145,7 @@ export default function CheckoutPage() {
       const checkoutRes = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderId }),
+        body: JSON.stringify({ orderId, orderSnapshot: orderData.order }),
       });
 
       const checkoutData = await checkoutRes.json();
