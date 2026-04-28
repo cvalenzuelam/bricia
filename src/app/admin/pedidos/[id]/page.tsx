@@ -133,14 +133,9 @@ export default function AdminPedidoDetailPage({
     if (!order) return;
     if (
       !confirm(
-        `¿Eliminar permanentemente el pedido ${order.id}? Esta acción no se puede deshacer y se quitará del listado en Vercel Blob.`
+        `¿Eliminar el pedido ${order.id}? No se puede deshacer.`
       )
     ) {
-      return;
-    }
-    const typed = window.prompt(`Escribe el folio exacto para confirmar:\n${order.id}`);
-    if (typed !== order.id) {
-      window.alert("El folio no coincide. No se eliminó nada.");
       return;
     }
     setDeleting(true);
@@ -413,8 +408,7 @@ export default function AdminPedidoDetailPage({
             Eliminar pedido
           </p>
           <p className="text-sm font-sans text-brand-muted mb-4 max-w-2xl leading-relaxed">
-            Usa esto solo para pruebas o pedidos duplicados. El pedido desaparece del panel y de los datos guardados
-            (Blob o archivo local). No cancela cobros en Mercado Pago: revisa ahí si hubo un pago real.
+            Quita el pedido del panel. No cancela cobros en Mercado Pago.
           </p>
           <button
             type="button"
@@ -423,7 +417,7 @@ export default function AdminPedidoDetailPage({
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-red-800/20 text-[10px] font-sans font-bold tracking-[0.2em] uppercase text-red-900 hover:bg-red-900/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {deleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
-            Eliminar permanentemente
+            Borrar pedido
           </button>
         </div>
       </div>

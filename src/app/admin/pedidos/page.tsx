@@ -88,14 +88,9 @@ export default function AdminPedidosPage() {
     e.stopPropagation();
     if (
       !confirm(
-        `¿Eliminar permanentemente el pedido ${order.id}? No se puede deshacer.`
+        `¿Eliminar el pedido ${order.id}? No se puede deshacer.`
       )
     ) {
-      return;
-    }
-    const typed = window.prompt(`Escribe el folio exacto para confirmar:\n${order.id}`);
-    if (typed !== order.id) {
-      window.alert("El folio no coincide.");
       return;
     }
     setDeletingId(order.id);
