@@ -2,7 +2,12 @@ import { Resend } from "resend";
 import type { Order } from "@/data/orders";
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const DEFAULT_EMAIL_FROM = "Bricia López <onboarding@resend.dev>";
+// Mientras no haya un dominio propio verificado en Resend, hay que enviar desde
+// `onboarding@resend.dev` (es la única dirección que Resend permite por default).
+// Lo que sí podemos personalizar libremente es el nombre que aparece como
+// remitente: `CASABRICIA <onboarding@resend.dev>` se ve como "CASABRICIA" en
+// el inbox de la mayoría de clientes (Gmail, iCloud, Outlook, etc.).
+const DEFAULT_EMAIL_FROM = "CASABRICIA <onboarding@resend.dev>";
 
 /**
  * Acepta cualquier variante razonable y la normaliza a un valor válido para
