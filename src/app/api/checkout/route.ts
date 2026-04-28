@@ -79,6 +79,8 @@ export async function POST(request: NextRequest) {
   const nameParts = order.customer.name.trim().split(/\s+/);
   const firstName = nameParts.slice(0, Math.max(1, nameParts.length - 1)).join(" ");
   const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : "";
+  const streetNumberStr =
+    order.shipping.exterior.trim() || "S/N";
 
   try {
     const result = await preference.create({
@@ -95,14 +97,14 @@ export async function POST(request: NextRequest) {
           address: {
             zip_code: order.shipping.zip,
             street_name: order.shipping.street,
-            street_number: parseInt(order.shipping.exterior, 10) || 0,
+            street_number: streetNumberStr,
           },
         },
         shipments: {
           receiver_address: {
             zip_code: order.shipping.zip,
             street_name: order.shipping.street,
-            street_number: parseInt(order.shipping.exterior, 10) || 0,
+            street_number: streetNumberStr,
             city_name: order.shipping.city,
             state_name: order.shipping.state,
           },
