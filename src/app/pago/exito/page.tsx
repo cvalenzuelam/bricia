@@ -15,18 +15,17 @@ function PagoExitoContent() {
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Resolve orderId: from query (`orderId` o `external_reference`) o sessionStorage
+  const orderIdParam =
+    searchParams.get("orderId") || searchParams.get("external_reference");
+  const paymentId = searchParams.get("payment_id") || undefined;
+  const paymentStatus = searchParams.get("status") || undefined;
+
   useEffect(() => {
-    const fromQuery =
-      searchParams.get("orderId") ||
-      searchParams.get("external_reference");
-    const fromSession =
-      typeof window !== "undefined"
+    const orderId =
+      orderIdParam ||
+      (typeof window !== "undefined"
         ? sessionStorage.getItem("bricia_pending_order")
-        : null;
-    const orderId = fromQuery || fromSession;
-    const paymentId = searchParams.get("payment_id") || undefined;
-    const paymentStatus = searchParams.get("status") || undefined;
+        : null);
 
     if (!orderId) {
       setLoading(false);
@@ -38,19 +37,27 @@ function PagoExitoContent() {
     (async () => {
       try {
         // Confirma el pedido (idempotente; si webhook ya lo marcó, devuelve alreadyConfirmed)
-        await fetch(`/api/orders/${orderId}/confirm`, {
+        const confirmRes = await fetch(`/api/orders/${orderId}/confirm`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ paymentId, paymentStatus }),
         });
+        const confirmData = await confirmRes.json().catch(() => ({}));
+
+        if (!cancelled && confirmRes.ok && confirmData?.success) {
+          clearCart();
+          try {
+            sessionStorage.removeItem("bricia_pending_order");
+          } catch {
+            /* ignore */
+          }
+        }
 
         const res = await fetch(`/api/orders/${orderId}`, { cache: "no-store" });
         if (!res.ok) throw new Error("not found");
         const data = (await res.json()) as Order;
         if (!cancelled) {
           setOrder(data);
-          clearCart();
-          sessionStorage.removeItem("bricia_pending_order");
         }
       } catch (err) {
         console.error(err);
@@ -62,8 +69,7 @@ function PagoExitoContent() {
     return () => {
       cancelled = true;
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [orderIdParam, paymentId, paymentStatus, clearCart]);
 
   if (loading) {
     return (
