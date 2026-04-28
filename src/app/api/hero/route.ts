@@ -3,6 +3,8 @@ import fs from "fs";
 import path from "path";
 import { list, put } from "@vercel/blob";
 import { MemoryCache } from "@/lib/memory-cache";
+import { fetchPublicBlobJson } from "@/lib/blob-public-read";
+import { localJsonInDev } from "@/lib/dev-data-source";
 
 const CONFIG_PATH = path.join(process.cwd(), "src/data/hero-config.json");
 const HERO_BLOB_KEY = "bricia/hero-config.json";
@@ -14,7 +16,7 @@ const PUBLIC_CACHE_HEADERS = {
 
 export const runtime = "nodejs";
 
-const heroCache = new MemoryCache<unknown>(60_000);
+const heroCache = new MemoryCache<unknown>(180_000);
 
 function readLocalHeroConfig() {
   const raw = fs.readFileSync(CONFIG_PATH, "utf-8");
@@ -26,6 +28,21 @@ export async function GET() {
     const cached = heroCache.get();
     if (cached) {
       return NextResponse.json(cached, { headers: PUBLIC_CACHE_HEADERS });
+    }
+
+    if (localJsonInDev()) {
+      const localFirst = readLocalHeroConfig();
+      heroCache.set(localFirst);
+      return NextResponse.json(localFirst, { headers: PUBLIC_CACHE_HEADERS });
+    }
+
+    const direct = await fetchPublicBlobJson<Record<string, unknown>>(
+      HERO_BLOB_KEY,
+      10000
+    );
+    if (direct && typeof direct === "object") {
+      heroCache.set(direct);
+      return NextResponse.json(direct, { headers: PUBLIC_CACHE_HEADERS });
     }
 
     try {
@@ -60,6 +77,12 @@ export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
     const payload = JSON.stringify(body, null, 2);
+
+    if (localJsonInDev()) {
+      fs.writeFileSync(CONFIG_PATH, payload, "utf-8");
+      heroCache.set(body);
+      return NextResponse.json({ success: true, local: true });
+    }
 
     try {
       await put(HERO_BLOB_KEY, payload, {

@@ -3,6 +3,8 @@ import path from "path";
 import { put, list } from "@vercel/blob";
 import localRecipesData from "./recipes.json";
 import { MemoryCache } from "@/lib/memory-cache";
+import { fetchPublicBlobJson } from "@/lib/blob-public-read";
+import { localJsonInDev } from "@/lib/dev-data-source";
 
 export interface Recipe {
   slug: string;
@@ -34,12 +36,7 @@ const BLOB_TOKEN =
   process.env.VERCEL_BLOB_READ_WRITE_TOKEN;
 
 function shouldPersistRecipesLocally(): boolean {
-  const onVercel = Boolean(process.env.VERCEL);
-  return (
-    !onVercel &&
-    !BLOB_TOKEN &&
-    process.env.NODE_ENV === "development"
-  );
+  return localJsonInDev();
 }
 
 async function withTimeout<T>(
@@ -58,7 +55,7 @@ async function withTimeout<T>(
   ]);
 }
 
-const recipesCache = new MemoryCache<Recipe[]>(60_000);
+const recipesCache = new MemoryCache<Recipe[]>(300_000);
 
 export async function getRecipes(): Promise<Recipe[]> {
   if (shouldPersistRecipesLocally()) {
@@ -72,6 +69,15 @@ export async function getRecipes(): Promise<Recipe[]> {
 
   const cached = recipesCache.get();
   if (cached) return cached;
+
+  const viaPublic = await fetchPublicBlobJson<Recipe[]>(
+    BLOB_KEY,
+    FETCH_TIMEOUT_MS
+  );
+  if (viaPublic && Array.isArray(viaPublic)) {
+    recipesCache.set(viaPublic);
+    return viaPublic;
+  }
 
   try {
     const { blobs } = await withTimeout(

@@ -10,6 +10,8 @@
  * - El cache es por instancia: cada serverless function tiene su propia copia,
  *   pero Vercel reutiliza instancias varios minutos, así que en la práctica
  *   reducimos enormemente las lecturas.
+ * - Configura `VERCEL_BLOB_PUBLIC_BASE_URL` (origen del store) para leer JSON
+ *   público con `fetch` y evitar `list()` en cada frío: ver `blob-public-read.ts`.
  * - En writes hay que llamar a `bust()` o `set()` para invalidar/refrescar.
  */
 

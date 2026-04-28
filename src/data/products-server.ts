@@ -4,6 +4,8 @@ import { put, list } from "@vercel/blob";
 import localProductsData from "./products.json";
 import type { Product } from "./products";
 import { MemoryCache } from "@/lib/memory-cache";
+import { fetchPublicBlobJson } from "@/lib/blob-public-read";
+import { localJsonInDev } from "@/lib/dev-data-source";
 
 const BLOB_KEY = "bricia/products.json";
 const LOCAL_PATH = path.join(process.cwd(), "src/data/products.json");
@@ -17,8 +19,7 @@ const BLOB_TOKEN =
   process.env.VERCEL_BLOB_READ_WRITE_TOKEN;
 
 function shouldPersistLocally(): boolean {
-  const onVercel = Boolean(process.env.VERCEL);
-  return !onVercel && !BLOB_TOKEN && process.env.NODE_ENV === "development";
+  return localJsonInDev();
 }
 
 async function withTimeout<T>(
@@ -37,7 +38,8 @@ async function withTimeout<T>(
   ]);
 }
 
-const productsCache = new MemoryCache<Product[]>(60_000);
+/** 5 min: catálogo cambia poco; baja lecturas repetidas a Blob/CDN */
+const productsCache = new MemoryCache<Product[]>(300_000);
 
 export async function getProducts(): Promise<Product[]> {
   if (shouldPersistLocally()) {
@@ -51,6 +53,12 @@ export async function getProducts(): Promise<Product[]> {
 
   const cached = productsCache.get();
   if (cached) return cached;
+
+  const viaPublic = await fetchPublicBlobJson<Product[]>(BLOB_KEY, FETCH_TIMEOUT_MS);
+  if (viaPublic && Array.isArray(viaPublic)) {
+    productsCache.set(viaPublic);
+    return viaPublic;
+  }
 
   if (BLOB_TOKEN) {
     try {

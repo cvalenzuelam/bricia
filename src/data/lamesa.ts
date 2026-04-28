@@ -2,6 +2,9 @@ import { readFile, writeFile } from "fs/promises";
 import path from "path";
 import { put, list } from "@vercel/blob";
 import localMesaData from "./lamesa.json";
+import { MemoryCache } from "@/lib/memory-cache";
+import { fetchPublicBlobJson } from "@/lib/blob-public-read";
+import { localJsonInDev } from "@/lib/dev-data-source";
 
 export type ContentBlock =
   | { type: "paragraph"; text: string }
@@ -33,8 +36,7 @@ const BLOB_TOKEN =
   process.env.VERCEL_BLOB_READ_WRITE_TOKEN;
 
 function shouldPersistLocally(): boolean {
-  const onVercel = Boolean(process.env.VERCEL);
-  return !onVercel && !BLOB_TOKEN && process.env.NODE_ENV === "development";
+  return localJsonInDev();
 }
 
 async function withTimeout<T>(
@@ -53,6 +55,9 @@ async function withTimeout<T>(
   ]);
 }
 
+/** Evita repetir list() en cada request a páginas que usan La Mesa */
+const mesaCache = new MemoryCache<MesaArticle[]>(300_000);
+
 export async function getMesaArticles(): Promise<MesaArticle[]> {
   if (shouldPersistLocally()) {
     try {
@@ -61,6 +66,18 @@ export async function getMesaArticles(): Promise<MesaArticle[]> {
     } catch {
       return localMesaData as MesaArticle[];
     }
+  }
+
+  const cached = mesaCache.get();
+  if (cached) return cached;
+
+  const viaPublic = await fetchPublicBlobJson<MesaArticle[]>(
+    BLOB_KEY,
+    FETCH_TIMEOUT_MS
+  );
+  if (viaPublic && Array.isArray(viaPublic)) {
+    mesaCache.set(viaPublic);
+    return viaPublic;
   }
 
   try {
@@ -81,7 +98,9 @@ export async function getMesaArticles(): Promise<MesaArticle[]> {
         FETCH_TIMEOUT_MS,
         "fetching latest mesa blob"
       );
-      return (await res.json()) as MesaArticle[];
+      const json = (await res.json()) as MesaArticle[];
+      mesaCache.set(json);
+      return json;
     }
     return localMesaData as MesaArticle[];
   } catch {
@@ -101,6 +120,7 @@ export async function saveMesaArticles(articles: MesaArticle[]): Promise<void> {
 
   if (shouldPersistLocally()) {
     await writeFile(LOCAL_PATH, payload, "utf-8");
+    mesaCache.set(articles);
     return;
   }
 
@@ -120,6 +140,7 @@ export async function saveMesaArticles(articles: MesaArticle[]): Promise<void> {
     SAVE_TIMEOUT_MS,
     "saving mesa blob"
   );
+  mesaCache.set(articles);
 }
 
 export async function addMesaArticle(article: MesaArticle): Promise<void> {

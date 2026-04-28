@@ -3,6 +3,8 @@ import path from "path";
 import { put, list } from "@vercel/blob";
 import localOrdersData from "./orders.json";
 import { MemoryCache } from "@/lib/memory-cache";
+import { fetchPublicBlobJson } from "@/lib/blob-public-read";
+import { localJsonInDev } from "@/lib/dev-data-source";
 
 export type OrderStatus =
   | "pending"
@@ -83,8 +85,7 @@ const BLOB_TOKEN =
   process.env.VERCEL_BLOB_READ_WRITE_TOKEN;
 
 function shouldPersistLocally(): boolean {
-  const onVercel = Boolean(process.env.VERCEL);
-  return !onVercel && !BLOB_TOKEN && process.env.NODE_ENV === "development";
+  return localJsonInDev();
 }
 
 async function withTimeout<T>(
@@ -106,7 +107,8 @@ async function withTimeout<T>(
 // Cache breve para /admin/pedidos: evita un list() por cada vista/refresh.
 // Las escrituras (saveOrders) actualizan el cache, así que el admin sigue
 // viendo datos frescos tras crear/editar/borrar pedidos.
-const ordersCache = new MemoryCache<Order[]>(30_000);
+// Cache en memoria invalidado al guardar; direct URL evita list() en cada frío.
+const ordersCache = new MemoryCache<Order[]>(60_000);
 
 export async function getOrders(): Promise<Order[]> {
   if (shouldPersistLocally()) {
@@ -120,6 +122,12 @@ export async function getOrders(): Promise<Order[]> {
 
   const cached = ordersCache.get();
   if (cached) return cached;
+
+  const viaPublic = await fetchPublicBlobJson<Order[]>(BLOB_KEY, FETCH_TIMEOUT_MS);
+  if (viaPublic && Array.isArray(viaPublic)) {
+    ordersCache.set(viaPublic);
+    return viaPublic;
+  }
 
   if (BLOB_TOKEN) {
     try {
