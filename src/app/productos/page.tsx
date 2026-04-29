@@ -198,15 +198,10 @@ export default function ProductosPage() {
                       Ver pieza →
                     </Link>
 
-                    <div className="flex items-center justify-between pt-1">
+                    <div className="pt-1">
                       <span className="font-serif text-2xl text-brand-primary">
                         {formatPrice(product.price)}
                       </span>
-                      {product.stock <= 3 && (
-                        <span className="text-[9px] font-sans text-brand-accent border border-brand-accent/30 rounded-full px-2.5 py-1 tracking-[0.15em] uppercase">
-                          Últimas {product.stock}
-                        </span>
-                      )}
                     </div>
 
                     <AddButton product={product} />

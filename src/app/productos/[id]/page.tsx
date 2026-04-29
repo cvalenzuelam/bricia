@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, Layers, Package, Ruler } from "lucide-react";
+import { ArrowLeft, Layers, Ruler } from "lucide-react";
 import { getProducts } from "@/data/products-server";
 import { formatPrice } from "@/data/products";
 import type { Product } from "@/data/products";
@@ -238,28 +238,13 @@ export default async function ProductoDetallePage({ params }: PageProps) {
             )}
 
             <div className="rounded-2xl border border-brand-primary/8 bg-white/60 p-8 space-y-6 backdrop-blur-sm">
-              <div className="flex flex-wrap items-end justify-between gap-4">
-                <div>
-                  <p className="text-[10px] font-sans font-bold tracking-[0.25em] uppercase text-brand-muted mb-2">
-                    Precio
-                  </p>
-                  <p className="font-serif text-3xl md:text-4xl text-brand-primary">
-                    {formatPrice(product.price)}
-                  </p>
-                </div>
-                <div className="flex flex-col items-end gap-2">
-                  {product.stock > 0 && product.stock <= 3 && (
-                    <span className="text-[9px] font-sans text-brand-accent border border-brand-accent/35 rounded-full px-3 py-1.5 tracking-[0.15em] uppercase">
-                      Últimas {product.stock}
-                    </span>
-                  )}
-                  {product.stock > 3 && (
-                    <span className="text-[10px] font-sans text-brand-muted tracking-[0.12em] flex items-center gap-1.5">
-                      <Package size={14} strokeWidth={1.5} className="opacity-50" />
-                      {product.stock} en existencia
-                    </span>
-                  )}
-                </div>
+              <div>
+                <p className="text-[10px] font-sans font-bold tracking-[0.25em] uppercase text-brand-muted mb-2">
+                  Precio
+                </p>
+                <p className="font-serif text-3xl md:text-4xl text-brand-primary">
+                  {formatPrice(product.price)}
+                </p>
               </div>
 
               <ProductDetailAddToCart product={product} />
