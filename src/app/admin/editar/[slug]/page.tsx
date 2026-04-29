@@ -7,11 +7,14 @@ import Link from "next/link";
 import { uploadCmsImageFile } from "@/lib/cms-upload-image";
 import { ArrowLeft, Upload, Plus, X, Loader2, Save, Video } from "lucide-react";
 import AdminCmsLoading from "@/components/admin/AdminCmsLoading";
+import type { Recipe } from "@/data/recipes";
 
 const CATEGORIES = ["PRIMAVERA", "VERANO", "OTOÑO", "INVIERNO", "POSTRES"];
 const REQUEST_TIMEOUT_MS = 20000;
-const FRONT_SYNC_TIMEOUT_MS = 60000;
+/** Tiempo hasta que API + página pública reflejan el guardado (builds ISR/CDN lentos). */
+const FRONT_SYNC_TIMEOUT_MS = 120000;
 const FRONT_SYNC_INTERVAL_MS = 2500;
+const PUBLIC_HTML_FETCH_MS = 45000;
 
 async function fetchWithTimeout(
   input: RequestInfo | URL,
@@ -42,24 +45,69 @@ async function uploadRecipeImage(file: File, slug: string): Promise<string | nul
   return uploadCmsImageFile(file, pathname);
 }
 
-async function waitForRecipeUpdateInApi(
-  slug: string,
-  expected: { title: string; image: string },
-  timeoutMs = FRONT_SYNC_TIMEOUT_MS
-) {
+function normalizedIngredientList(rows: string[]) {
+  return rows.map((s) => s.trim()).filter((s) => s.length > 0);
+}
+
+/** Compara todos los campos relevantes tras PUT (histórico, pasos, galería, etc.). */
+function recipesMatch(remote: Recipe, want: Recipe): boolean {
+  if (!remote || !want || remote.slug !== want.slug) return false;
+  if (remote.title.trim() !== want.title.trim()) return false;
+  if (remote.subtitle.trim() !== want.subtitle.trim()) return false;
+  if (remote.category !== want.category) return false;
+  if (remote.image.trim() !== want.image.trim()) return false;
+  if (remote.history.trim() !== want.history.trim()) return false;
+  if (remote.prepTime.trim() !== want.prepTime.trim()) return false;
+  if (remote.servings.trim() !== want.servings.trim()) return false;
+  if (JSON.stringify(remote.gallery ?? []) !== JSON.stringify(want.gallery ?? [])) return false;
+  if (
+    JSON.stringify(normalizedIngredientList(remote.ingredients)) !==
+    JSON.stringify(normalizedIngredientList(want.ingredients))
+  )
+    return false;
+  if (
+    JSON.stringify(normalizedIngredientList(remote.steps)) !==
+    JSON.stringify(normalizedIngredientList(want.steps))
+  )
+    return false;
+  const rvVid = (remote.videoUrl ?? "").trim();
+  const wvVid = (want.videoUrl ?? "").trim();
+  if (rvVid !== wvVid) return false;
+  const rvThumb = (remote.videoThumbnail ?? "").trim();
+  const wvThumb = (want.videoThumbnail ?? "").trim();
+  if (rvThumb !== wvThumb) return false;
+  return true;
+}
+
+/** Fragmento estable de la URL de imagen (nombre de objeto) dentro del HTML. */
+function stableImageFinger(url: string): string {
+  const u = url.trim();
+  if (!u) return "";
+  try {
+    const p = new URL(u, "http://local.invalid").pathname;
+    const leaf = decodeURIComponent(p.split("/").filter(Boolean).pop() || "");
+    if (leaf.length >= 12) return leaf;
+  } catch {
+    /* ignore */
+  }
+  return u.length > 120 ? u.slice(-120) : u;
+}
+
+async function waitUntilApiRecipeReflects(slug: string, want: Recipe, timeoutMs = FRONT_SYNC_TIMEOUT_MS) {
   const startedAt = Date.now();
 
   while (Date.now() - startedAt < timeoutMs) {
     try {
-      const res = await fetchWithTimeout(`/api/recipes/${slug}?t=${Date.now()}`, { cache: "no-store" });
+      const res = await fetchWithTimeout(`/api/recipes/${slug}?sync=${Date.now()}`, {
+        cache: "no-store",
+        headers: { "Cache-Control": "no-cache" },
+      });
       if (res.ok) {
-        const recipe = await res.json();
-        if (recipe?.title === expected.title && recipe?.image === expected.image) {
-          return true;
-        }
+        const remote = (await res.json()) as Recipe;
+        if (recipesMatch(remote, want)) return true;
       }
     } catch {
-      // keep polling
+      /* keep polling */
     }
     await new Promise((resolve) => setTimeout(resolve, FRONT_SYNC_INTERVAL_MS));
   }
@@ -67,24 +115,51 @@ async function waitForRecipeUpdateInApi(
   return false;
 }
 
-async function waitForRecipeTitleInFrontend(
+function htmlLooksLikePublicRecipe(html: string, want: Recipe): boolean {
+  const title = want.title.trim();
+  if (!title || !html.includes(title)) return false;
+
+  const img = stableImageFinger(want.image);
+  if (img && !html.includes(img)) return false;
+
+  const sub = want.subtitle.trim();
+  if (sub && !html.includes(sub)) return false;
+
+  const histPlain = want.history.replace(/\s+/g, " ").trim();
+  if (histPlain.length >= 8) {
+    const snap = histPlain.slice(0, Math.min(90, histPlain.length));
+    if (!html.includes(snap)) return false;
+  }
+
+  const firstStep = normalizedIngredientList(want.steps)[0];
+  if (firstStep && firstStep.length > 10 && !html.includes(firstStep)) return false;
+
+  return true;
+}
+
+async function waitUntilPublicRecipePageReflects(
   slug: string,
-  expectedTitle: string,
+  want: Recipe,
   timeoutMs = FRONT_SYNC_TIMEOUT_MS
 ) {
   const startedAt = Date.now();
 
   while (Date.now() - startedAt < timeoutMs) {
     try {
-      const res = await fetchWithTimeout(`/recetas/${slug}?t=${Date.now()}`, { cache: "no-store" });
+      const res = await fetchWithTimeout(
+        `/recetas/${slug}?sync=${Date.now()}`,
+        {
+          cache: "no-store",
+          headers: { "Cache-Control": "no-cache", Pragma: "no-cache" },
+        },
+        PUBLIC_HTML_FETCH_MS
+      );
       if (res.ok) {
         const html = await res.text();
-        if (html.includes(expectedTitle)) {
-          return true;
-        }
+        if (htmlLooksLikePublicRecipe(html, want)) return true;
       }
     } catch {
-      // keep polling
+      /* keep polling */
     }
     await new Promise((resolve) => setTimeout(resolve, FRONT_SYNC_INTERVAL_MS));
   }
@@ -240,7 +315,7 @@ export default function EditRecipePage({ params }: EditPageProps) {
       pendingMainUploadRef.current = null;
     }
 
-    const recipe = {
+    const recipePayload = {
       ...form,
       image: mainImagePath,
       videoUrl: form.videoUrl.trim(),
@@ -250,30 +325,37 @@ export default function EditRecipePage({ params }: EditPageProps) {
       steps: steps.filter((s) => s.trim() !== ""),
     };
 
+    const wantRecipe: Recipe = {
+      slug,
+      ...recipePayload,
+      videoThumbnail: recipePayload.videoThumbnail || "",
+    };
+
     try {
       const res = await fetchWithTimeout(`/api/recipes/${slug}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(recipe),
+        body: JSON.stringify(recipePayload),
       });
 
       if (res.ok) {
         setPublishing(true);
-        setPublishMessage("Validando guardado en el CMS...");
-        const syncedInApi = await waitForRecipeUpdateInApi(slug, {
-          title: recipe.title,
-          image: recipe.image,
-        });
+        setPublishMessage("Verificando que el CMS tenga todos los cambios…");
+        const syncedInApi = await waitUntilApiRecipeReflects(slug, wantRecipe);
 
         if (!syncedInApi) {
-          alert("Se guardó, pero no se pudo confirmar sincronización en CMS. Intenta refrescar.");
+          alert(
+            "Los datos pueden haberse guardado, pero no coincide aún lo que devuelve la API. Revisa dentro de unos minutos y recarga esta página si hace falta."
+          );
           return;
         }
 
-        setPublishMessage("Esperando que los cambios se reflejen en el front...");
-        const reflectedInFrontend = await waitForRecipeTitleInFrontend(slug, recipe.title);
-        if (!reflectedInFrontend) {
-          alert("Se guardó en CMS, pero el front tardó demasiado en reflejar cambios.");
+        setPublishMessage("Verificando la receta visible en la web pública…");
+        const reflectedInPublic = await waitUntilPublicRecipePageReflects(slug, wantRecipe);
+        if (!reflectedInPublic) {
+          alert(
+            "El CMS tiene los cambios pero la página pública aún tardó en actualizarse. Espera un poco y revisa «Ver receta» antes de republicar."
+          );
           return;
         }
 
@@ -325,12 +407,18 @@ export default function EditRecipePage({ params }: EditPageProps) {
         </div>
       )}
       <div className="max-w-3xl mx-auto px-6 py-12">
-        <Link
-          href="/admin"
-          className="inline-flex items-center gap-2 text-xs font-sans text-brand-muted hover:text-brand-accent transition-colors mb-8"
-        >
-          <ArrowLeft size={14} /> Volver al panel
-        </Link>
+        {(saving || uploading || publishing) ? (
+          <span className="inline-flex items-center gap-2 text-xs font-sans text-brand-muted mb-8 cursor-not-allowed opacity-50 select-none pointer-events-none">
+            <ArrowLeft size={14} /> Volver al panel
+          </span>
+        ) : (
+          <Link
+            href="/admin"
+            className="inline-flex items-center gap-2 text-xs font-sans text-brand-muted hover:text-brand-accent transition-colors mb-8"
+          >
+            <ArrowLeft size={14} /> Volver al panel
+          </Link>
+        )}
 
         <h1 className="text-3xl font-serif text-brand-primary mb-10">
           Editar: <span className="italic text-brand-accent">{form.title}</span>
