@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 112 36" fill="none" aria-hidden="true">
+  <circle cx="18" cy="18" r="15.5" fill="#00D66F"/>
+  <path fill="#0a0a0a" d="M15.1 11.2 23.2 18 15.1 24.8V20.6l4.9-2.6-4.9-2.6V11.2Z"/>
+  <text
+    x="40"
+    y="24.2"
+    fill="#0a0a0a"
+    font-family="system-ui, -apple-system, Segoe UI, sans-serif"
+    font-size="17"
+    font-weight="750"
+    letter-spacing="-0.03em"
+  >link</text>
+</svg>

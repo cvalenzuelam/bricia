@@ -124,7 +124,7 @@ export default function AdminProductosPage() {
                       </span>
                     )}
                   </div>
-                  <h3 className="text-lg font-serif text-brand-primary truncate lowercase">
+                  <h3 className="text-lg font-serif text-brand-primary truncate">
                     {product.name}
                   </h3>
                   <p className="text-xs font-sans text-brand-muted truncate">

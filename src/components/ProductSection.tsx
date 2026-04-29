@@ -21,13 +21,6 @@ function formatPriceMx(price: number): string {
   }).format(price);
 }
 
-function formatProductTitle(name: string): string {
-  return name
-    .split(/\s+/)
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-    .join(" ");
-}
-
 export default function ProductSection({
   initialProducts,
 }: {
@@ -163,7 +156,7 @@ export default function ProductSection({
                   </div>
                   <div className="text-center space-y-1.5 px-1">
                     <h3 className="text-lg font-serif text-brand-secondary group-hover:text-[#C2A878] transition-colors duration-300">
-                      {formatProductTitle(product.name)}
+                      {product.name}
                     </h3>
                     <p className="text-xs font-sans text-white/45 tracking-widest">
                       {formatPriceMx(product.price)}

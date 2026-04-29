@@ -559,7 +559,7 @@ export default function AdminPedidoDetailPage({
                       />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-serif text-base text-brand-primary capitalize">{item.name}</p>
+                      <p className="font-serif text-base text-brand-primary">{item.name}</p>
                       {item.subtitle && (
                         <p className="text-xs font-sans text-brand-muted">{item.subtitle}</p>
                       )}

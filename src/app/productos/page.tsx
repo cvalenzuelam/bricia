@@ -180,7 +180,7 @@ export default function ProductosPage() {
                   <div className="space-y-4">
                     <div className="space-y-1">
                       <Link href={`/productos/${product.id}`} className="block">
-                        <h3 className="font-serif text-2xl md:text-3xl text-brand-primary lowercase leading-tight group-hover:text-brand-accent transition-colors duration-400">
+                        <h3 className="font-serif text-2xl md:text-3xl text-brand-primary leading-tight group-hover:text-brand-accent transition-colors duration-400">
                           {product.name}
                         </h3>
                       </Link>

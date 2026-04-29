@@ -216,7 +216,7 @@ export default function EditarProductoPage({
             <ArrowLeft size={14} /> Volver a productos
           </Link>
           <h1 className="text-3xl font-serif text-brand-primary">Editar Producto</h1>
-          <p className="text-sm font-sans text-brand-muted mt-1 font-serif italic lowercase">{form.name || "…"}</p>
+          <p className="text-sm font-sans text-brand-muted mt-1 font-serif italic">{form.name || "…"}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-8">

@@ -178,7 +178,7 @@ export default async function ProductoDetallePage({ params }: PageProps) {
           <div className="lg:col-span-5 space-y-8">
             <header className="space-y-6 text-center lg:text-left">
               <p className="editorial-spacing text-brand-accent">La alacena</p>
-              <h1 className="text-5xl md:text-6xl lg:text-[3.5rem] font-serif text-brand-primary lowercase tracking-tight leading-[1.05]">
+              <h1 className="text-5xl md:text-6xl lg:text-[3.5rem] font-serif text-brand-primary tracking-tight leading-[1.05]">
                 {product.name}
               </h1>
               <p className="text-lg md:text-xl font-serif italic text-brand-primary/70">
@@ -293,7 +293,7 @@ export default async function ProductoDetallePage({ params }: PageProps) {
                     />
                   </div>
                   <div>
-                    <h3 className="font-serif text-xl text-brand-primary lowercase group-hover:text-brand-accent transition-colors">
+                    <h3 className="font-serif text-xl text-brand-primary group-hover:text-brand-accent transition-colors">
                       {p.name}
                     </h3>
                     <p className="text-sm font-serif text-brand-primary/60">{formatPrice(p.price)}</p>

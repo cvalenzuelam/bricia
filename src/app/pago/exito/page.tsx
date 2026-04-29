@@ -151,7 +151,7 @@ function PagoExitoContent() {
                   {order.items.map((item) => (
                     <div key={item.productId} className="flex justify-between items-baseline">
                       <div>
-                        <p className="font-serif text-brand-primary capitalize leading-tight">
+                        <p className="font-serif text-brand-primary leading-tight">
                           {item.name}
                         </p>
                         {item.subtitle && (

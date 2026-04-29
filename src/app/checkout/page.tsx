@@ -425,17 +425,35 @@ export default function CheckoutPage() {
                 type="button"
                 disabled={submitting}
                 onClick={goToMercadoPagoCheckout}
-                className="w-full rounded-xl bg-black py-4 text-xs font-sans font-bold uppercase tracking-[0.12em] text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                className="group flex w-full items-center gap-3 rounded-xl bg-black px-4 py-3.5 transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60 sm:gap-4 sm:px-5"
               >
-                {submitting ? "Preparando pago…" : "Pagar con Mercado Pago"}
+                <Image
+                  src="/payments/mercado-pago-on-dark.svg"
+                  alt="Mercado Pago"
+                  width={200}
+                  height={81}
+                  className="h-8 w-auto max-w-[min(52vw,13.5rem)] shrink-0 object-contain object-left sm:h-9"
+                />
+                <span className="min-w-0 flex-1 text-center text-[11px] font-sans font-bold uppercase leading-snug tracking-[0.1em] text-white sm:text-xs sm:tracking-[0.12em]">
+                  {submitting ? "Preparando pago…" : "Pagar con Mercado Pago"}
+                </span>
               </button>
               <button
                 type="button"
                 disabled={submitting}
                 onClick={goToStripeCheckout}
-                className="w-full rounded-xl border-2 border-brand-primary/15 bg-white py-4 text-xs font-sans font-bold uppercase tracking-[0.12em] text-brand-primary transition-colors hover:border-brand-accent/40 hover:bg-brand-secondary/30 disabled:cursor-not-allowed disabled:opacity-60"
+                className="flex w-full items-center gap-3 rounded-xl border-2 border-brand-primary/15 bg-white px-4 py-3.5 transition-colors hover:border-brand-accent/40 hover:bg-brand-secondary/30 disabled:cursor-not-allowed disabled:opacity-60 sm:gap-4 sm:px-5"
               >
-                {submitting ? "Preparando pago…" : "Pagar con tarjeta o Link (Stripe)"}
+                <Image
+                  src="/payments/link-by-stripe.svg"
+                  alt="Link by Stripe"
+                  width={112}
+                  height={36}
+                  className="h-8 w-auto max-w-[min(42vw,7.5rem)] shrink-0 object-contain object-left sm:h-9"
+                />
+                <span className="min-w-0 flex-1 text-center text-[11px] font-sans font-bold uppercase leading-snug tracking-[0.1em] text-brand-primary sm:text-xs sm:tracking-[0.12em]">
+                  {submitting ? "Preparando pago…" : "Pagar con tarjeta o Link (Stripe)"}
+                </span>
               </button>
               <p className="text-[10px] font-sans text-brand-muted text-center leading-relaxed">
                 En Stripe Checkout podrás usar{" "}
@@ -480,7 +498,7 @@ export default function CheckoutPage() {
                     </div>
                     <div className="flex-1 min-w-0 flex flex-col justify-between py-1">
                       <div>
-                        <p className="font-serif text-sm text-brand-primary capitalize leading-tight">
+                        <p className="font-serif text-sm text-brand-primary leading-tight">
                           {product.name}
                         </p>
                         <p className="text-[11px] font-sans text-brand-muted truncate">
