@@ -1,17 +1,15 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
-import { list, put } from "@vercel/blob";
 import { MemoryCache } from "@/lib/memory-cache";
-import { fetchPublicBlobJson } from "@/lib/blob-public-read";
 import { localJsonInDev } from "@/lib/dev-data-source";
+import { CMS_DOC_KEYS, fetchCmsDocument, upsertCmsDocument } from "@/lib/supabase/cms-documents";
+import { isSupabaseConfigured } from "@/lib/supabase/admin";
 
 const CONFIG_PATH = path.join(process.cwd(), "src/data/contact-config.json");
-const CONTACT_BLOB_KEY = "bricia/contact-config.json";
 
 const PUBLIC_CACHE_HEADERS = {
-  "Cache-Control":
-    "public, s-maxage=60, stale-while-revalidate=300",
+  "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
 };
 
 export const runtime = "nodejs";
@@ -36,28 +34,18 @@ export async function GET() {
       return NextResponse.json(localFirst, { headers: PUBLIC_CACHE_HEADERS });
     }
 
-    const direct = await fetchPublicBlobJson<Record<string, unknown>>(
-      CONTACT_BLOB_KEY,
-      10000
-    );
-    if (direct && typeof direct === "object") {
-      contactCache.set(direct);
-      return NextResponse.json(direct, { headers: PUBLIC_CACHE_HEADERS });
-    }
-
-    try {
-      const { blobs } = await list({ prefix: CONTACT_BLOB_KEY });
-      if (blobs.length > 0) {
-        const latest = blobs.sort((a, b) => (b.uploadedAt > a.uploadedAt ? 1 : -1))[0];
-        const res = await fetch(latest.url, { cache: "no-store" });
-        if (res.ok) {
-          const blobConfig = await res.json();
-          contactCache.set(blobConfig);
-          return NextResponse.json(blobConfig, { headers: PUBLIC_CACHE_HEADERS });
+    if (isSupabaseConfigured()) {
+      try {
+        const remote = await fetchCmsDocument<Record<string, unknown>>(
+          CMS_DOC_KEYS.contact
+        );
+        if (remote && typeof remote === "object") {
+          contactCache.set(remote);
+          return NextResponse.json(remote, { headers: PUBLIC_CACHE_HEADERS });
         }
+      } catch (e) {
+        console.error("[contact API] Supabase GET failed:", e);
       }
-    } catch {
-      // fall back to local file
     }
 
     const localConfig = readLocalConfig();
@@ -82,19 +70,19 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ success: true, local: true });
     }
 
-    try {
-      await put(CONTACT_BLOB_KEY, payload, {
-        access: "public",
-        allowOverwrite: true,
-        contentType: "application/json",
-      });
-      contactCache.set(body);
-      return NextResponse.json({ success: true });
-    } catch {
-      fs.writeFileSync(CONFIG_PATH, payload, "utf-8");
-      contactCache.set(body);
-      return NextResponse.json({ success: true, local: true });
+    if (isSupabaseConfigured()) {
+      try {
+        await upsertCmsDocument(CMS_DOC_KEYS.contact, body);
+        contactCache.set(body);
+        return NextResponse.json({ success: true });
+      } catch (e) {
+        console.error("[contact API] Supabase PUT failed:", e);
+      }
     }
+
+    fs.writeFileSync(CONFIG_PATH, payload, "utf-8");
+    contactCache.set(body);
+    return NextResponse.json({ success: true, local: true });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Error desconocido";
     return NextResponse.json(

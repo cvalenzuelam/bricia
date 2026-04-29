@@ -1,12 +1,11 @@
 import fs from "fs";
 import path from "path";
-import { list, put } from "@vercel/blob";
 import { MemoryCache } from "@/lib/memory-cache";
-import { fetchPublicBlobJson } from "@/lib/blob-public-read";
 import { localJsonInDev } from "@/lib/dev-data-source";
+import { CMS_DOC_KEYS, fetchCmsDocument, upsertCmsDocument } from "@/lib/supabase/cms-documents";
+import { isSupabaseConfigured } from "@/lib/supabase/admin";
 
 const CONFIG_PATH = path.join(process.cwd(), "src/data/hero-config.json");
-export const HERO_BLOB_KEY = "bricia/hero-config.json";
 
 const heroPayloadCache = new MemoryCache<unknown>(180_000);
 
@@ -20,7 +19,7 @@ export function setCachedHeroPayload(next: unknown) {
   heroPayloadCache.set(next);
 }
 
-/** Carga única usada por GET /api/hero y por el servidor del home (evita más invocaciones / fetch repetidos). */
+/** Carga única usada por GET /api/hero y por el servidor del home. */
 export async function loadHeroPayload(): Promise<unknown> {
   const cached = heroPayloadCache.get();
   if (cached) return cached;
@@ -31,30 +30,18 @@ export async function loadHeroPayload(): Promise<unknown> {
     return localFirst;
   }
 
-  const direct = await fetchPublicBlobJson<Record<string, unknown>>(
-    HERO_BLOB_KEY,
-    10000
-  );
-  if (direct && typeof direct === "object") {
-    heroPayloadCache.set(direct);
-    return direct;
-  }
-
-  try {
-    const { blobs } = await list({ prefix: HERO_BLOB_KEY });
-    if (blobs.length > 0) {
-      const latest = blobs.sort((a, b) =>
-        b.uploadedAt > a.uploadedAt ? 1 : -1
-      )[0];
-      const res = await fetch(latest.url, { cache: "no-store" });
-      if (res.ok) {
-        const blobConfig = await res.json();
-        heroPayloadCache.set(blobConfig);
-        return blobConfig;
+  if (isSupabaseConfigured()) {
+    try {
+      const remote = await fetchCmsDocument<Record<string, unknown>>(
+        CMS_DOC_KEYS.hero
+      );
+      if (remote && typeof remote === "object") {
+        heroPayloadCache.set(remote);
+        return remote;
       }
+    } catch (e) {
+      console.error("[hero-config] Supabase load failed:", e);
     }
-  } catch {
-    /* fallthrough */
   }
 
   const localConfig = readLocalHeroJson();
@@ -62,7 +49,7 @@ export async function loadHeroPayload(): Promise<unknown> {
   return localConfig;
 }
 
-/** Persistir en Blob o disco (usado desde la ruta PUT). La lógica sigue igual que antes. */
+/** Persistir vía Supabase o disco local. */
 export async function persistHeroPayloadJson(payloadStr: string, bodyParsed: unknown) {
   if (localJsonInDev()) {
     fs.writeFileSync(CONFIG_PATH, payloadStr, "utf-8");
@@ -70,17 +57,17 @@ export async function persistHeroPayloadJson(payloadStr: string, bodyParsed: unk
     return { ok: true as const, localOnly: true as const };
   }
 
-  try {
-    await put(HERO_BLOB_KEY, payloadStr, {
-      access: "public",
-      allowOverwrite: true,
-      contentType: "application/json",
-    });
-    setCachedHeroPayload(bodyParsed);
-    return { ok: true as const, localOnly: false as const };
-  } catch {
-    fs.writeFileSync(CONFIG_PATH, payloadStr, "utf-8");
-    setCachedHeroPayload(bodyParsed);
-    return { ok: true as const, localOnly: true as const };
+  if (isSupabaseConfigured()) {
+    try {
+      await upsertCmsDocument(CMS_DOC_KEYS.hero, JSON.parse(payloadStr));
+      setCachedHeroPayload(bodyParsed);
+      return { ok: true as const, localOnly: false as const };
+    } catch (e) {
+      console.error("[hero-config] Supabase persist failed:", e);
+    }
   }
+
+  fs.writeFileSync(CONFIG_PATH, payloadStr, "utf-8");
+  setCachedHeroPayload(bodyParsed);
+  return { ok: true as const, localOnly: true as const };
 }

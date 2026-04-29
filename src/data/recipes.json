@@ -4,7 +4,7 @@
     "title": "Tiradito de Atún",
     "subtitle": "en Salsa Serrano",
     "category": "VERANO",
-    "image": "/images/tiradito.png",
+    "image": "/uploads-dev/1777421020081-9e986ff928d8.jpg",
     "history": "De verdad... si amas los mariscos tanto como yo, tienes que prepararlo. Para la salsa necesitas el jugo de una naranja, el jugo de cinco limones, un chile serrano, un diente de ajo, salsa de soya y salsa inglesa. Lo licuas todo, y lo usas como cama para el atún. Yo lo corté en láminas delgadas, y lo coroné con cebolla morada, más chile serrano, un toque de aceite de ajonjolí —que te prometo hace magia— y un poco de ajonjolí negro. Y listo. Fresco, intenso, y simplemente irresistible.",
     "ingredients": [
       "200g de atún fresco (calidad sashimi)",
@@ -33,7 +33,9 @@
       "/images/recipe_1775340916095.jpg",
       "/images/recipe_1775340916106.jpg",
       "/images/recipe_1775340916117.jpg"
-    ]
+    ],
+    "videoUrl": "",
+    "videoThumbnail": ""
   },
   {
     "slug": "ensalada-primavera-fresas",

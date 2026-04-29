@@ -1,10 +1,10 @@
 import { readFile, writeFile } from "fs/promises";
 import path from "path";
-import { put, list } from "@vercel/blob";
 import localRecipesData from "./recipes.json";
 import { MemoryCache } from "@/lib/memory-cache";
-import { fetchPublicBlobJson } from "@/lib/blob-public-read";
 import { localJsonInDev } from "@/lib/dev-data-source";
+import { CMS_DOC_KEYS, fetchCmsDocument, upsertCmsDocument } from "@/lib/supabase/cms-documents";
+import { isSupabaseConfigured } from "@/lib/supabase/admin";
 
 export interface Recipe {
   slug: string;
@@ -14,9 +14,7 @@ export interface Recipe {
   image: string;
   history: string;
   gallery?: string[];
-  /** Instagram (reel/post), YouTube, Vimeo, .mp4/.webm u otra URL https */
   videoUrl?: string;
-  /** Miniatura del video (si no hay, se usa la foto principal de la receta) */
   videoThumbnail?: string;
   ingredients: string[];
   steps: string[];
@@ -24,16 +22,9 @@ export interface Recipe {
   servings: string;
 }
 
-const BLOB_KEY = "bricia/recipes.json";
 const LOCAL_RECIPES_PATH = path.join(process.cwd(), "src/data/recipes.json");
-const LIST_TIMEOUT_MS = 10000;
 const FETCH_TIMEOUT_MS = 10000;
 const SAVE_TIMEOUT_MS = 15000;
-
-const BLOB_TOKEN =
-  process.env.BLOB_READ_WRITE_TOKEN ||
-  process.env.BLOB_TOKEN ||
-  process.env.VERCEL_BLOB_READ_WRITE_TOKEN;
 
 function shouldPersistRecipesLocally(): boolean {
   return localJsonInDev();
@@ -70,50 +61,28 @@ export async function getRecipes(): Promise<Recipe[]> {
   const cached = recipesCache.get();
   if (cached) return cached;
 
-  const viaPublic = await fetchPublicBlobJson<Recipe[]>(
-    BLOB_KEY,
-    FETCH_TIMEOUT_MS
-  );
-  if (viaPublic && Array.isArray(viaPublic)) {
-    recipesCache.set(viaPublic);
-    return viaPublic;
+  if (isSupabaseConfigured()) {
+    try {
+      const remote = await withTimeout(
+        fetchCmsDocument<Recipe[]>(CMS_DOC_KEYS.recipes),
+        FETCH_TIMEOUT_MS,
+        "reading recipes from Supabase"
+      );
+      if (Array.isArray(remote)) {
+        recipesCache.set(remote);
+        return remote;
+      }
+    } catch (e) {
+      console.error("[recipes] Supabase read failed:", e);
+    }
   }
 
-  try {
-    const { blobs } = await withTimeout(
-      list({
-        prefix: BLOB_KEY,
-        ...(BLOB_TOKEN ? { token: BLOB_TOKEN } : {}),
-      }),
-      LIST_TIMEOUT_MS,
-      "listing recipe blobs"
-    );
-    if (blobs.length > 0) {
-      // Sort desc to get the most recent one
-      const latest = blobs.sort((a, b) =>
-        b.uploadedAt > a.uploadedAt ? 1 : -1
-      )[0];
-      const res = await withTimeout(
-        fetch(latest.url, { cache: "no-store" }),
-        FETCH_TIMEOUT_MS,
-        "fetching latest recipes blob"
-      );
-      const data = (await res.json()) as Recipe[];
-      recipesCache.set(data);
-      return data;
-    }
-    // First run: fall back to the bundled static JSON
-    const fallback = localRecipesData as Recipe[];
-    recipesCache.set(fallback);
-    return fallback;
-  } catch {
-    return localRecipesData as Recipe[];
-  }
+  const fallback = localRecipesData as Recipe[];
+  recipesCache.set(fallback);
+  return fallback;
 }
 
-export async function getRecipeBySlug(
-  slug: string
-): Promise<Recipe | undefined> {
+export async function getRecipeBySlug(slug: string): Promise<Recipe | undefined> {
   const recipes = await getRecipes();
   return recipes.find((r) => r.slug === slug);
 }
@@ -126,21 +95,16 @@ export async function saveRecipes(recipes: Recipe[]): Promise<void> {
     return;
   }
 
-  if (!BLOB_TOKEN) {
+  if (!isSupabaseConfigured()) {
     throw new Error(
-      "Falta BLOB_READ_WRITE_TOKEN para guardar recetas. En desarrollo local sin token se usa src/data/recipes.json."
+      "Configura Supabase (NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY) para guardar recetas."
     );
   }
 
   await withTimeout(
-    put(BLOB_KEY, payload, {
-      access: "public",
-      allowOverwrite: true,
-      contentType: "application/json",
-      token: BLOB_TOKEN,
-    }),
+    upsertCmsDocument(CMS_DOC_KEYS.recipes, recipes),
     SAVE_TIMEOUT_MS,
-    "saving recipes blob"
+    "saving recipes to Supabase"
   );
   recipesCache.set(recipes);
 }

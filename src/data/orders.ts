@@ -1,10 +1,10 @@
 import { readFile, writeFile } from "fs/promises";
 import path from "path";
-import { put, list } from "@vercel/blob";
 import localOrdersData from "./orders.json";
 import { MemoryCache } from "@/lib/memory-cache";
-import { fetchPublicBlobJson } from "@/lib/blob-public-read";
 import { localJsonInDev } from "@/lib/dev-data-source";
+import { CMS_DOC_KEYS, fetchCmsDocument, upsertCmsDocument } from "@/lib/supabase/cms-documents";
+import { isSupabaseConfigured } from "@/lib/supabase/admin";
 
 export type OrderStatus =
   | "pending"
@@ -61,28 +61,16 @@ export interface Order {
   total: number;
   paymentId?: string;
   paymentStatus?: string;
-  /** Timestamp ISO when the buyer confirmation email was successfully sent. Used for idempotency. */
   confirmationEmailSentAt?: string;
-  /** Número/código de guía proporcionado por la paquetería. */
   trackingNumber?: string;
-  /** URL de rastreo proporcionada por la paquetería. */
   trackingUrl?: string;
-  /** Timestamp ISO en que el pedido se marcó como enviado. */
   shippedAt?: string;
-  /** Timestamp ISO en que se envió correctamente el correo de envío. Idempotencia. */
   shippingEmailSentAt?: string;
 }
 
-const BLOB_KEY = "bricia/orders.json";
 const LOCAL_PATH = path.join(process.cwd(), "src/data/orders.json");
-const LIST_TIMEOUT_MS = 10000;
 const FETCH_TIMEOUT_MS = 10000;
 const SAVE_TIMEOUT_MS = 15000;
-
-const BLOB_TOKEN =
-  process.env.BLOB_READ_WRITE_TOKEN ||
-  process.env.BLOB_TOKEN ||
-  process.env.VERCEL_BLOB_READ_WRITE_TOKEN;
 
 function shouldPersistLocally(): boolean {
   return localJsonInDev();
@@ -104,10 +92,6 @@ async function withTimeout<T>(
   ]);
 }
 
-// Cache breve para /admin/pedidos: evita un list() por cada vista/refresh.
-// Las escrituras (saveOrders) actualizan el cache, así que el admin sigue
-// viendo datos frescos tras crear/editar/borrar pedidos.
-// Cache en memoria invalidado al guardar; direct URL evita list() en cada frío.
 const ordersCache = new MemoryCache<Order[]>(60_000);
 
 export async function getOrders(): Promise<Order[]> {
@@ -123,38 +107,25 @@ export async function getOrders(): Promise<Order[]> {
   const cached = ordersCache.get();
   if (cached) return cached;
 
-  const viaPublic = await fetchPublicBlobJson<Order[]>(BLOB_KEY, FETCH_TIMEOUT_MS);
-  if (viaPublic && Array.isArray(viaPublic)) {
-    ordersCache.set(viaPublic);
-    return viaPublic;
-  }
-
-  if (BLOB_TOKEN) {
+  if (isSupabaseConfigured()) {
     try {
-      const { blobs } = await withTimeout(
-        list({ prefix: BLOB_KEY, token: BLOB_TOKEN }),
-        LIST_TIMEOUT_MS,
-        "listing blobs"
+      const remote = await withTimeout(
+        fetchCmsDocument<Order[]>(CMS_DOC_KEYS.orders),
+        FETCH_TIMEOUT_MS,
+        "reading orders from Supabase"
       );
-      const match = blobs.find((b) => b.pathname === BLOB_KEY);
-      if (match) {
-        const res = await withTimeout(
-          fetch(match.url, { cache: "no-store" }),
-          FETCH_TIMEOUT_MS,
-          "fetching blob"
-        );
-        if (res.ok) {
-          const data = (await res.json()) as Order[];
-          ordersCache.set(data);
-          return data;
-        }
+      if (Array.isArray(remote)) {
+        ordersCache.set(remote);
+        return remote;
       }
     } catch (err) {
-      console.error("[orders] blob read failed:", err);
+      console.error("[orders] Supabase read failed:", err);
     }
   }
 
-  return localOrdersData as Order[];
+  const fallback = localOrdersData as Order[];
+  ordersCache.set(fallback);
+  return fallback;
 }
 
 export async function saveOrders(orders: Order[]): Promise<void> {
@@ -166,22 +137,17 @@ export async function saveOrders(orders: Order[]): Promise<void> {
     return;
   }
 
-  if (BLOB_TOKEN) {
-    await withTimeout(
-      put(BLOB_KEY, json, {
-        access: "public",
-        contentType: "application/json",
-        token: BLOB_TOKEN,
-        allowOverwrite: true,
-      }),
-      SAVE_TIMEOUT_MS,
-      "saving blob"
+  if (!isSupabaseConfigured()) {
+    throw new Error(
+      "Configura Supabase (NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY) para guardar pedidos."
     );
-    ordersCache.set(orders);
-    return;
   }
 
-  await writeFile(LOCAL_PATH, json, "utf-8");
+  await withTimeout(
+    upsertCmsDocument(CMS_DOC_KEYS.orders, orders),
+    SAVE_TIMEOUT_MS,
+    "saving orders to Supabase"
+  );
   ordersCache.set(orders);
 }
 

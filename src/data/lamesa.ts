@@ -1,10 +1,10 @@
 import { readFile, writeFile } from "fs/promises";
 import path from "path";
-import { put, list } from "@vercel/blob";
 import localMesaData from "./lamesa.json";
 import { MemoryCache } from "@/lib/memory-cache";
-import { fetchPublicBlobJson } from "@/lib/blob-public-read";
 import { localJsonInDev } from "@/lib/dev-data-source";
+import { CMS_DOC_KEYS, fetchCmsDocument, upsertCmsDocument } from "@/lib/supabase/cms-documents";
+import { isSupabaseConfigured } from "@/lib/supabase/admin";
 
 export type ContentBlock =
   | { type: "paragraph"; text: string }
@@ -24,16 +24,9 @@ export interface MesaArticle {
   body: ContentBlock[];
 }
 
-const BLOB_KEY = "bricia/lamesa.json";
 const LOCAL_PATH = path.join(process.cwd(), "src/data/lamesa.json");
-const LIST_TIMEOUT_MS = 10000;
 const FETCH_TIMEOUT_MS = 10000;
 const SAVE_TIMEOUT_MS = 15000;
-
-const BLOB_TOKEN =
-  process.env.BLOB_READ_WRITE_TOKEN ||
-  process.env.BLOB_TOKEN ||
-  process.env.VERCEL_BLOB_READ_WRITE_TOKEN;
 
 function shouldPersistLocally(): boolean {
   return localJsonInDev();
@@ -55,7 +48,6 @@ async function withTimeout<T>(
   ]);
 }
 
-/** Evita repetir list() en cada request a páginas que usan La Mesa */
 const mesaCache = new MemoryCache<MesaArticle[]>(300_000);
 
 export async function getMesaArticles(): Promise<MesaArticle[]> {
@@ -71,46 +63,28 @@ export async function getMesaArticles(): Promise<MesaArticle[]> {
   const cached = mesaCache.get();
   if (cached) return cached;
 
-  const viaPublic = await fetchPublicBlobJson<MesaArticle[]>(
-    BLOB_KEY,
-    FETCH_TIMEOUT_MS
-  );
-  if (viaPublic && Array.isArray(viaPublic)) {
-    mesaCache.set(viaPublic);
-    return viaPublic;
+  if (isSupabaseConfigured()) {
+    try {
+      const remote = await withTimeout(
+        fetchCmsDocument<MesaArticle[]>(CMS_DOC_KEYS.lamesa),
+        FETCH_TIMEOUT_MS,
+        "reading La Mesa from Supabase"
+      );
+      if (Array.isArray(remote)) {
+        mesaCache.set(remote);
+        return remote;
+      }
+    } catch (e) {
+      console.error("[lamesa] Supabase read failed:", e);
+    }
   }
 
-  try {
-    const { blobs } = await withTimeout(
-      list({
-        prefix: BLOB_KEY,
-        ...(BLOB_TOKEN ? { token: BLOB_TOKEN } : {}),
-      }),
-      LIST_TIMEOUT_MS,
-      "listing mesa blobs"
-    );
-    if (blobs.length > 0) {
-      const latest = blobs.sort((a, b) =>
-        b.uploadedAt > a.uploadedAt ? 1 : -1
-      )[0];
-      const res = await withTimeout(
-        fetch(latest.url, { cache: "no-store" }),
-        FETCH_TIMEOUT_MS,
-        "fetching latest mesa blob"
-      );
-      const json = (await res.json()) as MesaArticle[];
-      mesaCache.set(json);
-      return json;
-    }
-    return localMesaData as MesaArticle[];
-  } catch {
-    return localMesaData as MesaArticle[];
-  }
+  const fallback = localMesaData as MesaArticle[];
+  mesaCache.set(fallback);
+  return fallback;
 }
 
-export async function getMesaArticleBySlug(
-  slug: string
-): Promise<MesaArticle | undefined> {
+export async function getMesaArticleBySlug(slug: string): Promise<MesaArticle | undefined> {
   const articles = await getMesaArticles();
   return articles.find((a) => a.slug === slug);
 }
@@ -124,21 +98,16 @@ export async function saveMesaArticles(articles: MesaArticle[]): Promise<void> {
     return;
   }
 
-  if (!BLOB_TOKEN) {
+  if (!isSupabaseConfigured()) {
     throw new Error(
-      "Falta BLOB_READ_WRITE_TOKEN para guardar artículos. En desarrollo local sin token se usa src/data/lamesa.json."
+      "Configura Supabase (NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY) para guardar La Mesa."
     );
   }
 
   await withTimeout(
-    put(BLOB_KEY, payload, {
-      access: "public",
-      allowOverwrite: true,
-      contentType: "application/json",
-      token: BLOB_TOKEN,
-    }),
+    upsertCmsDocument(CMS_DOC_KEYS.lamesa, articles),
     SAVE_TIMEOUT_MS,
-    "saving mesa blob"
+    "saving La Mesa to Supabase"
   );
   mesaCache.set(articles);
 }
@@ -178,6 +147,4 @@ export function generateMesaSlug(title: string): string {
     .replace(/^-|-$/g, "");
 }
 
-// Legacy synchronous export — used by client components that still import directly.
-// Will match whatever is in the local JSON at build time.
 export const mesaArticles: MesaArticle[] = localMesaData as MesaArticle[];

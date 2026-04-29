@@ -1,22 +1,17 @@
 import { readFile, writeFile } from "fs/promises";
 import path from "path";
-import { put, list } from "@vercel/blob";
 import localProductsData from "./products.json";
 import type { Product } from "./products";
 import { MemoryCache } from "@/lib/memory-cache";
-import { fetchPublicBlobJson } from "@/lib/blob-public-read";
 import { localJsonInDev } from "@/lib/dev-data-source";
+import {
+  createSupabaseAdmin,
+  isSupabaseConfigured,
+} from "@/lib/supabase/admin";
 
-const BLOB_KEY = "bricia/products.json";
 const LOCAL_PATH = path.join(process.cwd(), "src/data/products.json");
-const LIST_TIMEOUT_MS = 10000;
 const FETCH_TIMEOUT_MS = 10000;
 const SAVE_TIMEOUT_MS = 15000;
-
-const BLOB_TOKEN =
-  process.env.BLOB_READ_WRITE_TOKEN ||
-  process.env.BLOB_TOKEN ||
-  process.env.VERCEL_BLOB_READ_WRITE_TOKEN;
 
 function shouldPersistLocally(): boolean {
   return localJsonInDev();
@@ -38,7 +33,79 @@ async function withTimeout<T>(
   ]);
 }
 
-/** 5 min: catálogo cambia poco; baja lecturas repetidas a Blob/CDN */
+function productRowToProduct(row: Record<string, unknown>): Product {
+  const p: Product = {
+    id: String(row.id),
+    name: String(row.name),
+    subtitle: String(row.subtitle ?? ""),
+    price: Number(row.price),
+    description: String(row.description ?? ""),
+    image: String(row.image ?? ""),
+    category: String(row.category ?? ""),
+    stock: Number(row.stock ?? 0),
+  };
+  if (row.dimensions != null && String(row.dimensions).length > 0) {
+    p.dimensions = String(row.dimensions);
+  }
+  if (row.material != null && String(row.material).length > 0) {
+    p.material = String(row.material);
+  }
+  return p;
+}
+
+async function fetchProductsFromSupabase(): Promise<Product[]> {
+  const sb = createSupabaseAdmin();
+  const { data, error } = await sb
+    .from("products")
+    .select("*")
+    .order("category", { ascending: true })
+    .order("name", { ascending: true });
+
+  if (error) throw error;
+  if (!data?.length) return [];
+
+  return data.map((row) => productRowToProduct(row as Record<string, unknown>));
+}
+
+async function syncProductsToSupabase(products: Product[]): Promise<void> {
+  const sb = createSupabaseAdmin();
+  const wantedIds = new Set(products.map((p) => p.id));
+
+  const { data: existing, error: listErr } = await sb.from("products").select("id");
+
+  if (listErr) throw listErr;
+
+  const ids = (existing ?? []) as { id: string }[];
+  const toDelete = ids.filter((r) => !wantedIds.has(r.id)).map((r) => r.id);
+
+  if (toDelete.length > 0) {
+    const { error: delErr } = await sb.from("products").delete().in("id", toDelete);
+    if (delErr) throw delErr;
+  }
+
+  const iso = new Date().toISOString();
+  const rows = products.map((p) => ({
+    id: p.id,
+    name: p.name,
+    subtitle: p.subtitle,
+    price: p.price,
+    description: p.description,
+    image: p.image,
+    category: p.category,
+    stock: p.stock,
+    dimensions: p.dimensions ?? null,
+    material: p.material ?? null,
+    updated_at: iso,
+  }));
+
+  const { error: upsertErr } = await sb
+    .from("products")
+    .upsert(rows, { onConflict: "id" });
+
+  if (upsertErr) throw upsertErr;
+}
+
+/** 5 min cache */
 const productsCache = new MemoryCache<Product[]>(300_000);
 
 export async function getProducts(): Promise<Product[]> {
@@ -54,38 +121,25 @@ export async function getProducts(): Promise<Product[]> {
   const cached = productsCache.get();
   if (cached) return cached;
 
-  const viaPublic = await fetchPublicBlobJson<Product[]>(BLOB_KEY, FETCH_TIMEOUT_MS);
-  if (viaPublic && Array.isArray(viaPublic)) {
-    productsCache.set(viaPublic);
-    return viaPublic;
+  if (!isSupabaseConfigured()) {
+    console.warn(
+      "[products-server] Sin Supabase en producción: usando src/data/products.json empaquetado"
+    );
+    return localProductsData as Product[];
   }
 
-  if (BLOB_TOKEN) {
-    try {
-      const { blobs } = await withTimeout(
-        list({ prefix: BLOB_KEY, token: BLOB_TOKEN }),
-        LIST_TIMEOUT_MS,
-        "listing blobs"
-      );
-      const match = blobs.find((b) => b.pathname === BLOB_KEY);
-      if (match) {
-        const res = await withTimeout(
-          fetch(match.url, { cache: "no-store" }),
-          FETCH_TIMEOUT_MS,
-          "fetching blob"
-        );
-        if (res.ok) {
-          const data = (await res.json()) as Product[];
-          productsCache.set(data);
-          return data;
-        }
-      }
-    } catch (err) {
-      console.error("[products-server] blob read failed:", err);
-    }
+  try {
+    const viaDb = await withTimeout(
+      fetchProductsFromSupabase(),
+      FETCH_TIMEOUT_MS,
+      "reading products from Supabase"
+    );
+    productsCache.set(viaDb);
+    return viaDb;
+  } catch (err) {
+    console.error("[products-server] Supabase read failed:", err);
+    return localProductsData as Product[];
   }
-
-  return localProductsData as Product[];
 }
 
 export async function saveProducts(products: Product[]): Promise<void> {
@@ -96,22 +150,18 @@ export async function saveProducts(products: Product[]): Promise<void> {
     return;
   }
 
-  if (BLOB_TOKEN) {
-    await withTimeout(
-      put(BLOB_KEY, json, {
-        access: "public",
-        contentType: "application/json",
-        token: BLOB_TOKEN,
-        allowOverwrite: true,
-      }),
-      SAVE_TIMEOUT_MS,
-      "saving blob"
+  if (!isSupabaseConfigured()) {
+    throw new Error(
+      "Supabase no está configurado: añade NEXT_PUBLIC_SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY para guardar el catálogo en producción."
     );
-    productsCache.set(products);
-    return;
   }
 
-  await writeFile(LOCAL_PATH, json, "utf-8");
+  await withTimeout(
+    syncProductsToSupabase(products),
+    SAVE_TIMEOUT_MS,
+    "saving products to Supabase"
+  );
+  productsCache.set(products);
 }
 
 export function generateProductId(name: string): string {

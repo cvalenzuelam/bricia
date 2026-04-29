@@ -2,18 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { mkdir, writeFile } from "fs/promises";
 import path from "path";
 import crypto from "crypto";
-import { put } from "@vercel/blob";
 import { localJsonInDev } from "@/lib/dev-data-source";
+import {
+  createSupabaseAdmin,
+  isSupabaseConfigured,
+} from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
 
 const MAX_IMAGE_SIZE_BYTES = 25 * 1024 * 1024;
-const BLOB_TOKEN =
-  process.env.BLOB_READ_WRITE_TOKEN ||
-  process.env.BLOB_TOKEN ||
-  process.env.VERCEL_BLOB_READ_WRITE_TOKEN;
 
-/** Sin Blob en máquina local: guardar en disco para poder desarrollar el CMS. */
+const STORAGE_BUCKET =
+  process.env.SUPABASE_STORAGE_BUCKET?.trim() || "cms";
+
+/** En local: disco; en producción: Supabase Storage. */
 async function saveDevUpload(file: File, ext: string) {
   const dir = path.join(process.cwd(), "public", "uploads-dev");
   await mkdir(dir, { recursive: true });
@@ -22,6 +24,21 @@ async function saveDevUpload(file: File, ext: string) {
   const buf = Buffer.from(await file.arrayBuffer());
   await writeFile(full, buf);
   return `/uploads-dev/${name}`;
+}
+
+async function saveSupabaseUpload(file: File, ext: string) {
+  const uniqueName = `bricia/images/cms_${Date.now()}-${crypto.randomBytes(4).toString("hex")}.${ext}`;
+  const buf = Buffer.from(await file.arrayBuffer());
+  const sb = createSupabaseAdmin();
+  const { error } = await sb.storage.from(STORAGE_BUCKET).upload(uniqueName, buf, {
+    contentType: file.type || `image/${ext === "jpg" ? "jpeg" : ext}`,
+    upsert: false,
+  });
+
+  if (error) throw error;
+
+  const { data } = sb.storage.from(STORAGE_BUCKET).getPublicUrl(uniqueName);
+  return data.publicUrl;
 }
 
 export async function POST(request: NextRequest) {
@@ -54,7 +71,6 @@ export async function POST(request: NextRequest) {
     if (ext === "jfif" || ext === "jpeg") ext = "jpg";
     if (!ext) ext = "png";
 
-    /** En desarrollo local priorizamos disco (sin put a Blob → menos advanced ops). */
     if (localJsonInDev()) {
       const publicPath = await saveDevUpload(file, ext);
       return NextResponse.json({
@@ -63,26 +79,31 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    if (!BLOB_TOKEN) {
+    if (!isSupabaseConfigured()) {
       return NextResponse.json(
         {
           error:
-            "Falta BLOB_READ_WRITE_TOKEN. En local puedes usar `npm run dev` sin Vercel y se guardará en /public/uploads-dev, o añade el token en .env.local.",
+            "Sin almacén: configura NEXT_PUBLIC_SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY en producción; en desarrollo (`npm run dev`) las imágenes se guardan en public/uploads-dev.",
         },
         { status: 500 }
       );
     }
 
-    const uniqueName = `bricia/images/recipe_${Date.now()}.${ext}`;
-    const blob = await put(uniqueName, file, {
-      access: "public",
-      token: BLOB_TOKEN,
-    });
-
-    return NextResponse.json({
-      success: true,
-      path: blob.url,
-    });
+    try {
+      const publicUrl = await saveSupabaseUpload(file, ext);
+      return NextResponse.json({
+        success: true,
+        path: publicUrl,
+      });
+    } catch (err) {
+      console.error("[upload] Supabase Storage failed:", err);
+      const message =
+        err instanceof Error ? err.message : "Error subiendo a Supabase Storage";
+      return NextResponse.json(
+        { error: `Error al subir imagen: ${message}` },
+        { status: 500 }
+      );
+    }
   } catch (err) {
     console.error("Upload error:", err);
     const message = err instanceof Error ? err.message : "Error desconocido";
