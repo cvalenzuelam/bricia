@@ -8,6 +8,7 @@ import { uploadCmsImageFile } from "@/lib/cms-upload-image";
 import { PRODUCT_GALLERY_MAX } from "@/lib/product-gallery";
 import { ArrowLeft, Save, Upload, Loader2, X } from "lucide-react";
 import AdminCmsLoading from "@/components/admin/AdminCmsLoading";
+import { PHOTO_IMAGE_QUALITY } from "@/lib/image-quality";
 
 const DEFAULT_CATEGORIES = ["COCINA", "MESA", "DESPENSA"] as const;
 const REQUEST_TIMEOUT_MS = 20000;
@@ -240,9 +241,9 @@ export default function NuevoProductoPage() {
               onClick={() => imageInputRef.current?.click()}
             >
               {imagePreview ? (
-                <Image src={imagePreview} alt="Preview" fill className="object-cover" />
+                <Image src={imagePreview} alt="Preview" fill quality={PHOTO_IMAGE_QUALITY} className="object-cover" />
               ) : form.image ? (
-                <Image src={form.image} alt="Default" fill className="object-cover opacity-40" />
+                <Image src={form.image} alt="Default" fill quality={PHOTO_IMAGE_QUALITY} className="object-cover opacity-40" />
               ) : null}
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/0 group-hover:bg-black/10 transition-colors">
                 {uploading ? (
@@ -284,7 +285,7 @@ export default function NuevoProductoPage() {
                       onClick={() => galleryInputRefs.current[i]?.click()}
                     >
                       {thumb ? (
-                        <Image src={thumb} alt="" fill className="object-cover" />
+                        <Image src={thumb} alt="" fill quality={PHOTO_IMAGE_QUALITY} className="object-cover" />
                       ) : (
                         <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 p-2">
                           <Upload size={16} className="text-brand-muted/50" />

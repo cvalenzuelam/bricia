@@ -2,6 +2,8 @@
 
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { PHOTO_IMAGE_QUALITY } from "@/lib/image-quality";
+import ImageFrameFade from "@/components/ImageFrameFade";
 
 const collageImages = [
   "/images/meat_real.png",
@@ -64,9 +66,12 @@ export default function BioCollage() {
                 src={img}
                 alt={`Cocina ${i}`}
                 fill
+                sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 28vw"
+                quality={PHOTO_IMAGE_QUALITY}
                 className="object-cover grayscale hover:grayscale-0 transition-all duration-1000"
               />
-              <div className="absolute inset-0 bg-brand-primary/10 group-hover:opacity-0 transition-opacity"></div>
+              <ImageFrameFade variant="cream" />
+              <div className="absolute inset-0 z-[2] bg-brand-primary/10 group-hover:opacity-0 transition-opacity"></div>
             </motion.div>
           ))}
         </div>

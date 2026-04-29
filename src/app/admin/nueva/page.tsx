@@ -7,6 +7,7 @@ import Link from "next/link";
 import { uploadCmsImageFile } from "@/lib/cms-upload-image";
 import { ArrowLeft, Upload, Plus, X, Loader2, Video } from "lucide-react";
 import AdminCmsLoading from "@/components/admin/AdminCmsLoading";
+import { PHOTO_IMAGE_QUALITY } from "@/lib/image-quality";
 
 const CATEGORIES = ["PRIMAVERA", "VERANO", "OTOÑO", "INVIERNO", "POSTRES"];
 
@@ -205,7 +206,7 @@ export default function NuevaRecetaPage() {
               className="relative h-64 rounded-xl border-2 border-dashed border-brand-primary/10 hover:border-brand-accent/40 transition-colors cursor-pointer overflow-hidden flex items-center justify-center bg-white group"
             >
               {imagePreview ? (
-                <Image src={imagePreview} alt="Preview" fill className="object-cover" />
+                <Image src={imagePreview} alt="Preview" fill quality={PHOTO_IMAGE_QUALITY} className="object-cover" />
               ) : (
                 <div className="text-center space-y-2">
                   <Upload size={32} className="mx-auto text-brand-muted/40 group-hover:text-brand-accent transition-colors" />
@@ -345,7 +346,7 @@ export default function NuevaRecetaPage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {gallery.map((img, idx) => (
                 <div key={idx} className="relative aspect-square rounded-xl overflow-hidden border border-brand-primary/10 group">
-                  <Image src={img} alt={`Gallery ${idx}`} fill className="object-cover" />
+                  <Image src={img} alt={`Gallery ${idx}`} fill quality={PHOTO_IMAGE_QUALITY} className="object-cover" />
                   <button type="button" onClick={() => setGallery(gallery.filter((_, i) => i !== idx))} className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
                     <X size={12} />
                   </button>

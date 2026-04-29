@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import { ArrowLeft, Loader2, CheckCircle2 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { formatPrice } from "@/data/products";
+import { PHOTO_IMAGE_QUALITY } from "@/lib/image-quality";
 import {
   calculateShipping,
   DEFAULT_SHIPPING_OPTION_ID,
@@ -494,6 +495,7 @@ export default function CheckoutPage() {
                         alt={product.name}
                         fill
                         sizes="64px"
+                        quality={PHOTO_IMAGE_QUALITY}
                         className="object-cover"
                       />
                       <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-brand-primary text-brand-secondary text-[10px] font-bold flex items-center justify-center">

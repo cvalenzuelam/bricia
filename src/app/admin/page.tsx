@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { shouldUnoptimizeRemoteImage } from "@/lib/next-image-remote";
+import { PHOTO_IMAGE_QUALITY } from "@/lib/image-quality";
 import { Plus, Edit3, Trash2, Lock, ChefHat, LayoutList, ShoppingBag, Package, Mail, Home } from "lucide-react";
 import AdminCmsLoading from "@/components/admin/AdminCmsLoading";
 
@@ -197,6 +198,7 @@ export default function AdminPage() {
                   alt={recipe.title}
                   fill
                   sizes="80px"
+                  quality={PHOTO_IMAGE_QUALITY}
                   unoptimized={shouldUnoptimizeRemoteImage(recipe.image)}
                   className="object-cover"
                 />

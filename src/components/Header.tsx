@@ -16,6 +16,7 @@ import {
   mixedSuggestions,
   type SiteSearchHit,
 } from "@/lib/site-search";
+import { PHOTO_IMAGE_QUALITY } from "@/lib/image-quality";
 
 const leftLinks = [
   { name: "RECETAS", href: "/recetas" },
@@ -352,6 +353,7 @@ export default function Header() {
                           alt={hit.title}
                           fill
                           sizes="56px"
+                          quality={PHOTO_IMAGE_QUALITY}
                           className="object-cover"
                         />
                       </div>
@@ -398,6 +400,7 @@ export default function Header() {
                                   alt={hit.title}
                                   fill
                                   sizes="48px"
+                                  quality={PHOTO_IMAGE_QUALITY}
                                   className="object-cover"
                                 />
                               </div>

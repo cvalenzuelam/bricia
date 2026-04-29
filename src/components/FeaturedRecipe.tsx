@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { Fragment, useEffect, useState, type CSSProperties } from "react";
+import { PHOTO_IMAGE_QUALITY } from "@/lib/image-quality";
 
 /** Mismo negro editorial que `--color-brand-primary` (resto del sitio). */
 const BRAND_DARK = "#1D1D1B";
@@ -52,10 +53,10 @@ function hexToRgb(hex: string): { r: number; g: number; b: number } {
   };
 }
 
-/** Costados izq/der: panel sólido en el borde → foto (mismas paradas en espejo). */
+/** Costados: panel → foto (paradas más suaves, sin tanta banda opaca). */
 function featuredImageEdgeStops(panelHex: string): string {
   const { r, g, b } = hexToRgb(panelHex);
-  return `${panelHex} 0%, ${panelHex} 5%, rgba(${r},${g},${b},0.9) 15%, rgba(${r},${g},${b},0.68) 26%, rgba(${r},${g},${b},0.42) 40%, rgba(${r},${g},${b},0.22) 54%, rgba(${r},${g},${b},0.1) 65%, transparent 76%`;
+  return `rgba(${r},${g},${b},0.38) 0%, rgba(${r},${g},${b},0.24) 14%, rgba(${r},${g},${b},0.13) 30%, rgba(${r},${g},${b},0.06) 48%, transparent 72%`;
 }
 
 /** Degradado desktop: viñeta suave arriba ambos costados hacia el panel. */
@@ -64,20 +65,20 @@ function featuredImageOverlayStyle(panelHex: string): CSSProperties {
   const stops = featuredImageEdgeStops(panelHex);
   return {
     background: [
-      `linear-gradient(to top, rgba(${r},${g},${b},0.14) 0%, transparent 28%)`,
+      `linear-gradient(to top, rgba(${r},${g},${b},0.09) 0%, transparent 30%)`,
       `linear-gradient(to left, ${stops})`,
       `linear-gradient(to right, ${stops})`,
     ].join(", "),
   };
 }
 
-/** Móvil: debajo del bloque de texto + costados (misma lógica, stops un poco más cortos). */
+/** Móvil: bloque de texto arriba + costados, degradados más ligeros. */
 function featuredImageMobileOverlayStyle(panelHex: string): CSSProperties {
   const { r, g, b } = hexToRgb(panelHex);
-  const stops = `${panelHex} 0%, ${panelHex} 5%, rgba(${r},${g},${b},0.88) 14%, rgba(${r},${g},${b},0.52) 30%, rgba(${r},${g},${b},0.22) 48%, transparent 68%`;
+  const stops = `rgba(${r},${g},${b},0.34) 0%, rgba(${r},${g},${b},0.2) 16%, rgba(${r},${g},${b},0.1) 34%, transparent 62%`;
   return {
     background: [
-      `linear-gradient(to bottom, ${panelHex} 0%, rgba(${r},${g},${b},0.52) 24%, transparent 46%)`,
+      `linear-gradient(to bottom, rgba(${r},${g},${b},0.28) 0%, rgba(${r},${g},${b},0.14) 22%, transparent 44%)`,
       `linear-gradient(to left, ${stops})`,
       `linear-gradient(to right, ${stops})`,
     ].join(", "),
@@ -130,7 +131,7 @@ export default function FeaturedRecipe({
     >
       {/* Puente hero (crema) → panel: ola orgánica que se superpone un poco al hero */}
       <div
-        className="pointer-events-none relative z-[3] -mt-[clamp(2.35rem,5.6vw,3.85rem)] w-full select-none md:-mt-[4.5rem]"
+        className="pointer-events-none relative z-[3] max-md:-mt-4 max-md:bg-brand-secondary md:-mt-[2.75rem] lg:-mt-[3rem] w-full select-none"
         aria-hidden
       >
         <svg
@@ -138,19 +139,20 @@ export default function FeaturedRecipe({
           role="presentation"
           xmlns="http://www.w3.org/2000/svg"
           preserveAspectRatio="none"
-          className="block h-[clamp(2.5rem,6.5vw,3.75rem)] w-[115%] max-w-none -translate-x-[7.5%] text-brand-secondary max-md:drop-shadow-none md:h-16 md:w-[110%] md:-translate-x-[5%] md:drop-shadow-[0_-6px_18px_rgba(29,29,27,0.055)]"
+          className="relative z-[2] block h-[clamp(2.5rem,6.5vw,3.75rem)] w-[115%] max-w-none -translate-x-[7.5%] text-brand-secondary max-md:drop-shadow-none md:h-16 md:w-[110%] md:-translate-x-[5%] md:drop-shadow-[0_-6px_18px_rgba(29,29,27,0.055)]"
         >
           <path fill="currentColor" d="M0 0h1200v28Q600 58 0 28V0z" />
         </svg>
+        {/* Solo desktop: en móvil el degradado a negro quedaba visible sobre el padding crema del hero. */}
         <div
-          className="pointer-events-none absolute inset-x-[5%] bottom-0 z-[1] h-10 md:inset-x-[3%] md:h-14"
+          className="pointer-events-none absolute inset-x-[5%] bottom-0 z-[1] hidden h-10 md:block md:inset-x-[3%] md:h-14"
           style={{
             background: `linear-gradient(180deg, transparent 0%, ${panel} 72%)`,
           }}
         />
       </div>
 
-      <div className="relative z-[1] mx-auto flex min-h-[70vh] max-w-[1600px] flex-col-reverse items-stretch md:flex-row">
+      <div className="relative z-[1] mx-auto flex min-h-0 max-w-[1600px] flex-col-reverse items-stretch md:min-h-[70vh] md:flex-row">
 
         {/* Left: Full-bleed image */}
         <motion.div
@@ -158,13 +160,14 @@ export default function FeaturedRecipe({
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 1.2 }}
-          className="relative min-h-[50vh] md:min-h-full md:w-1/2 md:flex-shrink-0 md:basis-1/2"
+          className="relative max-md:min-h-[38vh] md:min-h-full md:w-1/2 md:flex-shrink-0 md:basis-1/2"
         >
           <Image
             src={featured.imageSrc}
             alt={featured.imageAlt}
             fill
             sizes="50vw"
+            quality={PHOTO_IMAGE_QUALITY}
             className="object-cover"
           />
           {/* Móvil: fundido con el texto encima + ambos costados */}
@@ -187,7 +190,7 @@ export default function FeaturedRecipe({
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 1.2, delay: 0.2 }}
-          className="relative z-[3] flex flex-col justify-center px-8 py-16 text-center text-white md:w-1/2 md:basis-1/2 md:px-10 md:py-20 lg:px-14"
+          className="relative z-[3] flex flex-col justify-center px-8 py-16 text-center text-white max-md:py-10 md:w-1/2 md:basis-1/2 md:px-10 md:py-20 lg:px-14"
           style={{ backgroundColor: panel }}
         >
           <div className="relative z-[1] mx-auto w-full max-w-md space-y-8">

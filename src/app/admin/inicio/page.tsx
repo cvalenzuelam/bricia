@@ -7,6 +7,7 @@ import Link from "next/link";
 import { uploadCmsImageFile } from "@/lib/cms-upload-image";
 import { ArrowLeft, Save, Upload, Loader2, Eye } from "lucide-react";
 import AdminCmsLoading from "@/components/admin/AdminCmsLoading";
+import { PHOTO_IMAGE_QUALITY } from "@/lib/image-quality";
 
 const FONT_OPTIONS = [
   { value: "serif", label: "Playfair Display (Serif)" },
@@ -674,7 +675,7 @@ export default function AdminInicioPage() {
                 onClick={() => landingInputRef.current?.click()}
               >
                 {landingImage.src ? (
-                  <Image src={landingImage.src} alt={landingImage.alt} fill className="object-cover" />
+                  <Image src={landingImage.src} alt={landingImage.alt} fill quality={PHOTO_IMAGE_QUALITY} className="object-cover" />
                 ) : (
                   <div className="flex items-center justify-center h-full">
                     <Upload size={24} className="text-brand-muted/30 group-hover:text-brand-accent transition-colors" />
@@ -727,6 +728,7 @@ export default function AdminInicioPage() {
                       src={config.featuredSection?.imageSrc || DEFAULT_FEATURED_SECTION.imageSrc}
                       alt=""
                       fill
+                      quality={PHOTO_IMAGE_QUALITY}
                       className="object-cover"
                     />
                   ) : (
@@ -942,7 +944,7 @@ export default function AdminInicioPage() {
                     onClick={() => igInputRefs.current[i]?.click()}
                   >
                     {img.src ? (
-                      <Image src={img.src} alt="Instagram Post" fill className="object-cover" />
+                      <Image src={img.src} alt="Instagram Post" fill quality={PHOTO_IMAGE_QUALITY} className="object-cover" />
                     ) : (
                       <div className="flex items-center justify-center h-full">
                         <Upload size={24} className="text-brand-muted/30 group-hover:text-brand-accent transition-colors" />
@@ -992,7 +994,7 @@ export default function AdminInicioPage() {
                     onClick={() => productInputRefs.current[i]?.click()}
                   >
                     {product.image ? (
-                      <Image src={product.image} alt={product.name} fill className="object-cover" />
+                      <Image src={product.image} alt={product.name} fill quality={PHOTO_IMAGE_QUALITY} className="object-cover" />
                     ) : (
                       <div className="flex items-center justify-center h-full">
                         <Upload size={24} className="text-brand-muted/30 group-hover:text-brand-accent transition-colors" />

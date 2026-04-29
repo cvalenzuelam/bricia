@@ -9,6 +9,7 @@ import { PRODUCT_GALLERY_MAX } from "@/lib/product-gallery";
 import { ArrowLeft, Save, Upload, Loader2, X } from "lucide-react";
 import type { Product } from "@/data/products";
 import AdminCmsLoading from "@/components/admin/AdminCmsLoading";
+import { PHOTO_IMAGE_QUALITY } from "@/lib/image-quality";
 
 type GallerySlot = { url: string; file: File | null; preview: string | null };
 
@@ -283,7 +284,7 @@ export default function EditarProductoPage({
               onClick={() => imageInputRef.current?.click()}
             >
               {displayImage && (
-                <Image src={displayImage} alt="Preview" fill className="object-cover" />
+                <Image src={displayImage} alt="Preview" fill quality={PHOTO_IMAGE_QUALITY} className="object-cover" />
               )}
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/0 group-hover:bg-black/20 transition-colors">
                 {uploading ? (
@@ -324,7 +325,7 @@ export default function EditarProductoPage({
                       onClick={() => galleryInputRefs.current[i]?.click()}
                     >
                       {thumb ? (
-                        <Image src={thumb} alt="" fill className="object-cover" sizes="120px" />
+                        <Image src={thumb} alt="" fill quality={PHOTO_IMAGE_QUALITY} className="object-cover" sizes="120px" />
                       ) : (
                         <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 p-2">
                           <Upload size={16} className="text-brand-muted/50" />

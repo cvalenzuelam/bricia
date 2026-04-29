@@ -8,6 +8,8 @@ import { ShoppingBag, Check, Loader2 } from "lucide-react";
 import { formatPrice } from "@/data/products";
 import type { Product } from "@/data/products";
 import { useCart } from "@/context/CartContext";
+import { PHOTO_IMAGE_QUALITY } from "@/lib/image-quality";
+import ImageFrameFade from "@/components/ImageFrameFade";
 
 function AddButton({ product }: { product: Product }) {
   const { addItem } = useCart();
@@ -166,10 +168,12 @@ export default function ProductosPage() {
                       alt={product.name}
                       fill
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      quality={PHOTO_IMAGE_QUALITY}
                       className="object-cover transition-transform duration-[1.4s] ease-out group-hover/image:scale-105"
                     />
+                    <ImageFrameFade variant="white" />
                     {/* Category badge */}
-                    <div className="absolute top-4 left-4">
+                    <div className="absolute top-4 left-4 z-[2]">
                       <span className="text-[9px] font-sans font-bold tracking-[0.25em] uppercase bg-white/90 backdrop-blur-sm text-brand-primary/60 px-3 py-1.5 rounded-full">
                         {product.category}
                       </span>

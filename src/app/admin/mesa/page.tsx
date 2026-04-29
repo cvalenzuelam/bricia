@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeft, Plus, Edit3, Trash2, Loader2, LayoutList } from "lucide-react";
 import AdminCmsLoading from "@/components/admin/AdminCmsLoading";
+import { PHOTO_IMAGE_QUALITY } from "@/lib/image-quality";
 
 interface ArticleItem {
   slug: string;
@@ -114,6 +115,7 @@ export default function AdminMesaPage() {
                     alt={article.title}
                     fill
                     sizes="80px"
+                    quality={PHOTO_IMAGE_QUALITY}
                     className="object-cover"
                   />
                 </div>

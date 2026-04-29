@@ -8,6 +8,7 @@ import { ArrowLeft, Loader2, Package, MapPin, User, Mail, Phone, CreditCard, Sen
 import type { Order, OrderStatus } from "@/data/orders";
 import { formatPrice } from "@/data/products";
 import AdminCmsLoading from "@/components/admin/AdminCmsLoading";
+import { PHOTO_IMAGE_QUALITY } from "@/lib/image-quality";
 
 const STATUS_LABEL: Record<OrderStatus, string> = {
   pending: "Pendiente",
@@ -555,6 +556,7 @@ export default function AdminPedidoDetailPage({
                         alt={item.name}
                         fill
                         sizes="64px"
+                        quality={PHOTO_IMAGE_QUALITY}
                         className="object-cover"
                       />
                     </div>

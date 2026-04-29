@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Plus, Minus, ShoppingBag, Trash2, ArrowRight } from "lucide-react";
 import { useCart } from "@/context/CartContext";
+import { PHOTO_IMAGE_QUALITY } from "@/lib/image-quality";
 import { formatPrice } from "@/data/products";
 
 export default function CartDrawer() {
@@ -120,6 +121,7 @@ export default function CartDrawer() {
                           alt={product.name}
                           fill
                           sizes="80px"
+                          quality={PHOTO_IMAGE_QUALITY}
                           className="object-cover"
                         />
                       </div>

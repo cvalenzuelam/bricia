@@ -3,6 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { shouldUnoptimizeRemoteImage } from "@/lib/next-image-remote";
+import { PHOTO_IMAGE_QUALITY } from "@/lib/image-quality";
+import ImageFrameFade from "@/components/ImageFrameFade";
 import { motion } from "framer-motion";
 
 interface RecipeCardProps {
@@ -34,9 +36,11 @@ export default function RecipeCard({
             alt={title}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+            quality={PHOTO_IMAGE_QUALITY}
             unoptimized={shouldUnoptimizeRemoteImage(image)}
             className="object-cover transition-transform duration-[1.2s] ease-out group-hover:scale-105"
           />
+          <ImageFrameFade variant="cream" />
         </div>
 
         {/* Text */}

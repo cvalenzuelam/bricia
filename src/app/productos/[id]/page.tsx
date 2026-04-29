@@ -9,6 +9,8 @@ import type { Product } from "@/data/products";
 import ProductDetailAddToCart from "@/components/productos/ProductDetailAddToCart";
 import ProductImageGallery from "@/components/productos/ProductImageGallery";
 import { productAllImageUrls } from "@/lib/product-gallery";
+import { PHOTO_IMAGE_QUALITY } from "@/lib/image-quality";
+import ImageFrameFade from "@/components/ImageFrameFade";
 
 export async function generateStaticParams() {
   const products = await getProducts();
@@ -275,8 +277,10 @@ export default async function ProductoDetallePage({ params }: PageProps) {
                       alt={p.name}
                       fill
                       sizes="(max-width: 640px) 100vw, 33vw"
+                      quality={PHOTO_IMAGE_QUALITY}
                       className="object-cover transition-transform duration-[1.2s] ease-out group-hover:scale-105"
                     />
+                    <ImageFrameFade variant="white" />
                   </div>
                   <div>
                     <h3 className="font-serif text-xl text-brand-primary group-hover:text-brand-accent transition-colors">

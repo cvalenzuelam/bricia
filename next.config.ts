@@ -19,15 +19,18 @@ const nextConfig: NextConfig = {
     },
   },
   images: {
-    /** Menos regeneraciones nuevas ante muchos tamaños viewport (presupuesto Hobby Image Optimization). */
-    deviceSizes: [640, 750, 1080, 1200],
-    imageSizes: [16, 32, 48, 64, 96, 128, 240, 384],
+    /**
+     * Incluye 1920–3840 para que en DPR 2+ no se escale una imagen de ~1200px
+     * a un layout mucho más ancho (causa típica de “borrosidad” vs. preview en escritorio).
+     */
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 2560, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 192, 240, 384],
     /** Una sola derivada por petición donde el navegador lo admite vs avif+webp (menos transformations). */
     formats: ["image/webp"],
     /** Reutiliza el mismo archivo optimizado en CDN más tiempo. */
     minimumCacheTTL: 60 * 60 * 24 * 14,
-    /** Valores permitidos para la prop `quality` de next/image (p. ej. Hero usa 92). */
-    qualities: [75, 92, 95],
+    /** Allowlist para la prop `quality` de next/image (@/lib/image-quality). */
+    qualities: [75, 85, 90, 92, 95, 100],
     remotePatterns: [
       {
         protocol: "https",

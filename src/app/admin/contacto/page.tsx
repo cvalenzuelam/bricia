@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Eye, Loader2, Save, Upload } from "lucide-react";
 import { uploadCmsImageFile } from "@/lib/cms-upload-image";
 import AdminCmsLoading from "@/components/admin/AdminCmsLoading";
+import { PHOTO_IMAGE_QUALITY } from "@/lib/image-quality";
 
 type SocialIcon = "instagram" | "tiktok" | "youtube";
 
@@ -218,7 +219,7 @@ export default function AdminContactoPage() {
                 className="relative aspect-[2/3] rounded-xl overflow-hidden border-2 border-dashed border-brand-primary/10 hover:border-brand-accent/40 cursor-pointer"
                 onClick={() => fileInputRef.current?.click()}
               >
-                <Image src={config.hero.photoSrc} alt={config.hero.photoAlt} fill className="object-cover" />
+                <Image src={config.hero.photoSrc} alt={config.hero.photoAlt} fill quality={PHOTO_IMAGE_QUALITY} className="object-cover" />
                 <div className="absolute inset-0 bg-black/0 hover:bg-black/20 transition-colors flex items-center justify-center">
                   <span className="text-white text-xs font-sans font-bold opacity-0 hover:opacity-100">Cambiar foto</span>
                 </div>

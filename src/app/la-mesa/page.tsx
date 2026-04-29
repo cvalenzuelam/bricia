@@ -6,6 +6,8 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { MesaArticle } from "@/data/lamesa";
 import Image from "next/image";
+import { HERO_IMAGE_QUALITY, PHOTO_IMAGE_QUALITY } from "@/lib/image-quality";
+import ImageFrameFade from "@/components/ImageFrameFade";
 
 const typeColor: Record<string, string> = {
   MESA: "#A89F91",
@@ -85,7 +87,7 @@ export default function LaMesaPage() {
               className="object-cover opacity-60 mix-blend-overlay group-hover:scale-105 transition-transform duration-[2s] ease-out"
               priority
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-transparent" />
             <div className="relative max-w-3xl space-y-8">
               <div className="flex items-center gap-5">
                 <span className="text-[10px] font-sans font-bold tracking-[0.4em] uppercase px-4 py-2 rounded-full border border-white/20 text-white/80 backdrop-blur-sm">
@@ -131,9 +133,12 @@ export default function LaMesaPage() {
                       src={article.coverImage}
                       alt={article.title}
                       fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 640px"
+                      quality={PHOTO_IMAGE_QUALITY}
                       className="object-cover transform group-hover:scale-105 transition-transform duration-[1.5s] ease-out"
                     />
-                    <div className="absolute inset-x-8 bottom-8 flex justify-between items-end opacity-0 group-hover:opacity-40 transition-opacity duration-700">
+                    <ImageFrameFade variant="cream" tint="#FDFCF8" />
+                    <div className="absolute inset-x-8 bottom-8 z-[2] flex justify-between items-end opacity-0 group-hover:opacity-40 transition-opacity duration-700">
                       <div className="w-1/2 h-px bg-white"></div>
                       <div className="w-4 h-4 rounded-full border border-white"></div>
                     </div>

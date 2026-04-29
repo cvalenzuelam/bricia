@@ -8,6 +8,7 @@ import { ArrowLeft, Plus, Edit3, Trash2, Loader2, ShoppingBag } from "lucide-rea
 import { formatPrice } from "@/data/products";
 import type { Product } from "@/data/products";
 import AdminCmsLoading from "@/components/admin/AdminCmsLoading";
+import { PHOTO_IMAGE_QUALITY } from "@/lib/image-quality";
 
 const CATEGORY_COLORS: Record<string, string> = {
   COCINA: "#A89F91",
@@ -105,6 +106,7 @@ export default function AdminProductosPage() {
                     alt={product.name}
                     fill
                     sizes="80px"
+                    quality={PHOTO_IMAGE_QUALITY}
                     className="object-cover"
                   />
                 </div>

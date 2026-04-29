@@ -8,6 +8,7 @@ import { uploadCmsImageFile } from "@/lib/cms-upload-image";
 import { ArrowLeft, Save, Upload, Loader2, AlignLeft, Quote, ImageIcon, X } from "lucide-react";
 import type { ContentBlock, MesaArticle } from "@/data/lamesa";
 import AdminCmsLoading from "@/components/admin/AdminCmsLoading";
+import { PHOTO_IMAGE_QUALITY } from "@/lib/image-quality";
 
 const ARTICLE_TYPES = ["MESA", "ILUMINACIÓN", "HOSTING", "ESTÉTICA"] as const;
 const REQUEST_TIMEOUT_MS = 20000;
@@ -281,7 +282,7 @@ export default function EditarMesaPage({ params }: EditPageProps) {
               className="relative h-56 rounded-xl border-2 border-dashed border-brand-primary/10 hover:border-brand-accent/40 transition-colors cursor-pointer overflow-hidden bg-brand-secondary group"
             >
               {coverPreview ? (
-                <Image src={coverPreview} alt="Portada" fill className="object-cover" />
+                <Image src={coverPreview} alt="Portada" fill quality={PHOTO_IMAGE_QUALITY} className="object-cover" />
               ) : (
                 <div className="flex h-full flex-col items-center justify-center gap-2 text-brand-muted">
                   <Upload size={24} className="opacity-40" />
@@ -471,7 +472,7 @@ function BlockEditor({ block, index, onUpdate, onRemove, onImageUpload }: BlockE
         <>
           {block.url ? (
             <div className="relative h-40 rounded-lg overflow-hidden group cursor-pointer" onClick={() => imgInputRef.current?.click()}>
-              <Image src={block.url} alt={block.alt || ""} fill className="object-cover" />
+              <Image src={block.url} alt={block.alt || ""} fill quality={PHOTO_IMAGE_QUALITY} className="object-cover" />
               <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/30 transition-all opacity-0 group-hover:opacity-100">
                 <Upload className="text-white" size={20} />
               </div>

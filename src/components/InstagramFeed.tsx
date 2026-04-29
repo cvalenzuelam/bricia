@@ -2,7 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useEffect, useMemo, type ReactNode } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { PHOTO_IMAGE_QUALITY } from "@/lib/image-quality";
+import ImageFrameFade from "@/components/ImageFrameFade";
 
 const DEFAULT_INSTAGRAM_PROFILE_HREF =
   "https://www.instagram.com/briciaelizalde/";
@@ -127,12 +129,10 @@ function CommunityBridge() {
 }
 
 export default function InstagramFeed({
-  children,
   initialInstagramImages,
   /** true cuando el home SSR ya cargó instagramImages desde hero */
   fromServer = false,
 }: {
-  children?: ReactNode;
   initialInstagramImages?: { src: string; caption?: string; isVideo?: boolean }[];
   fromServer?: boolean;
 }) {
@@ -164,10 +164,10 @@ export default function InstagramFeed({
     [images]
   );
 
-  if (!children && !hasGrid) return null;
+  if (!hasGrid) return null;
 
   return (
-    <section className="relative overflow-hidden bg-brand-secondary pb-0">
+    <section className="relative overflow-hidden bg-brand-secondary pb-0 pt-10 md:pt-14">
       <div
         className="pointer-events-none absolute -left-32 top-16 h-[28rem] w-[28rem] rounded-full bg-brand-accent/[0.07] blur-3xl"
         aria-hidden
@@ -177,90 +177,86 @@ export default function InstagramFeed({
         aria-hidden
       />
 
-      {children}
+      <CommunityBridge />
 
-      {hasGrid && (
-        <>
-          <CommunityBridge />
+      <div className="relative z-[1] mx-auto mb-14 max-w-7xl px-6 pt-2 text-center md:mb-16 md:pt-0 md:text-left">
+        <span className="editorial-spacing text-brand-accent mb-4 block md:mb-5">
+          Comunidad
+        </span>
+        <h2 className="mb-4 font-serif text-3xl tracking-tight text-brand-primary md:text-[2.75rem] md:leading-tight">
+          Cocina, inspiración y{" "}
+          <span className="italic text-brand-accent">comunidad</span>
+        </h2>
+        <p className="mx-auto max-w-2xl font-sans text-sm leading-relaxed text-brand-muted/85 md:mx-0 md:text-base">
+          Encuéntrame en mis redes: recetas, ideas para la mesa y el día a
+          día. Comparte tus creaciones y acompáñanos en la comunidad.
+        </p>
+      </div>
 
-          <div className="relative z-[1] mx-auto mb-14 max-w-7xl px-6 pt-2 text-center md:mb-16 md:pt-0 md:text-left">
-            <span className="editorial-spacing text-brand-accent mb-4 block md:mb-5">
-              Comunidad
-            </span>
-            <h2 className="mb-4 font-serif text-3xl tracking-tight text-brand-primary md:text-[2.75rem] md:leading-tight">
-              Cocina, inspiración y{" "}
-              <span className="italic text-brand-accent">comunidad</span>
-            </h2>
-            <p className="mx-auto max-w-2xl font-sans text-sm leading-relaxed text-brand-muted/85 md:mx-0 md:text-base">
-              Encuéntrame en mis redes: recetas, ideas para la mesa y el día a
-              día. Comparte tus creaciones y acompáñanos en la comunidad.
-            </p>
-          </div>
-
-          <div
-            className="mx-auto grid w-full max-w-[1600px] grid-cols-2 grid-flow-row gap-2.5 px-3 sm:gap-3 sm:px-5 md:gap-4 md:px-8 lg:grid-cols-4 lg:gap-5"
-          >
-            {visibleImages.map((img, index) => {
-              const hrefResolved = resolveCommunityImageHref(img.href);
-              const internal = isInternalCommunityHref(hrefResolved);
-              const cellClass = collageCellClass(
-                index,
-                visibleImages.length
-              );
-              const tile = (
-                <>
-                  <Image
-                    src={img.src}
-                    alt={img.caption || "Publicación de Bricia"}
-                    fill
-                    sizes="(max-width: 1024px) 50vw, 25vw"
-                    className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                  />
-                  {img.isVideo && (
-                    <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-100 transition-opacity duration-300 group-hover:opacity-0">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/40 backdrop-blur-sm">
-                        <svg
-                          className="ml-0.5 h-5 w-5 text-white/90"
-                          viewBox="0 0 24 24"
-                          fill="currentColor"
-                        >
-                          <path d="M8 5v14l11-7z" />
-                        </svg>
-                      </div>
-                    </div>
-                  )}
-                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 p-6 text-center opacity-0 transition-opacity duration-500 group-hover:opacity-100">
-                    {img.caption && (
-                      <p className="line-clamp-4 font-sans text-xs leading-relaxed text-white">
-                        {img.caption}
-                      </p>
-                    )}
+      <div
+        className="mx-auto grid w-full max-w-[1600px] grid-cols-2 grid-flow-row gap-2.5 px-3 sm:gap-3 sm:px-5 md:gap-4 md:px-8 lg:grid-cols-4 lg:gap-5"
+      >
+        {visibleImages.map((img, index) => {
+          const hrefResolved = resolveCommunityImageHref(img.href);
+          const internal = isInternalCommunityHref(hrefResolved);
+          const cellClass = collageCellClass(
+            index,
+            visibleImages.length
+          );
+          const tile = (
+            <>
+              <Image
+                src={img.src}
+                alt={img.caption || "Publicación de Bricia"}
+                fill
+                sizes="(max-width: 1024px) 50vw, 40vw"
+                quality={PHOTO_IMAGE_QUALITY}
+                className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+              />
+              <ImageFrameFade variant="cream" />
+              {img.isVideo && (
+                <div className="pointer-events-none absolute inset-0 z-[2] flex items-center justify-center opacity-100 transition-opacity duration-300 group-hover:opacity-0">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/40 backdrop-blur-sm">
+                    <svg
+                      className="ml-0.5 h-5 w-5 text-white/90"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
                   </div>
-                </>
-              );
-              return internal ? (
-                <Link
-                  key={`${img.src}-${index}`}
-                  href={hrefResolved}
-                  className={cellClass}
-                >
-                  {tile}
-                </Link>
-              ) : (
-                <a
-                  key={`${img.src}-${index}`}
-                  href={hrefResolved}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={cellClass}
-                >
-                  {tile}
-                </a>
-              );
-            })}
-          </div>
-        </>
-      )}
+                </div>
+              )}
+              <div className="absolute inset-0 z-[3] flex flex-col items-center justify-center bg-black/60 p-6 text-center opacity-0 transition-opacity duration-500 group-hover:opacity-100">
+                {img.caption && (
+                  <p className="line-clamp-4 font-sans text-xs leading-relaxed text-white">
+                    {img.caption}
+                  </p>
+                )}
+              </div>
+            </>
+          );
+          return internal ? (
+            <Link
+              key={`${img.src}-${index}`}
+              href={hrefResolved}
+              className={cellClass}
+            >
+              {tile}
+            </Link>
+          ) : (
+            <a
+              key={`${img.src}-${index}`}
+              href={hrefResolved}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={cellClass}
+            >
+              {tile}
+            </a>
+          );
+        })}
+      </div>
     </section>
   );
 }

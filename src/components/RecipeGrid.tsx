@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import RecipeCard from "./RecipeCard";
 
 interface Recipe {
@@ -70,6 +71,26 @@ export default function RecipeGrid({
     variant === "full" ? "TODAS" : "featured"
   );
 
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [canPrev, setCanPrev] = useState(false);
+  const [canNext, setCanNext] = useState(false);
+
+  const syncScrollButtons = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const { scrollLeft, scrollWidth, clientWidth } = el;
+    const maxScroll = scrollWidth - clientWidth;
+    setCanPrev(scrollLeft > 4);
+    setCanNext(maxScroll > 4 && scrollLeft < maxScroll - 4);
+  }, []);
+
+  const scrollBySnap = useCallback((dir: -1 | 1) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const stride = Math.min(el.clientWidth * 0.75, 360);
+    el.scrollBy({ left: dir * stride, behavior: "smooth" });
+  }, []);
+
   useEffect(() => {
     if (initialRecipes !== undefined && initialLandingSlugs !== undefined) {
       return;
@@ -103,6 +124,20 @@ export default function RecipeGrid({
     }
     return filterByCategory(recipes, viewMode);
   }, [recipes, landingSlugs, viewMode]);
+
+  useEffect(() => {
+    if (variant !== "landing") return;
+    const el = scrollRef.current;
+    if (!el) return;
+    syncScrollButtons();
+    const ro = new ResizeObserver(syncScrollButtons);
+    ro.observe(el);
+    el.addEventListener("scroll", syncScrollButtons, { passive: true });
+    return () => {
+      ro.disconnect();
+      el.removeEventListener("scroll", syncScrollButtons);
+    };
+  }, [variant, filteredRecipes.length, viewMode, syncScrollButtons]);
 
   const showFeaturedReset = variant === "landing" && viewMode !== "featured";
 
@@ -168,9 +203,66 @@ export default function RecipeGrid({
         )}
       </div>
 
+      {variant === "landing" && filteredRecipes.length > 0 && (
+        <div className="md:hidden relative">
+          <div
+            ref={scrollRef}
+            role="region"
+            aria-roledescription="carrusel"
+            aria-label="Recetas de temporada"
+            className="no-scrollbar flex gap-6 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-2 -mx-1 px-1"
+          >
+            {filteredRecipes.map((recipe, index) => (
+              <div
+                key={recipe.slug}
+                className="flex-shrink-0 snap-start w-[min(78vw,280px)] sm:w-[min(42vw,280px)]"
+              >
+                <motion.div
+                  initial={{ opacity: 0, y: 16 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: Math.min(index * 0.04, 0.4), duration: 0.45 }}
+                >
+                  <RecipeCard
+                    slug={recipe.slug}
+                    title={recipe.title}
+                    category={recipe.category}
+                    image={recipe.image}
+                  />
+                </motion.div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-6 flex items-center justify-center gap-10">
+            <button
+              type="button"
+              aria-label="Recetas anteriores"
+              onClick={() => scrollBySnap(-1)}
+              disabled={!canPrev}
+              className="flex h-12 w-12 items-center justify-center rounded-full border border-brand-primary/15 text-brand-accent transition-opacity disabled:opacity-25"
+            >
+              <ChevronLeft size={24} strokeWidth={1.5} aria-hidden />
+            </button>
+            <button
+              type="button"
+              aria-label="Siguientes recetas"
+              onClick={() => scrollBySnap(1)}
+              disabled={!canNext}
+              className="flex h-12 w-12 items-center justify-center rounded-full border border-brand-primary/15 text-brand-accent transition-opacity disabled:opacity-25"
+            >
+              <ChevronRight size={24} strokeWidth={1.5} aria-hidden />
+            </button>
+          </div>
+        </div>
+      )}
+
       <motion.div
         layout
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-16"
+        className={
+          variant === "landing"
+            ? "hidden md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-16"
+            : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-16"
+        }
       >
         <AnimatePresence mode="popLayout">
           {filteredRecipes.map((recipe, index) => (

@@ -2,6 +2,8 @@ import { getRecipes, getRecipeBySlug } from "@/data/recipes";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import { shouldUnoptimizeRemoteImage } from "@/lib/next-image-remote";
+import { PHOTO_IMAGE_QUALITY } from "@/lib/image-quality";
+import ImageFrameFade from "@/components/ImageFrameFade";
 import Link from "next/link";
 import { ArrowLeft, Clock, Users } from "lucide-react";
 interface PageProps {
@@ -54,9 +56,11 @@ export default async function RecipePage({ params }: PageProps) {
             alt={recipe.title}
             fill
             sizes="(max-width: 1024px) 100vw, 80vw"
+            quality={PHOTO_IMAGE_QUALITY}
             unoptimized={shouldUnoptimizeRemoteImage(recipe.image)}
             className="object-cover"
           />
+          <ImageFrameFade variant="cream" />
         </div>
       </div>
 
@@ -98,9 +102,12 @@ export default async function RecipePage({ params }: PageProps) {
                     src={img} 
                     alt={`${recipe.title} galería ${i + 1}`} 
                     fill 
+                    sizes="(max-width: 768px) 50vw, 35vw"
+                    quality={PHOTO_IMAGE_QUALITY}
                     unoptimized={shouldUnoptimizeRemoteImage(img)}
                     className="object-cover group-hover:scale-105 transition-transform duration-700" 
                   />
+                  <ImageFrameFade variant="cream" />
                 </div>
               );
             })}

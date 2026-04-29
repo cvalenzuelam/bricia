@@ -71,28 +71,11 @@ export default async function Home() {
       {/* 4. Tienda — carrusel */}
       <ProductSection initialProducts={products} />
 
-      {/* 5–6. Cita + comunidad / Instagram (misma sección editorial) */}
+      {/* 5–6. Comunidad / Instagram */}
       <InstagramFeed
         initialInstagramImages={instagramImages}
         fromServer
-      >
-        <div className="relative z-[1] px-6 pb-4 pt-16 text-center md:pb-6 md:pt-24">
-          <div className="mx-auto flex max-w-3xl flex-col items-center gap-8 md:gap-10">
-            <div className="flex gap-2" aria-hidden>
-              <span className="h-12 w-px bg-gradient-to-b from-brand-accent/15 via-brand-accent/55 to-brand-accent/15" />
-              <span className="h-12 w-px bg-gradient-to-b from-brand-accent/10 via-brand-accent/35 to-brand-accent/10" />
-            </div>
-            <h3 className="font-serif text-3xl italic leading-relaxed text-brand-primary md:text-4xl">
-              Cocina con amor, mesas que conectan.
-            </h3>
-            <p className="max-w-xl font-sans text-sm leading-relaxed text-brand-muted md:text-[0.9375rem]">
-              Cada receta en este blog tiene un origen, y cada mesa que montamos
-              tiene una intención. No solo cocinamos para comer, diseñamos espacios
-              para conectar los corazones.
-            </p>
-          </div>
-        </div>
-      </InstagramFeed>
+      />
     </main>
   );
 }

@@ -1,4 +1,6 @@
 ﻿import Image from "next/image";
+import { HERO_IMAGE_QUALITY } from "@/lib/image-quality";
+import { contactPhotoSplitFadeStyle } from "@/lib/image-frame-fade";
 import Link from "next/link";
 import { Mail } from "lucide-react";
 
@@ -109,18 +111,12 @@ export default function ContactPage() {
             alt="Bricia Elizalde"
             fill
             sizes="(max-width: 768px) 100vw, 45vw"
-            quality={95}
+            quality={HERO_IMAGE_QUALITY}
             className="object-cover object-center"
             priority
           />
           {/* Overlay degradado para fundir con el texto en mobile */}
-          <div
-            className="absolute inset-0"
-            style={{
-              background:
-                "linear-gradient(to top, rgba(29,29,27,0.45) 0%, transparent 22%), linear-gradient(to right, transparent 55%, rgba(29,29,27,0.6) 80%, #1D1D1B 100%)",
-            }}
-          />
+          <div className="absolute inset-0 z-[1]" style={contactPhotoSplitFadeStyle()} />
 
         </div>
 

@@ -7,6 +7,8 @@ import { ArrowLeft, ArrowRight, Home } from "lucide-react";
 import { MesaArticle } from "@/data/lamesa";
 import { notFound } from "next/navigation";
 import Image from "next/image";
+import { HERO_IMAGE_QUALITY, PHOTO_IMAGE_QUALITY } from "@/lib/image-quality";
+import ImageFrameFade from "@/components/ImageFrameFade";
 
 export default function LaMesaArticlePage({ params }: { params: Promise<{ slug: string }> }) {
   const resolvedParams = use(params);
@@ -68,7 +70,7 @@ export default function LaMesaArticlePage({ params }: { params: Promise<{ slug: 
           className="object-cover object-center opacity-40 mix-blend-overlay"
           priority
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-transparent" />
 
         <div className="relative max-w-5xl space-y-8 z-10">
           <motion.div
@@ -140,8 +142,11 @@ export default function LaMesaArticlePage({ params }: { params: Promise<{ slug: 
                         src={block.url}
                         alt={block.alt}
                         fill
+                        sizes="(max-width: 896px) 100vw, 896px"
+                        quality={PHOTO_IMAGE_QUALITY}
                         className="object-cover hover:scale-105 transition-transform duration-[2s] ease-out"
                       />
+                      <ImageFrameFade variant="cream" tint="#FDFCF8" />
                     </div>
                     {block.caption && (
                       <figcaption className="mt-4 text-center text-xs font-sans text-brand-primary/40 tracking-wider">

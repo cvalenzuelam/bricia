@@ -12,6 +12,8 @@ import {
 } from "react";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import type { Product } from "@/data/products";
+import { PHOTO_IMAGE_QUALITY } from "@/lib/image-quality";
+import ImageFrameFade from "@/components/ImageFrameFade";
 
 function formatPriceMx(price: number): string {
   return new Intl.NumberFormat("es-MX", {
@@ -151,8 +153,10 @@ export default function ProductSection({
                       alt={product.name}
                       fill
                       sizes="(max-width: 640px) 78vw, (max-width: 1024px) 42vw, 300px"
+                      quality={PHOTO_IMAGE_QUALITY}
                       className="object-cover transition-transform duration-[1.2s] group-hover:scale-105"
                     />
+                    <ImageFrameFade variant="dark" />
                   </div>
                   <div className="text-center space-y-1.5 px-1">
                     <h3 className="text-lg font-serif text-brand-secondary group-hover:text-[#C2A878] transition-colors duration-300">

@@ -2,6 +2,8 @@
 
 import { useState, useCallback, useEffect } from "react";
 import Image from "next/image";
+import { PHOTO_IMAGE_QUALITY } from "@/lib/image-quality";
+import ImageFrameFade from "@/components/ImageFrameFade";
 
 export default function ProductImageGallery({
   images,
@@ -39,9 +41,11 @@ export default function ProductImageGallery({
           alt={productName}
           fill
           sizes="(max-width: 1024px) 100vw, 58vw"
+          quality={PHOTO_IMAGE_QUALITY}
           className="object-cover"
           priority
         />
+        <ImageFrameFade variant="white" />
       </div>
     );
   }
@@ -54,9 +58,11 @@ export default function ProductImageGallery({
           alt={`${productName} — foto ${active + 1} de ${safe.length}`}
           fill
           sizes="(max-width: 1024px) 100vw, 58vw"
+          quality={PHOTO_IMAGE_QUALITY}
           className="object-cover"
           priority={active === 0}
         />
+        <ImageFrameFade variant="white" />
       </div>
       <div
         className="flex gap-2 sm:gap-3 overflow-x-auto pb-1 no-scrollbar"
@@ -81,6 +87,7 @@ export default function ProductImageGallery({
               alt=""
               fill
               sizes="(max-width: 640px) 64px, 72px"
+              quality={PHOTO_IMAGE_QUALITY}
               className="object-cover"
             />
           </button>

@@ -4,7 +4,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowDown } from "lucide-react";
-import { useState, useEffect, type CSSProperties } from "react";
+import { useState, useEffect } from "react";
+import { HERO_IMAGE_QUALITY } from "@/lib/image-quality";
+import {
+  heroBottomFadeStyle,
+  heroBottomFadeStyleWeb,
+  heroMainImageOverlayStyle,
+  heroMainImageOverlayStyleWeb,
+} from "@/lib/image-frame-fade";
 
 interface HeroConfig {
   title: string;
@@ -52,36 +59,6 @@ const FONT_MAP: Record<string, string> = {
 
 const DEFAULT_BG = "#FAF9F4";
 
-function hexToRgb(
-  hex: string
-): { r: number; g: number; b: number } {
-  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex.trim());
-  if (!m) return { r: 250, g: 249, b: 244 };
-  return {
-    r: parseInt(m[1], 16),
-    g: parseInt(m[2], 16),
-    b: parseInt(m[3], 16),
-  };
-}
-
-function imageOverlayStyle(bgHex: string): CSSProperties {
-  const { r, g, b } = hexToRgb(bgHex);
-  return {
-    background: [
-      `linear-gradient(to top, rgba(${r},${g},${b},0.25) 0%, transparent 30%)`,
-      `linear-gradient(to left, transparent 42%, rgba(${r},${g},${b},0.5) 72%, ${bgHex} 100%)`,
-    ].join(", "),
-  };
-}
-
-/** Velado inferior: franja sólida al final + degradado (evita hilo de foto/Chroma en el borde). */
-function heroBottomFadeStyle(bgHex: string): CSSProperties {
-  const { r, g, b } = hexToRgb(bgHex);
-  return {
-    background: `linear-gradient(to top, ${bgHex} 0%, ${bgHex} 22%, rgba(${r},${g},${b},0.72) 48%, rgba(${r},${g},${b},0.22) 72%, transparent 100%)`,
-  };
-}
-
 function mergeHeroResponse(
   base: HeroConfig,
   patch: unknown
@@ -124,17 +101,19 @@ export default function Hero({
     config.collageImages?.[0]?.alt || "Foto principal de Bricia";
 
   const bg = config.backgroundColor || DEFAULT_BG;
-  const overlayStyle = imageOverlayStyle(bg);
-  const sectionMinH = "min-h-screen md:min-h-[calc(62vw*1.12)]";
+  const overlayStyleMobile = heroMainImageOverlayStyle(bg);
+  const overlayStyleWeb = heroMainImageOverlayStyleWeb(bg);
+  /** Móvil: sin min-h forzado (evita franja crema vacía). Escritorio: igual que antes. */
+  const sectionMinH = "max-md:min-h-0 md:min-h-[calc(62vw*1.12)]";
 
   return (
     <section
-      className={`relative ${sectionMinH} flex flex-col md:flex-row overflow-hidden`}
+      className={`relative ${sectionMinH} flex flex-col max-md:gap-7 max-md:pb-8 md:flex-row md:gap-0 overflow-hidden md:pb-8`}
       style={{ backgroundColor: bg }}
     >
       {/* Texto — izquierda (móvil: arriba), columna más estrecha */}
       <div
-        className={`relative w-full md:w-[38%] flex flex-col items-center justify-center px-8 md:px-10 lg:px-14 pb-10 pt-[max(7.5rem,env(safe-area-inset-top,0px)+5.5rem)] md:pt-5 md:pb-2 md:min-h-[calc(62vw*1.12)] text-center`}
+        className={`relative w-full md:w-[38%] flex flex-col items-center justify-center px-8 md:px-10 lg:px-14 max-md:pb-1 max-md:pt-[max(6.75rem,env(safe-area-inset-top,0px)+5.25rem)] md:pb-2 md:pt-5 md:min-h-[calc(62vw*1.12)] text-center`}
       >
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -142,8 +121,8 @@ export default function Hero({
           transition={{ duration: 1 }}
           className="max-w-lg w-full"
         >
-          <div className="space-y-4 md:space-y-8 md:-translate-y-28 lg:-translate-y-36">
-          <div className="space-y-3 md:space-y-6">
+          <div className="max-md:space-y-5 md:space-y-8 md:-translate-y-28 lg:-translate-y-36">
+          <div className="max-md:space-y-4 md:space-y-6">
             <h1
               className="text-3xl md:text-4xl lg:text-5xl leading-tight"
               style={{
@@ -164,7 +143,7 @@ export default function Hero({
             </span>
           </div>
 
-          <div className="space-y-3 md:space-y-6">
+          <div className="max-md:space-y-4 max-md:pt-1 md:space-y-6">
             <p
               className="md:hidden text-sm font-serif leading-snug text-brand-primary/85"
               style={{
@@ -208,7 +187,7 @@ export default function Hero({
 
       {/* Foto — derecha (móvil: debajo del texto), columna más ancha */}
       <div
-        className={`relative z-[1] w-full md:w-[62%] aspect-[5/4] md:aspect-auto min-h-[48svh] md:min-h-[calc(62vw*1.12)] overflow-hidden max-md:-mb-1 max-md:isolate max-md:[transform:translateZ(0)]`}
+        className={`relative z-[1] w-full md:w-[62%] aspect-[5/4] md:aspect-auto md:min-h-[calc(62vw*1.12)] overflow-hidden min-h-[48svh] max-md:min-h-0 max-md:isolate max-md:[transform:translateZ(0)]`}
       >
         <Image
           src={heroImage}
@@ -216,17 +195,26 @@ export default function Hero({
           fill
           priority
           sizes="(max-width: 768px) 100vw, 62vw"
-          quality={92}
+          quality={HERO_IMAGE_QUALITY}
           className="object-cover object-center max-md:origin-bottom max-md:scale-[1.04]"
         />
         <div
-          className="absolute inset-0 pointer-events-none"
-          style={overlayStyle}
+          className="absolute inset-0 pointer-events-none md:hidden"
+          style={overlayStyleMobile}
+        />
+        <div
+          className="absolute inset-0 pointer-events-none hidden md:block"
+          style={overlayStyleWeb}
         />
         {/* Velado inferior + tapa de 1px para subpíxeles entre foto y sección siguiente */}
         <div
-          className="pointer-events-none absolute inset-x-0 bottom-0 z-[3] h-[min(38%,12rem)] md:h-32"
+          className="pointer-events-none absolute inset-x-0 bottom-0 z-[3] h-[min(38%,12rem)] md:hidden"
           style={heroBottomFadeStyle(bg)}
+          aria-hidden
+        />
+        <div
+          className="pointer-events-none absolute inset-x-0 bottom-0 z-[3] hidden md:block h-32"
+          style={heroBottomFadeStyleWeb(bg)}
           aria-hidden
         />
         <div
