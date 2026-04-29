@@ -109,33 +109,52 @@ export default function RecipeGrid({
   return (
     <div className="max-w-7xl mx-auto px-6 space-y-16">
       <div className="flex flex-col items-center gap-4">
-        <div className="flex justify-start md:justify-center w-full">
-          <div className="flex flex-nowrap items-center gap-6 md:gap-12 overflow-x-auto no-scrollbar pb-4 -mb-4 px-4 w-full md:w-auto scroll-smooth">
-            {FILTER_ORDER.map((key) => (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setViewMode(key)}
-                className="group relative py-2 shrink-0"
-              >
-                <span
-                  className={`text-[9px] md:text-sm font-sans font-bold tracking-[0.1em] md:tracking-[0.2em] uppercase transition-colors duration-300 ${
-                    viewMode === key
-                      ? "text-brand-accent"
-                      : "text-brand-muted hover:text-brand-primary"
-                  }`}
+        <div className="flex justify-start md:justify-center w-full min-w-0">
+          <div
+            className="
+              flex flex-nowrap items-stretch md:items-center gap-2 md:gap-12
+              overflow-x-auto no-scrollbar scroll-smooth
+              max-md:pt-0.5 max-md:pb-1 max-md:pl-0 max-md:pr-8 max-md:-mx-1 max-md:px-1
+              w-full max-md:snap-x max-md:snap-mandatory md:overflow-visible md:pb-4 md:-mb-4 md:px-0 md:w-auto
+            "
+          >
+            {FILTER_ORDER.map((key) => {
+              const active = viewMode === key;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setViewMode(key)}
+                  className={`
+                    group relative shrink-0 snap-start
+                    max-md:rounded-full max-md:px-4 max-md:py-2.5 max-md:border max-md:text-[10px] max-md:font-sans max-md:font-bold
+                    max-md:tracking-[0.18em] max-md:uppercase max-md:transition-all max-md:duration-300
+                    ${active
+                      ? "max-md:bg-brand-primary max-md:text-brand-secondary max-md:border-brand-primary"
+                      : "max-md:bg-white/90 max-md:backdrop-blur-sm max-md:text-brand-muted max-md:border-brand-primary/15 max-md:hover:border-brand-accent/40 max-md:hover:text-brand-accent"
+                    }
+                    md:py-2 md:rounded-none md:border-0 md:bg-transparent md:backdrop-blur-none md:px-0
+                  `}
                 >
-                  {key}
-                </span>
-                {viewMode === key && (
-                  <motion.div
-                    layoutId="activeFilter"
-                    className="absolute -bottom-1 left-0 right-0 h-px bg-brand-accent"
-                    transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                  />
-                )}
-              </button>
-            ))}
+                  <span
+                    className={`
+                      max-md:text-inherit
+                      text-[9px] md:text-sm font-sans font-bold tracking-[0.1em] md:tracking-[0.2em] uppercase transition-colors duration-300
+                      ${active ? "md:text-brand-accent" : "md:text-brand-muted md:group-hover:text-brand-primary"}
+                    `}
+                  >
+                    {key}
+                  </span>
+                  {active && (
+                    <motion.div
+                      layoutId="activeFilter"
+                      className="hidden md:block absolute -bottom-1 left-0 right-0 h-px bg-brand-accent"
+                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                    />
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
         {showFeaturedReset && (
