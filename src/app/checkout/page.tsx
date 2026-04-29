@@ -420,39 +420,39 @@ export default function CheckoutPage() {
 
             </section>
 
-            <div className="space-y-4 pt-2">
+            <div className="space-y-4 -mt-6 md:-mt-8 lg:-mt-10">
               <button
                 type="button"
                 disabled={submitting}
                 onClick={goToMercadoPagoCheckout}
-                className="group flex w-full items-center gap-3 rounded-xl bg-black px-4 py-3.5 transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60 sm:gap-4 sm:px-5"
+                className="relative flex min-h-[3.75rem] w-full items-center justify-center rounded-xl border-2 border-brand-primary/15 bg-white py-3 pl-4 pr-4 transition-colors hover:border-brand-accent/40 hover:bg-brand-secondary/30 disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-[3.5rem] sm:py-3.5 sm:pl-5 sm:pr-5"
               >
                 <Image
-                  src="/payments/mercado-pago-on-dark.svg"
+                  src="/payments/mercado-pago-on-light.svg"
                   alt="Mercado Pago"
                   width={200}
                   height={81}
-                  className="h-8 w-auto max-w-[min(52vw,13.5rem)] shrink-0 object-contain object-left sm:h-9"
+                  className="pointer-events-none absolute left-3 top-1/2 z-10 h-8 w-auto max-w-[min(46vw,12rem)] -translate-y-1/2 object-contain object-left sm:left-4 sm:h-9 sm:max-w-[13rem]"
                 />
-                <span className="min-w-0 flex-1 text-center text-[11px] font-sans font-bold uppercase leading-snug tracking-[0.1em] text-white sm:text-xs sm:tracking-[0.12em]">
-                  {submitting ? "Preparando pago…" : "Pagar con Mercado Pago"}
+                <span className="w-full px-[3.5rem] text-center font-serif text-[13px] font-medium leading-snug tracking-[0.04em] text-brand-primary sm:px-36 sm:text-[0.9375rem]">
+                  {submitting ? "Preparando pago…" : "Pagar de forma segura con Mercado Pago"}
                 </span>
               </button>
               <button
                 type="button"
                 disabled={submitting}
                 onClick={goToStripeCheckout}
-                className="flex w-full items-center gap-3 rounded-xl border-2 border-brand-primary/15 bg-white px-4 py-3.5 transition-colors hover:border-brand-accent/40 hover:bg-brand-secondary/30 disabled:cursor-not-allowed disabled:opacity-60 sm:gap-4 sm:px-5"
+                className="relative flex min-h-[3.75rem] w-full items-center justify-center rounded-xl border-2 border-brand-primary/15 bg-white py-3 pl-4 pr-4 transition-colors hover:border-brand-accent/40 hover:bg-brand-secondary/30 disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-[3.5rem] sm:py-3.5 sm:pl-5 sm:pr-5"
               >
                 <Image
                   src="/payments/link-by-stripe.svg"
                   alt="Link by Stripe"
                   width={112}
                   height={36}
-                  className="h-8 w-auto max-w-[min(42vw,7.5rem)] shrink-0 object-contain object-left sm:h-9"
+                  className="pointer-events-none absolute left-3 top-1/2 z-10 h-8 w-auto max-w-[min(36vw,6.75rem)] -translate-y-1/2 object-contain object-left sm:left-4 sm:h-9 sm:max-w-[7.25rem]"
                 />
-                <span className="min-w-0 flex-1 text-center text-[11px] font-sans font-bold uppercase leading-snug tracking-[0.1em] text-brand-primary sm:text-xs sm:tracking-[0.12em]">
-                  {submitting ? "Preparando pago…" : "Pagar con tarjeta o Link (Stripe)"}
+                <span className="w-full px-[3.5rem] text-center font-serif text-[13px] font-medium leading-snug tracking-[0.04em] text-brand-primary sm:px-36 sm:text-[0.9375rem]">
+                  {submitting ? "Preparando pago…" : "Tarjeta de Crédito, Débito o Link"}
                 </span>
               </button>
               <p className="text-[10px] font-sans text-brand-muted text-center leading-relaxed">
@@ -460,7 +460,7 @@ export default function CheckoutPage() {
                 <span className="font-medium text-brand-primary">Link</span> si tu cuenta lo permite (pago rápido con email).
               </p>
               <p className="text-[10px] font-sans text-brand-muted text-center tracking-[0.1em] uppercase">
-                Pago seguro · Tarjeta · OXXO · Transferencia
+                Pago seguro · Tarjeta · Link
               </p>
             </div>
             </form>
