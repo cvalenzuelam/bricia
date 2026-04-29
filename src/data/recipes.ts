@@ -46,7 +46,8 @@ async function withTimeout<T>(
   ]);
 }
 
-const recipesCache = new MemoryCache<Recipe[]>(300_000);
+/** Solo para modo sin Supabase (JSON empaquetado); con Supabase no cacheamos en proceso — evita vistas viejas entre instancias serverless durante minutos */
+const bundledRecipesFallbackCache = new MemoryCache<Recipe[]>(60_000);
 
 export async function getRecipes(): Promise<Recipe[]> {
   if (shouldPersistRecipesLocally()) {
@@ -58,9 +59,6 @@ export async function getRecipes(): Promise<Recipe[]> {
     }
   }
 
-  const cached = recipesCache.get();
-  if (cached) return cached;
-
   if (isSupabaseConfigured()) {
     try {
       const remote = await withTimeout(
@@ -69,7 +67,6 @@ export async function getRecipes(): Promise<Recipe[]> {
         "reading recipes from Supabase"
       );
       if (Array.isArray(remote)) {
-        recipesCache.set(remote);
         return remote;
       }
     } catch (e) {
@@ -77,8 +74,11 @@ export async function getRecipes(): Promise<Recipe[]> {
     }
   }
 
+  const cached = bundledRecipesFallbackCache.get();
+  if (cached) return cached;
+
   const fallback = localRecipesData as Recipe[];
-  recipesCache.set(fallback);
+  bundledRecipesFallbackCache.set(fallback);
   return fallback;
 }
 
@@ -106,7 +106,6 @@ export async function saveRecipes(recipes: Recipe[]): Promise<void> {
     SAVE_TIMEOUT_MS,
     "saving recipes to Supabase"
   );
-  recipesCache.set(recipes);
 }
 
 export async function addRecipe(recipe: Recipe): Promise<void> {

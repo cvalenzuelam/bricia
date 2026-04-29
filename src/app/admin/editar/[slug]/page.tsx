@@ -11,10 +11,10 @@ import type { Recipe } from "@/data/recipes";
 
 const CATEGORIES = ["PRIMAVERA", "VERANO", "OTOÑO", "INVIERNO", "POSTRES"];
 const REQUEST_TIMEOUT_MS = 20000;
-/** Tiempo hasta que API + página pública reflejan el guardado (builds ISR/CDN lentos). */
-const FRONT_SYNC_TIMEOUT_MS = 120000;
-const FRONT_SYNC_INTERVAL_MS = 2500;
-const PUBLIC_HTML_FETCH_MS = 45000;
+/** Tiempo hasta que API + página pública reflejan el guardado. */
+const FRONT_SYNC_TIMEOUT_MS = 90000;
+const FRONT_SYNC_INTERVAL_MS = 500;
+const PUBLIC_HTML_FETCH_MS = 28000;
 
 async function fetchWithTimeout(
   input: RequestInfo | URL,

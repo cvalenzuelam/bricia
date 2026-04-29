@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getRecipes, addRecipe, generateSlug } from "@/data/recipes";
 
 // Permitimos que la CDN cachee 60s y sirva stale hasta 5 min mientras
@@ -67,6 +68,13 @@ export async function POST(request: NextRequest) {
     };
 
     await addRecipe(recipe);
+    try {
+      revalidatePath("/recetas");
+      revalidatePath(`/recetas/${recipe.slug}`);
+      revalidatePath("/");
+    } catch {
+      /* no-op */
+    }
     return NextResponse.json({ success: true, recipe }, { status: 201 });
   } catch {
     return NextResponse.json(

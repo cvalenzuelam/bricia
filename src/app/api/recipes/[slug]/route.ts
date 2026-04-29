@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { updateRecipe, deleteRecipe, getRecipeBySlug } from "@/data/recipes";
 
 const NO_STORE_HEADERS = {
@@ -29,6 +30,15 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     if (!updated) {
       return NextResponse.json({ error: "Receta no encontrada" }, { status: 404 });
     }
+
+    try {
+      revalidatePath(`/recetas/${slug}`);
+      revalidatePath("/recetas");
+      revalidatePath("/"); // destacados / hero pueden referenciar recetas
+    } catch {
+      /* no-op si ISR no aplicable */
+    }
+
     return NextResponse.json({ success: true, recipe: updated });
   } catch (error) {
     const message =
@@ -42,6 +52,13 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
   const deleted = await deleteRecipe(slug);
   if (!deleted) {
     return NextResponse.json({ error: "Receta no encontrada" }, { status: 404 });
+  }
+  try {
+    revalidatePath("/recetas");
+    revalidatePath("/");
+    revalidatePath(`/recetas/${slug}`, "layout");
+  } catch {
+    /* no-op */
   }
   return NextResponse.json({ success: true });
 }
