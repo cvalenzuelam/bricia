@@ -13,10 +13,17 @@ const NO_STORE_HEADERS = {
   "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
 };
 
-export async function GET() {
+/** `?sync=` / `?nocache=` evita CDN/HTML cache en los polls del CMS (listado debe coincidir al guardado). */
+export async function GET(request: NextRequest) {
+  const noCache =
+    request.nextUrl.searchParams.has("sync") ||
+    request.nextUrl.searchParams.has("nocache");
+
   try {
     const recipes = await getRecipes();
-    return NextResponse.json(recipes, { headers: PUBLIC_CACHE_HEADERS });
+    return NextResponse.json(recipes, {
+      headers: noCache ? NO_STORE_HEADERS : PUBLIC_CACHE_HEADERS,
+    });
   } catch {
     return NextResponse.json(
       { error: "Error al cargar recetas" },

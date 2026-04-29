@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, use } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -11,8 +12,8 @@ import type { Recipe } from "@/data/recipes";
 
 const CATEGORIES = ["PRIMAVERA", "VERANO", "OTOÑO", "INVIERNO", "POSTRES"];
 const REQUEST_TIMEOUT_MS = 20000;
-/** Tiempo hasta que API + página pública reflejan el guardado. */
-const FRONT_SYNC_TIMEOUT_MS = 90000;
+/** Tiempo hasta que panel + página pública reflejan el guardado. */
+const FRONT_SYNC_TIMEOUT_MS = 120000;
 const FRONT_SYNC_INTERVAL_MS = 500;
 const PUBLIC_HTML_FETCH_MS = 28000;
 
@@ -73,6 +74,48 @@ function stableImageFinger(url: string): string {
   return u.length > 120 ? u.slice(-120) : u;
 }
 
+/** Como el HTML público puede escapar `&`, `<`, `>` en los textos. */
+function escapeHtmlSpecialChars(text: string): string {
+  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function plainTextLikelyInHtml(html: string, plain: string): boolean {
+  const t = plain.trim();
+  if (!t) return true;
+  if (html.includes(t)) return true;
+  if (html.includes(escapeHtmlSpecialChars(t))) return true;
+
+  const oneLinePlain = plain.replace(/\s+/g, " ").trim();
+  if (oneLinePlain.length >= 8) {
+    const oneLineEscaped = escapeHtmlSpecialChars(oneLinePlain);
+    const condensedHtml = html.replace(/\s+/g, " ");
+    if (
+      condensedHtml.includes(oneLinePlain) ||
+      condensedHtml.includes(oneLineEscaped)
+    ) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function imageUrlLikelyInHtml(html: string, wantUrl: string): boolean {
+  const finger = stableImageFinger(wantUrl).trim();
+  if (!finger) return true;
+  if (html.includes(finger)) return true;
+  const trimmed = wantUrl.trim();
+  if (trimmed && html.includes(trimmed)) return true;
+  try {
+    const p = new URL(trimmed || "", "http://local.invalid").pathname;
+    const last = decodeURIComponent(p.split("/").filter(Boolean).pop() || "");
+    if (last.length >= 8 && html.includes(last)) return true;
+  } catch {
+    /* ignore */
+  }
+  return false;
+}
+
 async function waitUntilAdminListReflects(slug: string, want: Recipe, timeoutMs = FRONT_SYNC_TIMEOUT_MS) {
   const startedAt = Date.now();
 
@@ -100,22 +143,46 @@ async function waitUntilAdminListReflects(slug: string, want: Recipe, timeoutMs 
 
 function htmlLooksLikePublicRecipe(html: string, want: Recipe): boolean {
   const title = want.title.trim();
-  if (!title || !html.includes(title)) return false;
+  if (!title || !plainTextLikelyInHtml(html, title)) return false;
 
-  const img = stableImageFinger(want.image);
-  if (img && !html.includes(img)) return false;
+  if (!imageUrlLikelyInHtml(html, want.image)) return false;
 
   const sub = want.subtitle.trim();
-  if (sub && !html.includes(sub)) return false;
+  if (sub && !plainTextLikelyInHtml(html, sub)) return false;
 
   const histPlain = want.history.replace(/\s+/g, " ").trim();
   if (histPlain.length >= 8) {
-    const snap = histPlain.slice(0, Math.min(90, histPlain.length));
-    if (!html.includes(snap)) return false;
+    const snap = histPlain.slice(0, Math.min(120, histPlain.length));
+    if (!plainTextLikelyInHtml(html, snap)) return false;
   }
 
-  const firstStep = normalizedIngredientList(want.steps)[0];
-  if (firstStep && firstStep.length > 10 && !html.includes(firstStep)) return false;
+  const pt = want.prepTime.trim();
+  if (pt && !plainTextLikelyInHtml(html, pt)) return false;
+
+  const sv = want.servings.trim();
+  if (sv && !plainTextLikelyInHtml(html, sv)) return false;
+
+  const vu = (want.videoUrl ?? "").trim();
+  if (vu.length > 0) {
+    const escAmp = vu.replace(/&/g, "&amp;");
+    if (!html.includes(vu) && !html.includes(escAmp)) return false;
+  }
+
+  for (const g of want.gallery ?? []) {
+    if (!imageUrlLikelyInHtml(html, g)) return false;
+  }
+
+  const steps = normalizedIngredientList(want.steps);
+  const longStep = steps.find((s) => s.trim().length > 12);
+
+  const ings = normalizedIngredientList(want.ingredients);
+  const longIng = ings.find((s) => s.trim().length > 10);
+
+  if (longStep) {
+    if (!plainTextLikelyInHtml(html, longStep)) return false;
+  } else if (longIng && !plainTextLikelyInHtml(html, longIng)) {
+    return false;
+  }
 
   return true;
 }
@@ -181,6 +248,10 @@ export default function EditRecipePage({ params }: EditPageProps) {
   });
   const [ingredients, setIngredients] = useState([""]);
   const [steps, setSteps] = useState([""]);
+  /** Evita hydrate mismatch al usar createPortal/document.body */
+  const [mounted, setMounted] = useState(false);
+
+  const cmsBusy = saving || uploading || publishing;
 
   // Auth check & load recipe
   useEffect(() => {
@@ -216,14 +287,27 @@ export default function EditRecipePage({ params }: EditPageProps) {
   }, [slug, router]);
 
   useEffect(() => {
-    if (!saving && !uploading && !publishing) return;
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!cmsBusy) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [cmsBusy]);
+
+  useEffect(() => {
+    if (!cmsBusy) return;
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
       event.preventDefault();
       event.returnValue = "";
     };
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [saving, uploading, publishing]);
+  }, [cmsBusy]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.currentTarget;
@@ -262,16 +346,18 @@ export default function EditRecipePage({ params }: EditPageProps) {
     }
 
     const uploadedPaths: string[] = [];
+    setUploading(true);
     try {
       for (let i = 0; i < files.length; i++) {
-          const file = files[i];
-          const path = await uploadRecipeImage(file, slug);
-          if (path) uploadedPaths.push(path);
-          else alert("Error al subir imagen");
+        const file = files[i];
+        const path = await uploadRecipeImage(file, slug);
+        if (path) uploadedPaths.push(path);
+        else alert("Error al subir imagen");
       }
     } catch {
       alert("Error al subir imagen");
     } finally {
+      setUploading(false);
       input.value = "";
     }
     setGallery((prev) => [...prev, ...uploadedPaths]);
@@ -371,26 +457,41 @@ export default function EditRecipePage({ params }: EditPageProps) {
     return <AdminCmsLoading message="Cargando receta desde el CMS…" />;
   }
 
+  const blocker =
+    mounted && cmsBusy
+      ? createPortal(
+          <div
+            role="presentation"
+            aria-busy="true"
+            aria-live="polite"
+            className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/50 px-6 backdrop-blur-sm"
+          >
+            <div className="w-full max-w-md space-y-3 rounded-2xl border border-brand-primary/10 bg-white p-6 text-center shadow-xl">
+              <Loader2 size={28} className="mx-auto animate-spin text-brand-accent" />
+              <p className="font-sans text-sm font-bold uppercase tracking-[0.12em] text-brand-primary">
+                Sincronizando con la web
+              </p>
+              <p className="font-sans text-xs text-brand-muted">
+                {publishMessage || (uploading ? "Subiendo archivo…" : "Guardando receta…")}
+              </p>
+              <p className="font-sans text-[11px] leading-relaxed text-brand-muted/80">
+                No está disponible el menú del sitio: primero actualiza el panel (/admin), luego la página
+                (/recetas). El overlay se cierra solo cuando coincide.
+              </p>
+            </div>
+          </div>,
+          document.body
+        )
+      : null;
+
   return (
-    <div className="min-h-screen bg-brand-secondary pt-20">
-      {(saving || uploading || publishing) && (
-        <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm flex items-center justify-center px-6">
-          <div className="bg-white rounded-2xl border border-brand-primary/10 shadow-xl p-6 w-full max-w-md text-center space-y-3">
-            <Loader2 size={28} className="animate-spin text-brand-accent mx-auto" />
-            <p className="text-sm font-sans font-bold tracking-[0.12em] uppercase text-brand-primary">
-              Procesando cambios
-            </p>
-            <p className="text-xs font-sans text-brand-muted">
-              {publishMessage || (uploading ? "Subiendo imagen..." : "Guardando receta...")}
-            </p>
-            <p className="text-[11px] font-sans text-brand-muted/80">
-              Espera: primero /admin y luego /recetas. El loader hasta que coincidan.
-            </p>
-          </div>
-        </div>
-      )}
+    <>
+      {blocker}
+      <div
+        className={`min-h-screen bg-brand-secondary pt-20 ${cmsBusy ? "pointer-events-none select-none" : ""}`}
+      >
       <div className="max-w-3xl mx-auto px-6 py-12">
-        {(saving || uploading || publishing) ? (
+        {cmsBusy ? (
           <span className="inline-flex items-center gap-2 text-xs font-sans text-brand-muted mb-8 cursor-not-allowed opacity-50 select-none pointer-events-none">
             <ArrowLeft size={14} /> Volver al panel
           </span>
@@ -408,6 +509,10 @@ export default function EditRecipePage({ params }: EditPageProps) {
         </h1>
 
         <form onSubmit={handleSubmit} className="space-y-8">
+          <fieldset
+            disabled={cmsBusy}
+            className="m-0 min-w-0 space-y-8 border-0 p-0 disabled:opacity-95"
+          >
           {/* Image */}
           <div className="space-y-2">
             <label className="text-[10px] font-sans font-bold tracking-[0.25em] text-brand-muted uppercase block">
@@ -555,19 +660,25 @@ export default function EditRecipePage({ params }: EditPageProps) {
 
           {/* Submit */}
           <div className="pt-6 border-t border-brand-primary/5">
-            <button type="submit" disabled={saving || uploading}
+            <button type="submit" disabled={cmsBusy}
               className="w-full flex items-center justify-center gap-2 bg-brand-accent text-white py-4 rounded-xl text-sm font-sans font-bold tracking-[0.15em] uppercase hover:bg-brand-primary transition-colors disabled:opacity-60">
-              {saving ? (
-                <><Loader2 size={18} className="animate-spin" /> Guardando...</>
-              ) : uploading ? (
-                <><Loader2 size={18} className="animate-spin" /> Subiendo imagen...</>
+              {cmsBusy ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" />{" "}
+                  {publishMessage.trim() ||
+                    (uploading ? "Subiendo archivo…" : publishing ? "Sincronizando…" : "Guardando receta…")}
+                </>
               ) : (
-                <><Save size={18} /> Guardar Cambios</>
+                <>
+                  <Save size={18} /> Guardar Cambios
+                </>
               )}
             </button>
           </div>
+          </fieldset>
         </form>
       </div>
     </div>
+    </>
   );
 }
