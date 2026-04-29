@@ -14,6 +14,7 @@ import {
   FREE_SHIPPING_THRESHOLD,
   SHIPPING_OPTIONS,
   getShippingOptionById,
+  isCheckoutZeroShippingForced,
 } from "@/lib/shipping";
 import {
   MEXICAN_STATES,
@@ -67,11 +68,13 @@ export default function CheckoutPage() {
     }
   }, [hydrated, items.length, submitting, router]);
 
+  const zeroShippingTest = isCheckoutZeroShippingForced();
+
   useEffect(() => {
-    if (subtotal >= FREE_SHIPPING_THRESHOLD) {
+    if (subtotal >= FREE_SHIPPING_THRESHOLD || zeroShippingTest) {
       setShippingOptionId(DEFAULT_SHIPPING_OPTION_ID);
     }
-  }, [subtotal]);
+  }, [subtotal, zeroShippingTest]);
 
   const selectedShippingOption = getShippingOptionById(shippingOptionId);
   const shippingCost = calculateShipping(subtotal, selectedShippingOption.price);
@@ -497,13 +500,15 @@ export default function CheckoutPage() {
 
               <div className="space-y-2 pt-5 border-t border-brand-primary/5">
                 <Row label="Subtotal" value={formatPrice(subtotal)} />
-                {subtotal >= FREE_SHIPPING_THRESHOLD ? (
+                {subtotal >= FREE_SHIPPING_THRESHOLD || zeroShippingTest ? (
                   <div className="rounded-lg border border-brand-accent/25 bg-brand-accent/5 px-3 py-3">
                     <p className="text-[10px] font-sans font-bold tracking-[0.2em] uppercase text-brand-accent mb-1.5">
                       Envío gratis
                     </p>
                     <p className="text-[11px] font-sans text-brand-muted leading-relaxed">
-                      Tu compra supera {formatPrice(FREE_SHIPPING_THRESHOLD)} en productos; el envío va por nuestra cuenta. No debes elegir paquetería.
+                      {zeroShippingTest && subtotal < FREE_SHIPPING_THRESHOLD
+                        ? "Prueba temporal: el envío se cotiza en $0. Quita NEXT_PUBLIC_CHECKOUT_ZERO_SHIPPING del entorno para volver a cobrar envío."
+                        : `Tu compra supera ${formatPrice(FREE_SHIPPING_THRESHOLD)} en productos; el envío va por nuestra cuenta. No debes elegir paquetería.`}
                     </p>
                   </div>
                 ) : (
@@ -536,7 +541,7 @@ export default function CheckoutPage() {
                     {selectedShippingOption.name} · {selectedShippingOption.eta}
                   </p>
                 )}
-                {remainingForFreeShipping > 0 && (
+                {!zeroShippingTest && remainingForFreeShipping > 0 && (
                   <p className="text-[10px] font-sans text-brand-muted/80 italic font-serif pt-1 leading-relaxed">
                     Te faltan {formatPrice(remainingForFreeShipping)} para envío gratis.
                   </p>

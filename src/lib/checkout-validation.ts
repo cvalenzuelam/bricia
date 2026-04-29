@@ -139,8 +139,14 @@ export function sanitizeCheckoutField<K extends keyof CheckoutFormInput>(
 ): string {
   const v = typeof value === "string" ? value : "";
   switch (key) {
-    case "name":
-      return cleanText(v).replace(/\s+/g, " ").slice(0, CHECKOUT_LIMITS.name);
+    case "name": {
+      // No usar trim() completo: borra el espacio final mientras se escribe "Nombre Apellido".
+      return v
+        .replace(/[\u0000-\u001F\u007F]/g, "")
+        .replace(/^\s+/, "")
+        .replace(/\s+/g, " ")
+        .slice(0, CHECKOUT_LIMITS.name);
+    }
     case "email":
       return cleanText(v).slice(0, CHECKOUT_LIMITS.email);
     case "phone":
