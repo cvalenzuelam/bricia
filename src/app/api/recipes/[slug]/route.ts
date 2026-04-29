@@ -32,6 +32,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     }
 
     try {
+      revalidatePath("/admin");
       revalidatePath(`/recetas/${slug}`);
       revalidatePath("/recetas");
       revalidatePath("/"); // destacados / hero pueden referenciar recetas

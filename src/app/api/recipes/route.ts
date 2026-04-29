@@ -69,6 +69,7 @@ export async function POST(request: NextRequest) {
 
     await addRecipe(recipe);
     try {
+      revalidatePath("/admin");
       revalidatePath("/recetas");
       revalidatePath(`/recetas/${recipe.slug}`);
       revalidatePath("/");

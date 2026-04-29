@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { uploadCmsImageFile } from "@/lib/cms-upload-image";
-import { ArrowLeft, Upload, Plus, X, Loader2, Save, Video, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Upload, Plus, X, Loader2, Save, Video } from "lucide-react";
 import AdminCmsLoading from "@/components/admin/AdminCmsLoading";
 import type { Recipe } from "@/data/recipes";
 
@@ -49,33 +49,13 @@ function normalizedIngredientList(rows: string[]) {
   return rows.map((s) => s.trim()).filter((s) => s.length > 0);
 }
 
-/** Compara todos los campos relevantes tras PUT (histórico, pasos, galería, etc.). */
-function recipesMatch(remote: Recipe, want: Recipe): boolean {
-  if (!remote || !want || remote.slug !== want.slug) return false;
+/** Igual que el listado Mis Recetas: GET /api/recipes → filas slug, title, subtitle, category, image. */
+function adminListRecipeMatches(remote: Recipe | undefined, want: Recipe): boolean {
+  if (!remote || remote.slug !== want.slug) return false;
   if (remote.title.trim() !== want.title.trim()) return false;
   if (remote.subtitle.trim() !== want.subtitle.trim()) return false;
   if (remote.category !== want.category) return false;
   if (remote.image.trim() !== want.image.trim()) return false;
-  if (remote.history.trim() !== want.history.trim()) return false;
-  if (remote.prepTime.trim() !== want.prepTime.trim()) return false;
-  if (remote.servings.trim() !== want.servings.trim()) return false;
-  if (JSON.stringify(remote.gallery ?? []) !== JSON.stringify(want.gallery ?? [])) return false;
-  if (
-    JSON.stringify(normalizedIngredientList(remote.ingredients)) !==
-    JSON.stringify(normalizedIngredientList(want.ingredients))
-  )
-    return false;
-  if (
-    JSON.stringify(normalizedIngredientList(remote.steps)) !==
-    JSON.stringify(normalizedIngredientList(want.steps))
-  )
-    return false;
-  const rvVid = (remote.videoUrl ?? "").trim();
-  const wvVid = (want.videoUrl ?? "").trim();
-  if (rvVid !== wvVid) return false;
-  const rvThumb = (remote.videoThumbnail ?? "").trim();
-  const wvThumb = (want.videoThumbnail ?? "").trim();
-  if (rvThumb !== wvThumb) return false;
   return true;
 }
 
@@ -93,18 +73,21 @@ function stableImageFinger(url: string): string {
   return u.length > 120 ? u.slice(-120) : u;
 }
 
-async function waitUntilApiRecipeReflects(slug: string, want: Recipe, timeoutMs = FRONT_SYNC_TIMEOUT_MS) {
+async function waitUntilAdminListReflects(slug: string, want: Recipe, timeoutMs = FRONT_SYNC_TIMEOUT_MS) {
   const startedAt = Date.now();
 
   while (Date.now() - startedAt < timeoutMs) {
     try {
-      const res = await fetchWithTimeout(`/api/recipes/${slug}?sync=${Date.now()}`, {
+      const res = await fetchWithTimeout(`/api/recipes?sync=${Date.now()}`, {
         cache: "no-store",
-        headers: { "Cache-Control": "no-cache" },
+        headers: { "Cache-Control": "no-cache", Pragma: "no-cache" },
       });
       if (res.ok) {
-        const remote = (await res.json()) as Recipe;
-        if (recipesMatch(remote, want)) return true;
+        const list = (await res.json()) as Recipe[];
+        if (Array.isArray(list)) {
+          const row = list.find((r) => r.slug === slug);
+          if (adminListRecipeMatches(row, want)) return true;
+        }
       }
     } catch {
       /* keep polling */
@@ -180,8 +163,6 @@ export default function EditRecipePage({ params }: EditPageProps) {
   const [uploading, setUploading] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [publishMessage, setPublishMessage] = useState("");
-  /** Solo true cuando CMS + página pública ya reflejan el último guardado (no redirige al listado automáticamente). */
-  const [liveOnPublicSite, setLiveOnPublicSite] = useState(false);
   const [loading, setLoading] = useState(true);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [uploadedImagePath, setUploadedImagePath] = useState("");
@@ -298,7 +279,6 @@ export default function EditRecipePage({ params }: EditPageProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLiveOnPublicSite(false);
     setSaving(true);
     let mainImagePath = uploadedImagePath || form.image;
 
@@ -343,26 +323,25 @@ export default function EditRecipePage({ params }: EditPageProps) {
 
       if (res.ok) {
         setPublishing(true);
-        setPublishMessage("Verificando que el CMS tenga todos los cambios…");
-        const syncedInApi = await waitUntilApiRecipeReflects(slug, wantRecipe);
+        setPublishMessage("Actualizando el panel (/admin)…");
+        const inAdminList = await waitUntilAdminListReflects(slug, wantRecipe);
 
-        if (!syncedInApi) {
+        if (!inAdminList) {
           alert(
-            "Los datos pueden haberse guardado, pero no coincide aún lo que devuelve la API. Revisa dentro de unos minutos y recarga esta página si hace falta."
+            "El guardado pudo hacerse pero el listado del panel (/admin) aún no muestra estos datos. Espera un poco y recarga esta página si hace falta."
           );
           return;
         }
 
-        setPublishMessage("Verificando la receta visible en la web pública…");
+        setPublishMessage("Actualizando la página pública (/recetas)…");
         const reflectedInPublic = await waitUntilPublicRecipePageReflects(slug, wantRecipe);
         if (!reflectedInPublic) {
           alert(
-            "El CMS tiene los cambios pero la página pública aún tardó en actualizarse. Espera un poco y revisa «Ver receta» antes de republicar."
+            "El panel ya está al día pero la receta en la web pública aún tardó. Espera un poco y vuelve a abrir /recetas."
           );
           return;
         }
 
-        setLiveOnPublicSite(true);
         router.refresh();
       } else {
         const errData = await res.json().catch(() => null);
@@ -405,7 +384,7 @@ export default function EditRecipePage({ params }: EditPageProps) {
               {publishMessage || (uploading ? "Subiendo imagen..." : "Guardando receta...")}
             </p>
             <p className="text-[11px] font-sans text-brand-muted/80">
-              Permanece aquí: el loader solo desaparece cuando el cambio está listo para ver en la web.
+              Espera: primero /admin y luego /recetas. El loader hasta que coincidan.
             </p>
           </div>
         </div>
@@ -427,41 +406,6 @@ export default function EditRecipePage({ params }: EditPageProps) {
         <h1 className="text-3xl font-serif text-brand-primary mb-10">
           Editar: <span className="italic text-brand-accent">{form.title}</span>
         </h1>
-
-        {liveOnPublicSite && (
-          <div
-            role="status"
-            className="mb-10 rounded-2xl border border-emerald-200 bg-emerald-50/95 px-5 py-4 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 text-left"
-          >
-            <div className="flex gap-3">
-              <CheckCircle2 className="shrink-0 text-emerald-700 mt-0.5" size={22} aria-hidden />
-              <div className="space-y-1">
-                <p className="text-sm font-sans font-bold text-emerald-900 tracking-tight">
-                  Cambios publicados en el sitio
-                </p>
-                <p className="text-xs font-sans text-emerald-800/90 leading-relaxed">
-                  Esta receta ya se ve actualizada para quien visita la página pública. Sigue aquí cuando quieras o vuelve al panel.
-                </p>
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-2 sm:justify-end shrink-0">
-              <Link
-                href={`/recetas/${slug}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center rounded-lg border border-emerald-300 bg-white px-4 py-2 text-[11px] font-sans font-bold uppercase tracking-[0.12em] text-emerald-900 hover:bg-emerald-100 transition-colors"
-              >
-                Ver en la web
-              </Link>
-              <Link
-                href="/admin"
-                className="inline-flex items-center justify-center rounded-lg bg-emerald-800 px-4 py-2 text-[11px] font-sans font-bold uppercase tracking-[0.12em] text-white hover:bg-emerald-900 transition-colors"
-              >
-                Ir al panel de recetas
-              </Link>
-            </div>
-          </div>
-        )}
 
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Image */}
