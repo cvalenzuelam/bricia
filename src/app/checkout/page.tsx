@@ -220,7 +220,7 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="min-h-screen bg-brand-secondary pt-32 pb-20">
+    <div className="min-h-screen bg-brand-secondary pt-32 pb-12 md:pb-20">
       {submitting && (
         <div className="fixed inset-0 z-50 bg-brand-primary/85 backdrop-blur-sm flex flex-col items-center justify-center gap-6">
           <Loader2 size={40} className="animate-spin text-brand-secondary" />
@@ -425,16 +425,18 @@ export default function CheckoutPage() {
                 type="button"
                 disabled={submitting}
                 onClick={goToMercadoPagoCheckout}
-                className="relative flex min-h-[3.75rem] w-full items-center justify-center rounded-xl border-2 border-brand-primary/15 bg-white py-3 pl-4 pr-4 transition-colors hover:border-brand-accent/40 hover:bg-brand-secondary/30 disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-[3.5rem] sm:py-3.5 sm:pl-5 sm:pr-5"
+                className="grid w-full min-h-[4.5rem] grid-cols-[8.5rem_1fr] items-center gap-3 rounded-xl border-2 border-brand-primary/15 bg-white px-3 py-3.5 transition-colors hover:border-brand-accent/40 hover:bg-brand-secondary/30 disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-[4.5rem] sm:grid-cols-[10.5rem_1fr] sm:gap-4 sm:px-5 sm:py-3.5"
               >
-                <Image
-                  src="/payments/mercado-pago-on-light.svg"
-                  alt="Mercado Pago"
-                  width={200}
-                  height={81}
-                  className="pointer-events-none absolute left-3 top-1/2 z-10 h-8 w-auto max-w-[min(46vw,12rem)] -translate-y-1/2 object-contain object-left sm:left-4 sm:h-9 sm:max-w-[13rem]"
-                />
-                <span className="w-full px-[3.5rem] text-center font-serif text-[13px] font-medium leading-snug tracking-[0.04em] text-brand-primary sm:px-36 sm:text-[0.9375rem]">
+                <span className="relative h-12 w-full translate-x-1.5 justify-self-stretch sm:translate-x-2 sm:h-14">
+                  <Image
+                    src="/payments/mercado-pago-on-light.svg"
+                    alt="Mercado Pago"
+                    fill
+                    sizes="(max-width: 640px) 136px, 168px"
+                    className="object-contain object-left"
+                  />
+                </span>
+                <span className="min-w-0 text-center font-serif text-[12px] font-medium leading-snug tracking-[0.03em] text-brand-primary sm:text-[0.9375rem] sm:tracking-[0.04em]">
                   {submitting ? "Preparando pago…" : "Pagar de forma segura con Mercado Pago"}
                 </span>
               </button>
@@ -442,16 +444,18 @@ export default function CheckoutPage() {
                 type="button"
                 disabled={submitting}
                 onClick={goToStripeCheckout}
-                className="relative flex min-h-[3.75rem] w-full items-center justify-center rounded-xl border-2 border-brand-primary/15 bg-white py-3 pl-4 pr-4 transition-colors hover:border-brand-accent/40 hover:bg-brand-secondary/30 disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-[3.5rem] sm:py-3.5 sm:pl-5 sm:pr-5"
+                className="grid w-full min-h-[4.25rem] grid-cols-[8.5rem_1fr] items-center gap-3 rounded-xl border-2 border-brand-primary/15 bg-white px-3 py-3.5 transition-colors hover:border-brand-accent/40 hover:bg-brand-secondary/30 disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-[4rem] sm:grid-cols-[10.5rem_1fr] sm:gap-4 sm:px-5 sm:py-3.5"
               >
-                <Image
-                  src="/payments/link-by-stripe.svg"
-                  alt="Link by Stripe"
-                  width={112}
-                  height={36}
-                  className="pointer-events-none absolute left-3 top-1/2 z-10 h-8 w-auto max-w-[min(36vw,6.75rem)] -translate-y-1/2 object-contain object-left sm:left-4 sm:h-9 sm:max-w-[7.25rem]"
-                />
-                <span className="w-full px-[3.5rem] text-center font-serif text-[13px] font-medium leading-snug tracking-[0.04em] text-brand-primary sm:px-36 sm:text-[0.9375rem]">
+                <span className="relative h-11 w-full translate-x-3 justify-self-stretch sm:translate-x-4 sm:h-12">
+                  <Image
+                    src="/payments/link-by-stripe.svg"
+                    alt="Link by Stripe"
+                    fill
+                    sizes="(max-width: 640px) 136px, 168px"
+                    className="object-contain object-left"
+                  />
+                </span>
+                <span className="min-w-0 text-center font-serif text-[12px] font-medium leading-snug tracking-[0.03em] text-brand-primary sm:text-[0.9375rem] sm:tracking-[0.04em]">
                   {submitting ? "Preparando pago…" : "Tarjeta de Crédito, Débito o Link"}
                 </span>
               </button>

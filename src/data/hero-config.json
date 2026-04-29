@@ -12,6 +12,7 @@
   "logoColor": "#1D1D1B",
   "logoFont": "aboreto",
   "tagline": "Un blog que celebra la cocina emocional y los placeres cotidianos.",
+  "taglineMobile": "Cocina emocional y cotidiana: recetas cálidas para disfrutar en casa.",
   "taglineItalic": true,
   "description": "Aquí la cocina cotidiana cobra vida a través de recetas cálidas, deliciosas y pensadas para disfrutarse en casa. Celebramos esos momentos simples alrededor de la mesa y dejamos que los aromas, los sabores y los ingredientes despierten la curiosidad del paladar.",
   "ctaText": "Ven para descubrir recetas inspiradoras cada semana.",
@@ -25,14 +26,14 @@
   "featuredSection": {
     "imageSrc": "/images/tiradito.png",
     "imageAlt": "Nuevas recetas cada semana",
-    "panelBackgroundColor": "#8B7355",
+    "panelBackgroundColor": "#1D1D1B",
     "heading": "Nuevas Recetas\nCada Semana",
     "description": "Descubre recetas que tocan el corazón y despiertan tus sentidos. Cada semana traemos algo nuevo para que disfrutes en tu cocina. ¡Explora y déjate inspirar!",
     "ctaText": "Ver Recetas",
     "ctaHref": "/recetas",
     "titleFont": "serif",
     "buttonBackgroundColor": "#FFFFFF",
-    "buttonTextColor": "#8B7355"
+    "buttonTextColor": "#1D1D1B"
   },
   "instagramImages": [
     {

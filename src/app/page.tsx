@@ -33,6 +33,7 @@ export default async function Home() {
         src: string;
         caption?: string;
         isVideo?: boolean;
+        href?: string;
       }[])
     : undefined;
 
@@ -70,27 +71,28 @@ export default async function Home() {
       {/* 4. Tienda — carrusel */}
       <ProductSection initialProducts={products} />
 
-      {/* 5. Final Quote */}
-      <section className="py-16 md:py-32 px-6 bg-brand-secondary text-center">
-        <div className="max-w-3xl mx-auto space-y-8">
-          <div className="text-6xl text-brand-accent/20 font-serif">{`"`}</div>
-          <h3 className="text-3xl md:text-4xl font-serif italic text-brand-primary leading-relaxed">
-            Cocina con amor, mesas que conectan.
-          </h3>
-          <p className="text-sm font-sans text-brand-muted max-w-xl mx-auto leading-relaxed">
-            Cada receta en este blog tiene un origen, y cada mesa que montamos
-            tiene una intención. No solo cocinamos para comer, diseñamos espacios
-            para conectar los corazones.
-          </p>
-          <div className="w-16 h-px bg-brand-accent mx-auto opacity-30"></div>
-        </div>
-      </section>
-
-      {/* 6. Instagram */}
+      {/* 5–6. Cita + comunidad / Instagram (misma sección editorial) */}
       <InstagramFeed
         initialInstagramImages={instagramImages}
         fromServer
-      />
+      >
+        <div className="relative z-[1] px-6 pb-4 pt-16 text-center md:pb-6 md:pt-24">
+          <div className="mx-auto flex max-w-3xl flex-col items-center gap-8 md:gap-10">
+            <div className="flex gap-2" aria-hidden>
+              <span className="h-12 w-px bg-gradient-to-b from-brand-accent/15 via-brand-accent/55 to-brand-accent/15" />
+              <span className="h-12 w-px bg-gradient-to-b from-brand-accent/10 via-brand-accent/35 to-brand-accent/10" />
+            </div>
+            <h3 className="font-serif text-3xl italic leading-relaxed text-brand-primary md:text-4xl">
+              Cocina con amor, mesas que conectan.
+            </h3>
+            <p className="max-w-xl font-sans text-sm leading-relaxed text-brand-muted md:text-[0.9375rem]">
+              Cada receta en este blog tiene un origen, y cada mesa que montamos
+              tiene una intención. No solo cocinamos para comer, diseñamos espacios
+              para conectar los corazones.
+            </p>
+          </div>
+        </div>
+      </InstagramFeed>
     </main>
   );
 }

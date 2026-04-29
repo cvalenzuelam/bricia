@@ -26,6 +26,8 @@ const nextConfig: NextConfig = {
     formats: ["image/webp"],
     /** Reutiliza el mismo archivo optimizado en CDN más tiempo. */
     minimumCacheTTL: 60 * 60 * 24 * 14,
+    /** Valores permitidos para la prop `quality` de next/image (p. ej. Hero usa 92). */
+    qualities: [75, 92, 95],
     remotePatterns: [
       {
         protocol: "https",

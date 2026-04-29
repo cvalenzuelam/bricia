@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Menu, X, Search, ShoppingBag } from "lucide-react";
+import { Menu, X, Search, ShoppingBag, ArrowLeft } from "lucide-react";
+import { SiteSocialIconRow } from "@/components/SiteSocialLinks";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
 import { useCart } from "@/context/CartContext";
@@ -154,11 +155,11 @@ export default function Header() {
           </nav>
 
           <button
-            className={`md:hidden ${iconColor} z-[70] relative`}
+            className={`md:hidden ${isOpen ? "text-brand-primary" : iconColor} z-[70] relative`}
             onClick={() => setIsOpen(!isOpen)}
             aria-label={isOpen ? "Cerrar menú" : "Abrir menú"}
           >
-            {isOpen ? <X size={20} /> : <Menu size={20} />}
+            {isOpen ? <ArrowLeft size={22} strokeWidth={1.5} /> : <Menu size={20} />}
           </button>
 
           <div className="flex justify-center">
@@ -221,7 +222,8 @@ export default function Header() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[60] bg-brand-secondary/98 backdrop-blur-md flex flex-col pt-32 pb-16 px-10"
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-[60] flex min-h-[100dvh] flex-col bg-brand-secondary pt-32 pb-16 px-10 shadow-[0_0_0_1px_rgba(28,25,23,0.06)] overflow-y-auto overscroll-contain"
             >
               <div className="max-w-md mx-auto w-full h-full flex flex-col justify-between items-center text-center">
                 <nav className="flex flex-col space-y-10">
@@ -256,15 +258,15 @@ export default function Header() {
                   transition={{ delay: 0.5 }}
                   className="space-y-6 pt-10 text-center"
                 >
-                  <div className="flex flex-col items-center gap-4">
+                  <div className="flex flex-col items-center gap-6">
                     <div className="w-12 h-px bg-brand-accent/20"></div>
-                    <p className="text-[10px] font-sans font-bold tracking-[0.4em] text-brand-muted uppercase">
-                      Bricia Elizalde
+                    <p
+                      className="text-3xl xs:text-4xl tracking-[0.2em] text-brand-primary uppercase"
+                      style={{ fontFamily: "var(--font-aboreto)" }}
+                    >
+                      |BRICIA|
                     </p>
-                    <div className="flex gap-8">
-                      <a href="#" className="text-brand-muted hover:text-brand-accent transition-colors editorial-spacing !text-[9px]">Instagram</a>
-                      <a href="#" className="text-brand-muted hover:text-brand-accent transition-colors editorial-spacing !text-[9px]">TikTok</a>
-                    </div>
+                    <SiteSocialIconRow />
                   </div>
                 </motion.div>
               </div>

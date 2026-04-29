@@ -10,7 +10,7 @@ import {
   useCallback,
   type JSX,
 } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import type { Product } from "@/data/products";
 
 function formatPriceMx(price: number): string {
@@ -189,12 +189,21 @@ export default function ProductSection({
           </div>
         </div>
 
-        <div className="mt-14 text-center">
+        <div className="mt-14 flex justify-center pt-2">
           <Link
             href="/productos"
-            className="inline-block border border-white/20 px-10 py-4 text-[10px] font-sans font-bold tracking-[0.3em] uppercase hover:bg-[#C2A878] hover:text-brand-primary hover:border-[#C2A878] transition-all duration-500 rounded-full"
+            className="group relative inline-flex w-fit max-w-full items-center gap-3 overflow-hidden rounded-full border border-black/[0.06] bg-white py-3.5 pl-9 pr-3 text-[11px] font-sans font-bold tracking-[0.26em] uppercase text-brand-primary shadow-[0_8px_32px_-6px_rgba(0,0,0,0.28)] ring-1 ring-black/[0.07] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] before:absolute before:inset-0 before:rounded-full before:bg-gradient-to-br before:from-white/25 before:to-transparent before:opacity-0 before:transition-opacity before:duration-500 hover:-translate-y-1 hover:border-[#C2A878] hover:bg-[#C2A878] hover:text-brand-primary hover:shadow-[0_14px_44px_-12px_rgba(194,168,120,0.42)] hover:ring-[#C2A878]/55 hover:before:opacity-100 hover:before:from-white/35 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C2A878]/60 active:translate-y-0 md:gap-3.5 md:py-4 md:pl-10 md:pr-3.5"
           >
-            Ver toda la tienda
+            <span className="relative z-[1] pr-0.5">Ver toda la tienda</span>
+            <span
+              className="relative z-[1] flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-brand-primary/20 bg-brand-primary/[0.08] transition-all duration-500 group-hover:scale-105 group-hover:border-brand-primary/35 group-hover:bg-white/35 md:h-11 md:w-11"
+              aria-hidden
+            >
+              <ArrowRight
+                className="h-3.5 w-3.5 text-brand-primary transition-transform duration-500 group-hover:translate-x-0.5 md:h-4 md:w-4"
+                strokeWidth={1.75}
+              />
+            </span>
           </Link>
         </div>
       </div>

@@ -40,6 +40,37 @@ function sanitizeFileName(name: string) {
     .replace(/^-+|-+$/g, "");
 }
 
+/** Fijas en el admin; el collage en web se adapta a cuántas tengan `src`. */
+const INSTAGRAM_GRID_SLOTS = 10;
+
+type InstagramGridItem = {
+  src: string;
+  /** Vacío en CMS = enlace al perfil de Instagram por defecto. */
+  href: string;
+  caption: string;
+  isVideo: boolean;
+};
+
+function normalizeInstagramSlots(raw: unknown): InstagramGridItem[] {
+  const arr = Array.isArray(raw) ? raw : [];
+  const out: InstagramGridItem[] = [];
+  for (let i = 0; i < INSTAGRAM_GRID_SLOTS; i++) {
+    const x = arr[i];
+    if (x && typeof x === "object") {
+      const o = x as Record<string, unknown>;
+      out.push({
+        src: typeof o.src === "string" ? o.src : "",
+        href: typeof o.href === "string" ? o.href : "",
+        caption: typeof o.caption === "string" ? o.caption : "",
+        isVideo: o.isVideo === true,
+      });
+    } else {
+      out.push({ src: "", href: "", caption: "", isVideo: false });
+    }
+  }
+  return out;
+}
+
 interface CollageImage {
   src: string;
   alt: string;
@@ -68,7 +99,7 @@ interface FeaturedSectionConfig {
 const DEFAULT_FEATURED_SECTION: FeaturedSectionConfig = {
   imageSrc: "/images/tiradito.png",
   imageAlt: "Nuevas recetas cada semana",
-  panelBackgroundColor: "#8B7355",
+  panelBackgroundColor: "#1D1D1B",
   heading: "Nuevas Recetas\nCada Semana",
   description:
     "Descubre recetas que tocan el corazón y despiertan tus sentidos. Cada semana traemos algo nuevo para que disfrutes en tu cocina. ¡Explora y déjate inspirar!",
@@ -76,7 +107,7 @@ const DEFAULT_FEATURED_SECTION: FeaturedSectionConfig = {
   ctaHref: "/recetas",
   titleFont: "serif",
   buttonBackgroundColor: "#FFFFFF",
-  buttonTextColor: "#8B7355",
+  buttonTextColor: "#1D1D1B",
 };
 
 interface HeroConfig {
@@ -87,11 +118,13 @@ interface HeroConfig {
   logoColor: string;
   logoFont: string;
   tagline: string;
+  /** Texto breve solo en vista móvil del hero (el logo |BRICIA| no se muestra en móvil en el hero). */
+  taglineMobile: string;
   taglineItalic: boolean;
   description: string;
   ctaText: string;
   collageImages: CollageImage[];
-  instagramImages: { src: string }[];
+  instagramImages: InstagramGridItem[];
   products: ProductItem[];
   backgroundColor: string;
   featuredSection: FeaturedSectionConfig;
@@ -130,11 +163,12 @@ export default function AdminInicioPage() {
     logoColor: "#1D1D1B",
     logoFont: "aboreto",
     tagline: "",
+    taglineMobile: "",
     taglineItalic: true,
     description: "",
     ctaText: "",
     collageImages: [],
-    instagramImages: [],
+    instagramImages: normalizeInstagramSlots([]),
     products: [],
     backgroundColor: "#FAF9F4",
     featuredSection: { ...DEFAULT_FEATURED_SECTION },
@@ -155,6 +189,9 @@ export default function AdminInicioPage() {
         const data = await res.json();
         setConfig({
           ...data,
+          taglineMobile:
+            typeof data.taglineMobile === "string" ? data.taglineMobile : "",
+          instagramImages: normalizeInstagramSlots(data.instagramImages),
           featuredSection: {
             ...DEFAULT_FEATURED_SECTION,
             ...(data.featuredSection && typeof data.featuredSection === "object"
@@ -262,6 +299,12 @@ export default function AdminInicioPage() {
     return false;
   };
 
+  const setInstagramHref = (index: number, href: string) => {
+    const updated = normalizeInstagramSlots(config.instagramImages);
+    updated[index] = { ...updated[index], href };
+    setConfig({ ...config, instagramImages: updated });
+  };
+
   const uploadCmsImage = async (
     file: File,
     section: "collage" | "instagram" | "products" | "featured"
@@ -276,6 +319,7 @@ export default function AdminInicioPage() {
     try {
       const payload = {
         ...config,
+        instagramImages: normalizeInstagramSlots(config.instagramImages),
         featuredSection: {
           ...DEFAULT_FEATURED_SECTION,
           ...(config.featuredSection || {}),
@@ -402,8 +446,8 @@ export default function AdminInicioPage() {
       const path = await uploadCmsImage(file, "instagram");
 
       if (path) {
-        const updated = [...(config.instagramImages || [])];
-        updated[index] = { src: path };
+        const updated = normalizeInstagramSlots(config.instagramImages);
+        updated[index] = { ...updated[index], src: path };
         setConfig({ ...config, instagramImages: updated });
       } else {
         alert("Error al subir imagen");
@@ -533,6 +577,15 @@ export default function AdminInicioPage() {
                     className="accent-brand-accent" /> Cursiva
                 </label>
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[10px] font-sans font-bold tracking-[0.25em] text-brand-muted uppercase">Tagline móvil (breve)</label>
+              <p className="text-xs text-brand-muted leading-relaxed">
+                Solo pantallas pequeñas: una frase corta. En móvil el logo del hero no se muestra (ya está en el menú).
+              </p>
+              <input value={config.taglineMobile} onChange={(e) => setConfig({ ...config, taglineMobile: e.target.value })}
+                className="w-full px-4 py-3 border border-brand-primary/10 rounded-lg bg-brand-secondary text-brand-primary font-serif text-sm focus:outline-none focus:border-brand-accent transition-colors" />
             </div>
 
             <div className="space-y-2">
@@ -710,12 +763,12 @@ export default function AdminInicioPage() {
                   <div className="flex items-center gap-3">
                     <input
                       type="color"
-                      value={config.featuredSection?.panelBackgroundColor ?? "#8B7355"}
+                      value={config.featuredSection?.panelBackgroundColor ?? "#1D1D1B"}
                       onChange={(e) => updateFeatured("panelBackgroundColor", e.target.value)}
                       className="w-10 h-10 rounded-lg cursor-pointer border border-brand-primary/10"
                     />
                     <input
-                      value={config.featuredSection?.panelBackgroundColor ?? "#8B7355"}
+                      value={config.featuredSection?.panelBackgroundColor ?? "#1D1D1B"}
                       onChange={(e) => updateFeatured("panelBackgroundColor", e.target.value)}
                       className="flex-1 px-3 py-2 border border-brand-primary/10 rounded-lg bg-brand-secondary font-mono text-xs focus:outline-none focus:border-brand-accent"
                     />
@@ -813,12 +866,12 @@ export default function AdminInicioPage() {
                     <div className="flex items-center gap-2">
                       <input
                         type="color"
-                        value={config.featuredSection?.buttonTextColor ?? "#8B7355"}
+                        value={config.featuredSection?.buttonTextColor ?? "#1D1D1B"}
                         onChange={(e) => updateFeatured("buttonTextColor", e.target.value)}
                         className="w-9 h-9 rounded cursor-pointer border border-brand-primary/10"
                       />
                       <input
-                        value={config.featuredSection?.buttonTextColor ?? "#8B7355"}
+                        value={config.featuredSection?.buttonTextColor ?? "#1D1D1B"}
                         onChange={(e) => updateFeatured("buttonTextColor", e.target.value)}
                         className="flex-1 px-2 py-1.5 border border-brand-primary/10 rounded font-mono text-[11px]"
                       />
@@ -872,11 +925,17 @@ export default function AdminInicioPage() {
           <div className="bg-white rounded-2xl p-8 border border-brand-primary/5 space-y-6">
             <div className="border-b border-brand-primary/5 pb-4">
               <h2 className="text-lg font-serif text-brand-primary">📱 Fotos de Instagram</h2>
-              <p className="text-xs font-sans text-brand-muted mt-1">Sube hasta 10 fotos para simular tu feed en la barra inferior. Recomendamos imágenes cuadradas o verticales (4:5).</p>
+              <p className="text-xs font-sans text-brand-muted mt-1">
+                Hasta {INSTAGRAM_GRID_SLOTS} fotos en orden. Las vacías no se muestran en el sitio.
+                El collage en escritorio reparte el espacio sin dejar huecos según cuántas subas (recomendado: múltiplos de 4 después de la quinta, o llena las 10).
+                Cada foto puede enlazar a una URL externa o a una ruta interna que empiece por / (por ejemplo /recetas/tu-receta). Si dejas el campo vacío, el clic abre el Instagram de Bricia.
+              </p>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-              {(config.instagramImages || []).map((img, i) => (
+              {(config.instagramImages || [])
+                .slice(0, INSTAGRAM_GRID_SLOTS)
+                .map((img, i) => (
                 <div key={`ig-${i}`} className="space-y-2">
                   <div
                     className="relative aspect-square rounded-xl overflow-hidden border-2 border-dashed border-brand-primary/10 hover:border-brand-accent/40 transition-colors cursor-pointer bg-brand-secondary group"
@@ -898,6 +957,18 @@ export default function AdminInicioPage() {
                     type="file" accept="image/*"
                     onChange={(e) => handleIgUpload(i, e)}
                     className="hidden"
+                  />
+                  <label className="text-[9px] font-sans font-bold tracking-[0.12em] uppercase text-brand-muted block pt-1">
+                    Enlace al hacer clic
+                  </label>
+                  <input
+                    type="text"
+                    inputMode="url"
+                    autoComplete="off"
+                    value={img.href}
+                    onChange={(e) => setInstagramHref(i, e.target.value)}
+                    placeholder="/recetas/… o https://…"
+                    className="w-full px-2 py-1.5 border border-brand-primary/10 rounded-lg bg-brand-secondary text-brand-primary text-[11px] font-sans placeholder:text-brand-muted/50 focus:outline-none focus:border-brand-accent"
                   />
                 </div>
               ))}
