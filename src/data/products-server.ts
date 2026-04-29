@@ -72,6 +72,20 @@ async function fetchProductsFromSupabase(): Promise<Product[]> {
   return data.map((row) => productRowToProduct(row as Record<string, unknown>));
 }
 
+/** PostgREST/Postgres cuando la columna `gallery` aún no existe tras un deploy sin migración. */
+function isMissingGalleryColumnError(err: { message?: string } | null): boolean {
+  if (!err?.message) return false;
+  const m = err.message.toLowerCase();
+  if (!m.includes("gallery")) return false;
+  return (
+    m.includes("does not exist") ||
+    m.includes("schema cache") ||
+    m.includes("could not find") ||
+    m.includes("unknown column") ||
+    m.includes("no column")
+  );
+}
+
 async function syncProductsToSupabase(products: Product[]): Promise<void> {
   const sb = createSupabaseAdmin();
   const wantedIds = new Set(products.map((p) => p.id));
@@ -104,9 +118,31 @@ async function syncProductsToSupabase(products: Product[]): Promise<void> {
     updated_at: iso,
   }));
 
-  const { error: upsertErr } = await sb
-    .from("products")
-    .upsert(rows, { onConflict: "id" });
+  let upsertErr = (
+    await sb.from("products").upsert(rows, { onConflict: "id" })
+  ).error;
+
+  if (upsertErr && isMissingGalleryColumnError(upsertErr)) {
+    console.warn(
+      "[products-server] upsert con `gallery` falló: columna ausente en DB. " +
+        "Aplica supabase/migrations/20260430120000_products_gallery.sql. " +
+        "Reintentando sin galería para no bloquear el catálogo."
+    );
+    const rowsLegacy = products.map((p) => ({
+      id: p.id,
+      name: p.name,
+      subtitle: p.subtitle,
+      price: p.price,
+      description: p.description,
+      image: p.image,
+      category: p.category,
+      stock: p.stock,
+      dimensions: p.dimensions ?? null,
+      material: p.material ?? null,
+      updated_at: iso,
+    }));
+    upsertErr = (await sb.from("products").upsert(rowsLegacy, { onConflict: "id" })).error;
+  }
 
   if (upsertErr) throw upsertErr;
 }
