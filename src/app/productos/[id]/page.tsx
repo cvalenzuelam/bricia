@@ -10,17 +10,6 @@ import ProductDetailAddToCart from "@/components/productos/ProductDetailAddToCar
 import ProductImageGallery from "@/components/productos/ProductImageGallery";
 import { productAllImageUrls } from "@/lib/product-gallery";
 
-const CATEGORY_TINT: Record<string, string> = {
-  COCINA: "#A89F91",
-  MESA: "#C2A878",
-  DESPENSA: "#B5A18C",
-  DECORACIÓN: "#9A9078",
-};
-
-function categoryColor(category: string): string {
-  return CATEGORY_TINT[category.trim().toUpperCase()] ?? "#A89F91";
-}
-
 export async function generateStaticParams() {
   const products = await getProducts();
   return products.map((p) => ({ id: p.id }));
@@ -146,7 +135,6 @@ export default async function ProductoDetallePage({ params }: PageProps) {
       : products.filter((p) => p.id !== product.id).slice(0, 3);
   const relatedHeadingSameCategory = sameCategory.length > 0;
 
-  const tint = categoryColor(product.category);
   const dim = product.dimensions?.trim();
   const mat = product.material?.trim();
 
@@ -159,20 +147,13 @@ export default async function ProductoDetallePage({ params }: PageProps) {
         }}
       />
 
-      <nav className="max-w-7xl mx-auto px-6 py-8 md:py-12 flex justify-between items-center border-b border-brand-primary/5 mb-10 md:mb-16">
+      <nav className="max-w-7xl mx-auto px-6 py-8 md:py-12 border-b border-brand-primary/5 mb-10 md:mb-16">
         <Link
           href="/productos"
-          className="editorial-spacing flex items-center gap-2 hover:text-brand-accent transition-colors text-brand-primary/80"
+          className="editorial-spacing inline-flex items-center gap-2 hover:text-brand-accent transition-colors text-brand-primary/80"
         >
-          <ArrowLeft size={16} strokeWidth={1.5} /> Volver a la alacena
+          <ArrowLeft size={16} strokeWidth={1.5} /> Volver a la tienda
         </Link>
-        <span
-          className="editorial-spacing text-[10px] font-sans font-bold tracking-[0.28em]"
-          style={{ color: tint }}
-        >
-          {product.category}
-        </span>
-        <div className="w-20 hidden sm:block" aria-hidden />
       </nav>
 
       <div className="max-w-7xl mx-auto px-6">
@@ -193,7 +174,11 @@ export default async function ProductoDetallePage({ params }: PageProps) {
           {/* Contenido */}
           <div className="lg:col-span-5 space-y-8">
             <header className="space-y-6 text-center lg:text-left">
-              <p className="editorial-spacing text-brand-accent">La alacena</p>
+              <div className="flex justify-center lg:justify-start">
+                <span className="text-[9px] font-sans font-bold tracking-[0.25em] uppercase bg-white/90 backdrop-blur-sm text-brand-primary/60 px-3 py-1.5 rounded-full">
+                  {product.category}
+                </span>
+              </div>
               <h1 className="text-5xl md:text-6xl lg:text-[3.5rem] font-serif text-brand-primary tracking-tight leading-[1.05]">
                 {product.name}
               </h1>
