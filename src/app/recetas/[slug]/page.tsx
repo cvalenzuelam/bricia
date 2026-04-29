@@ -1,6 +1,7 @@
 import { getRecipes, getRecipeBySlug } from "@/data/recipes";
 import { notFound } from "next/navigation";
 import Image from "next/image";
+import { shouldUnoptimizeRemoteImage } from "@/lib/next-image-remote";
 import Link from "next/link";
 import { ArrowLeft, Clock, Users } from "lucide-react";
 interface PageProps {
@@ -48,7 +49,14 @@ export default async function RecipePage({ params }: PageProps) {
       {/* Main Image */}
       <div className="max-w-5xl mx-auto px-6 mb-24">
         <div className="relative aspect-[4/5] md:aspect-[16/9] rounded-2xl overflow-hidden shadow-2xl">
-          <Image src={recipe.image} alt={recipe.title} fill className="object-cover" />
+          <Image
+            src={recipe.image}
+            alt={recipe.title}
+            fill
+            sizes="(max-width: 1024px) 100vw, 80vw"
+            unoptimized={shouldUnoptimizeRemoteImage(recipe.image)}
+            className="object-cover"
+          />
         </div>
       </div>
 
@@ -90,6 +98,7 @@ export default async function RecipePage({ params }: PageProps) {
                     src={img} 
                     alt={`${recipe.title} galería ${i + 1}`} 
                     fill 
+                    unoptimized={shouldUnoptimizeRemoteImage(img)}
                     className="object-cover group-hover:scale-105 transition-transform duration-700" 
                   />
                 </div>

@@ -35,10 +35,10 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "*.public.blob.vercel-storage.com",
       },
+      /** Supabase Storage (paths bajo `/storage/`; omitimos pathname estricto para no romper coincide con `_next/image`) */
       {
         protocol: "https",
         hostname: "*.supabase.co",
-        pathname: "/storage/v1/object/public/**",
       },
     ],
   },

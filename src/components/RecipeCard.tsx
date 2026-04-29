@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { shouldUnoptimizeRemoteImage } from "@/lib/next-image-remote";
 import { motion } from "framer-motion";
 
 interface RecipeCardProps {
@@ -33,6 +34,7 @@ export default function RecipeCard({
             alt={title}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+            unoptimized={shouldUnoptimizeRemoteImage(image)}
             className="object-cover transition-transform duration-[1.2s] ease-out group-hover:scale-105"
           />
         </div>
