@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getProducts, addProduct, generateProductId } from "@/data/products-server";
 import type { Product } from "@/data/products";
+import { normalizeProductGallery } from "@/lib/product-gallery";
 
 const NO_STORE = {
   "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
@@ -26,7 +27,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, subtitle, price, description, image, category, stock, dimensions, material } =
+    const { name, subtitle, price, description, image, category, stock, dimensions, material, gallery } =
       body;
 
     if (!name || !category) {
@@ -38,6 +39,7 @@ export async function POST(request: NextRequest) {
 
     const dim = typeof dimensions === "string" ? dimensions.trim() : "";
     const mat = typeof material === "string" ? material.trim() : "";
+    const galleryNorm = normalizeProductGallery(gallery);
 
     const id = generateProductId(name);
     const product: Product = {
@@ -51,6 +53,7 @@ export async function POST(request: NextRequest) {
       stock: Number(stock) ?? 0,
       ...(dim ? { dimensions: dim } : {}),
       ...(mat ? { material: mat } : {}),
+      ...(galleryNorm.length > 0 ? { gallery: galleryNorm } : {}),
     };
 
     await addProduct(product);

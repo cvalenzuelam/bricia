@@ -7,6 +7,8 @@ import { getProducts } from "@/data/products-server";
 import { formatPrice } from "@/data/products";
 import type { Product } from "@/data/products";
 import ProductDetailAddToCart from "@/components/productos/ProductDetailAddToCart";
+import ProductImageGallery from "@/components/productos/ProductImageGallery";
+import { productAllImageUrls } from "@/lib/product-gallery";
 
 const CATEGORY_TINT: Record<string, string> = {
   COCINA: "#A89F91",
@@ -42,11 +44,24 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     product.description?.trim() ||
     `${product.subtitle}. ${product.category} en la tienda de Bricia.`;
   const origin = siteOrigin();
-  const ogImage = product.image.startsWith("http")
-    ? product.image
-    : origin
-      ? `${origin}${product.image.startsWith("/") ? product.image : `/${product.image}`}`
-      : product.image;
+  const allImages = productAllImageUrls(product);
+  const ogImages = allImages.slice(0, 4).map((src) => ({
+    url: src.startsWith("http")
+      ? src
+      : origin
+        ? `${origin}${src.startsWith("/") ? src : `/${src}`}`
+        : src,
+    alt: product.name,
+  }));
+  const fallbackSrc = (product.image?.trim() || "/images/mesa_setting.png");
+  const fallbackOg = {
+    url: fallbackSrc.startsWith("http")
+      ? fallbackSrc
+      : origin
+        ? `${origin}${fallbackSrc.startsWith("/") ? fallbackSrc : `/${fallbackSrc}`}`
+        : fallbackSrc,
+    alt: product.name,
+  };
 
   return {
     title,
@@ -54,7 +69,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     openGraph: {
       title,
       description: description.slice(0, 200),
-      images: [{ url: ogImage, alt: product.name }],
+      images: ogImages.length > 0 ? ogImages : [fallbackOg],
     },
   };
 }
@@ -67,14 +82,21 @@ function siteOrigin(): string {
   return "";
 }
 
+function toAbsoluteImageUrl(src: string, origin: string): string {
+  if (src.startsWith("http")) return src;
+  return origin ? `${origin}${src.startsWith("/") ? src : `/${src}`}` : src;
+}
+
 function productJsonLd(product: Product, origin: string) {
   const path = `/productos/${product.id}`;
   const pageUrl = origin ? `${origin}${path}` : path;
-  const imageAbsolute = product.image.startsWith("http")
-    ? product.image
-    : origin
-      ? `${origin}${product.image.startsWith("/") ? product.image : `/${product.image}`}`
-      : product.image;
+  const imageUrls = productAllImageUrls(product).map((u) => toAbsoluteImageUrl(u, origin));
+  const schemaImage =
+    imageUrls.length === 0
+      ? toAbsoluteImageUrl(product.image?.trim() || "/images/mesa_setting.png", origin)
+      : imageUrls.length === 1
+        ? imageUrls[0]
+        : imageUrls;
 
   const additional: { "@type": "PropertyValue"; name: string; value: string }[] = [];
   const dim = product.dimensions?.trim();
@@ -87,7 +109,7 @@ function productJsonLd(product: Product, origin: string) {
     "@type": "Product",
     name: product.name,
     description: product.description,
-    image: imageAbsolute,
+    image: schemaImage,
     sku: product.id,
     ...(additional.length > 0 ? { additionalProperty: additional } : {}),
     offers: {
@@ -158,16 +180,10 @@ export default async function ProductoDetallePage({ params }: PageProps) {
           {/* Imagen */}
           <div className="lg:col-span-7">
             <div className="lg:sticky lg:top-32 space-y-6">
-              <div className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-white border border-brand-primary/5 shadow-sm">
-                <Image
-                  src={product.image}
-                  alt={product.name}
-                  fill
-                  sizes="(max-width: 1024px) 100vw, 58vw"
-                  className="object-cover"
-                  priority
-                />
-              </div>
+              <ProductImageGallery
+                images={productAllImageUrls(product)}
+                productName={product.name}
+              />
               <p className="text-xs font-sans text-brand-muted/80 text-center lg:text-left leading-relaxed max-w-xl">
                 Fotografía referencial. Piezas artesanales: vetas, tonos y detalles pueden variar ligeramente.
               </p>

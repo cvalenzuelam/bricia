@@ -5,6 +5,8 @@ export interface Product {
   price: number; // MXN
   description: string;
   image: string;
+  /** Hasta 3 URLs de fotos adicionales (la principal es siempre `image`). */
+  gallery?: string[];
   category: string;
   stock: number;
   /** Medidas habituales, p. ej. "42 × 28 × 2 cm" o diámetro y alto */

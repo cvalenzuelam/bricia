@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { uploadCmsImageFile } from "@/lib/cms-upload-image";
-import { ArrowLeft, Save, Upload, Loader2 } from "lucide-react";
+import { PRODUCT_GALLERY_MAX } from "@/lib/product-gallery";
+import { ArrowLeft, Save, Upload, Loader2, X } from "lucide-react";
 import AdminCmsLoading from "@/components/admin/AdminCmsLoading";
 
 const DEFAULT_CATEGORIES = ["COCINA", "MESA", "DESPENSA"] as const;
@@ -67,6 +68,7 @@ function generateId(name: string): string {
 export default function NuevoProductoPage() {
   const router = useRouter();
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -86,6 +88,12 @@ export default function NuevoProductoPage() {
     image: "/images/mesa_setting.png",
   });
 
+  const [gallerySlots, setGallerySlots] = useState<
+    { file: File | null; preview: string | null }[]
+  >(() =>
+    Array.from({ length: PRODUCT_GALLERY_MAX }, () => ({ file: null, preview: null }))
+  );
+
   useEffect(() => {
     const session = sessionStorage.getItem("bricia_admin");
     if (session !== "true") {
@@ -94,6 +102,29 @@ export default function NuevoProductoPage() {
     }
     setAuthReady(true);
   }, [router]);
+
+  const handleGalleryChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setGallerySlots((prev) => {
+      const next = [...prev];
+      const old = next[index]?.preview;
+      if (old) URL.revokeObjectURL(old);
+      next[index] = { file, preview: URL.createObjectURL(file) };
+      return next;
+    });
+    e.target.value = "";
+  };
+
+  const clearGallerySlot = (index: number) => {
+    setGallerySlots((prev) => {
+      const next = [...prev];
+      const old = next[index]?.preview;
+      if (old) URL.revokeObjectURL(old);
+      next[index] = { file: null, preview: null };
+      return next;
+    });
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -119,9 +150,19 @@ export default function NuevoProductoPage() {
     if (!form.category.trim()) { alert("La etiqueta o categoría es obligatoria."); return; }
 
     setPublishing(true);
-    setPublishMessage("Subiendo imagen…");
+    setPublishMessage("Subiendo imagen principal…");
 
     const imagePath = await uploadImage();
+
+    setPublishMessage("Subiendo fotos adicionales…");
+    const galleryUrls: string[] = [];
+    for (let i = 0; i < PRODUCT_GALLERY_MAX; i++) {
+      const slot = gallerySlots[i];
+      if (slot?.file) {
+        const u = await uploadProductImage(slot.file);
+        if (u) galleryUrls.push(u);
+      }
+    }
 
     setPublishMessage("Guardando producto…");
 
@@ -135,6 +176,7 @@ export default function NuevoProductoPage() {
       category: form.category.trim().toUpperCase(),
       stock: Number(form.stock) || 0,
       image: imagePath,
+      ...(galleryUrls.length > 0 ? { gallery: galleryUrls } : {}),
     };
 
     try {
@@ -222,6 +264,61 @@ export default function NuevoProductoPage() {
               className="hidden"
               onChange={handleImageChange}
             />
+          </div>
+
+          {/* Galería (hasta 3 fotos extra) */}
+          <div className="space-y-3">
+            <label className="text-[10px] font-sans font-bold tracking-[0.2em] uppercase text-brand-muted block">
+              Fotos adicionales en la ficha (opcional, hasta {PRODUCT_GALLERY_MAX})
+            </label>
+            <p className="text-[10px] font-sans text-brand-muted leading-relaxed">
+              Se muestran debajo de la foto principal en la tienda. Formatos: JPG, PNG, WebP.
+            </p>
+            <div className="grid grid-cols-3 gap-3">
+              {gallerySlots.map((slot, i) => {
+                const thumb = slot.preview;
+                return (
+                  <div key={i} className="relative space-y-2">
+                    <div
+                      className="relative aspect-square rounded-xl overflow-hidden bg-white border-2 border-dashed border-brand-primary/10 cursor-pointer hover:border-brand-accent/40 transition-colors group"
+                      onClick={() => galleryInputRefs.current[i]?.click()}
+                    >
+                      {thumb ? (
+                        <Image src={thumb} alt="" fill className="object-cover" />
+                      ) : (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 p-2">
+                          <Upload size={16} className="text-brand-muted/50" />
+                          <span className="text-[9px] font-sans text-brand-muted text-center uppercase tracking-wider">
+                            Foto {i + 1}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    {thumb ? (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          clearGallerySlot(i);
+                        }}
+                        className="flex w-full items-center justify-center gap-1 rounded-lg border border-brand-primary/10 py-1.5 text-[9px] font-sans font-bold uppercase tracking-wider text-brand-muted hover:border-brand-accent hover:text-brand-accent transition-colors"
+                      >
+                        <X size={12} /> Quitar
+                      </button>
+                    ) : null}
+                    <input
+                      ref={(el) => {
+                        galleryInputRefs.current[i] = el;
+                      }}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => handleGalleryChange(i, e)}
+                    />
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
           {/* Name */}

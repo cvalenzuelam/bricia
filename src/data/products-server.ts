@@ -8,6 +8,7 @@ import {
   createSupabaseAdmin,
   isSupabaseConfigured,
 } from "@/lib/supabase/admin";
+import { normalizeProductGallery } from "@/lib/product-gallery";
 
 const LOCAL_PATH = path.join(process.cwd(), "src/data/products.json");
 const FETCH_TIMEOUT_MS = 10000;
@@ -50,6 +51,10 @@ function productRowToProduct(row: Record<string, unknown>): Product {
   if (row.material != null && String(row.material).length > 0) {
     p.material = String(row.material);
   }
+  const gallery = normalizeProductGallery(row.gallery);
+  if (gallery.length > 0) {
+    p.gallery = gallery;
+  }
   return p;
 }
 
@@ -91,6 +96,7 @@ async function syncProductsToSupabase(products: Product[]): Promise<void> {
     price: p.price,
     description: p.description,
     image: p.image,
+    gallery: normalizeProductGallery(p.gallery),
     category: p.category,
     stock: p.stock,
     dimensions: p.dimensions ?? null,

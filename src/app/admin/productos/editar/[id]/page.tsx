@@ -5,9 +5,20 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { uploadCmsImageFile } from "@/lib/cms-upload-image";
-import { ArrowLeft, Save, Upload, Loader2 } from "lucide-react";
+import { PRODUCT_GALLERY_MAX } from "@/lib/product-gallery";
+import { ArrowLeft, Save, Upload, Loader2, X } from "lucide-react";
 import type { Product } from "@/data/products";
 import AdminCmsLoading from "@/components/admin/AdminCmsLoading";
+
+type GallerySlot = { url: string; file: File | null; preview: string | null };
+
+function emptyGallerySlotsFromProduct(gallery?: string[]): GallerySlot[] {
+  return Array.from({ length: PRODUCT_GALLERY_MAX }, (_, i) => ({
+    url: gallery?.[i] ?? "",
+    file: null,
+    preview: null,
+  }));
+}
 
 const DEFAULT_CATEGORIES = ["COCINA", "MESA", "DESPENSA"] as const;
 const REQUEST_TIMEOUT_MS = 20000;
@@ -63,6 +74,7 @@ export default function EditarProductoPage({
   const router = useRouter();
 
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -82,6 +94,10 @@ export default function EditarProductoPage({
     stock: "0",
     image: "/images/mesa_setting.png",
   });
+
+  const [gallerySlots, setGallerySlots] = useState<GallerySlot[]>(() =>
+    emptyGallerySlotsFromProduct(undefined)
+  );
 
   useEffect(() => {
     const session = sessionStorage.getItem("bricia_admin");
@@ -108,6 +124,7 @@ export default function EditarProductoPage({
         stock: String(product.stock),
         image: product.image,
       });
+      setGallerySlots(emptyGallerySlotsFromProduct(product.gallery));
     } catch {
       setNotFound(true);
     } finally {
@@ -120,6 +137,29 @@ export default function EditarProductoPage({
     if (!file) return;
     setImageFile(file);
     setImagePreview(URL.createObjectURL(file));
+  };
+
+  const handleGalleryChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setGallerySlots((prev) => {
+      const next = [...prev];
+      const old = next[index]?.preview;
+      if (old) URL.revokeObjectURL(old);
+      next[index] = { url: "", file, preview: URL.createObjectURL(file) };
+      return next;
+    });
+    e.target.value = "";
+  };
+
+  const clearGallerySlot = (index: number) => {
+    setGallerySlots((prev) => {
+      const next = [...prev];
+      const old = next[index]?.preview;
+      if (old) URL.revokeObjectURL(old);
+      next[index] = { url: "", file: null, preview: null };
+      return next;
+    });
   };
 
   const uploadImage = async (): Promise<string> => {
@@ -139,9 +179,21 @@ export default function EditarProductoPage({
     if (!form.category.trim()) { alert("La etiqueta o categoría es obligatoria."); return; }
 
     setPublishing(true);
-    setPublishMessage("Subiendo imagen…");
+    setPublishMessage("Subiendo imagen principal…");
 
     const imagePath = await uploadImage();
+
+    setPublishMessage("Subiendo fotos adicionales…");
+    const galleryUrls: string[] = [];
+    for (let i = 0; i < PRODUCT_GALLERY_MAX; i++) {
+      const slot = gallerySlots[i];
+      if (slot?.file) {
+        const u = await uploadProductImage(slot.file);
+        if (u) galleryUrls.push(u);
+      } else if (slot?.url?.trim()) {
+        galleryUrls.push(slot.url.trim());
+      }
+    }
 
     setPublishMessage("Guardando cambios…");
 
@@ -155,6 +207,7 @@ export default function EditarProductoPage({
       category: form.category.trim().toUpperCase(),
       stock: Number(form.stock) || 0,
       image: imagePath,
+      gallery: galleryUrls,
     };
 
     try {
@@ -252,6 +305,60 @@ export default function EditarProductoPage({
               className="hidden"
               onChange={handleImageChange}
             />
+          </div>
+
+          <div className="space-y-3">
+            <label className="text-[10px] font-sans font-bold tracking-[0.2em] uppercase text-brand-muted block">
+              Fotos adicionales en la ficha (opcional, hasta {PRODUCT_GALLERY_MAX})
+            </label>
+            <p className="text-[10px] font-sans text-brand-muted leading-relaxed">
+              Debajo de la foto principal en la tienda. Sustituir una foto: haz clic en el recuadro.
+            </p>
+            <div className="grid grid-cols-3 gap-3">
+              {gallerySlots.map((slot, i) => {
+                const thumb = slot.preview || slot.url || null;
+                return (
+                  <div key={i} className="relative space-y-2">
+                    <div
+                      className="relative aspect-square rounded-xl overflow-hidden bg-white border-2 border-dashed border-brand-primary/10 cursor-pointer hover:border-brand-accent/40 transition-colors group"
+                      onClick={() => galleryInputRefs.current[i]?.click()}
+                    >
+                      {thumb ? (
+                        <Image src={thumb} alt="" fill className="object-cover" sizes="120px" />
+                      ) : (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 p-2">
+                          <Upload size={16} className="text-brand-muted/50" />
+                          <span className="text-[9px] font-sans text-brand-muted text-center uppercase tracking-wider">
+                            Foto {i + 1}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    {thumb ? (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          clearGallerySlot(i);
+                        }}
+                        className="flex w-full items-center justify-center gap-1 rounded-lg border border-brand-primary/10 py-1.5 text-[9px] font-sans font-bold uppercase tracking-wider text-brand-muted hover:border-brand-accent hover:text-brand-accent transition-colors"
+                      >
+                        <X size={12} /> Quitar
+                      </button>
+                    ) : null}
+                    <input
+                      ref={(el) => {
+                        galleryInputRefs.current[i] = el;
+                      }}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => handleGalleryChange(i, e)}
+                    />
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
           {/* Name */}

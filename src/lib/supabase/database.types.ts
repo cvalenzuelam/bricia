@@ -17,6 +17,7 @@ export interface Database {
           price: number;
           description: string;
           image: string;
+          gallery: string[];
           category: string;
           stock: number;
           dimensions: string | null;
@@ -30,6 +31,7 @@ export interface Database {
           price: number;
           description: string;
           image: string;
+          gallery?: string[];
           category: string;
           stock: number;
           dimensions?: string | null;
