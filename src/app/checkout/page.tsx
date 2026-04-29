@@ -57,6 +57,8 @@ export default function CheckoutPage() {
   const [hydrated, setHydrated] = useState(false);
   const [shippingOptionId, setShippingOptionId] = useState(DEFAULT_SHIPPING_OPTION_ID);
   const [mpReady, setMpReady] = useState(false);
+  /** Preferencia creada en backend; el Wallet Brick oficial exige `preferenceId` en `initialization` para varias personalizaciones y evita fallos de init. */
+  const [mpPreferenceId, setMpPreferenceId] = useState<string | null>(null);
 
   useEffect(() => {
     setHydrated(true);
@@ -75,6 +77,10 @@ export default function CheckoutPage() {
     }
   }, [subtotal]);
 
+  useEffect(() => {
+    setMpPreferenceId(null);
+  }, [shippingOptionId]);
+
   const selectedShippingOption = getShippingOptionById(shippingOptionId);
   const shippingCost = calculateShipping(subtotal, selectedShippingOption.price);
   const total = subtotal + shippingCost;
@@ -84,9 +90,11 @@ export default function CheckoutPage() {
     const cleaned = sanitizeCheckoutField(key, value) as FormState[K];
     setForm((f) => ({ ...f, [key]: cleaned }));
     if (errors[key]) setErrors((e) => ({ ...e, [key]: undefined }));
+    if (mpPreferenceId) setMpPreferenceId(null);
   };
 
   const applyParsedAddress = useCallback((p: ParsedPlaceAddress) => {
+    setMpPreferenceId(null);
     setErrors((e) => {
       const next = { ...e };
       delete next.street;
@@ -120,10 +128,13 @@ export default function CheckoutPage() {
     setMpReady(true);
   }, []);
 
-  const walletInitialization = useMemo(
-    () => ({ redirectMode: "self" as const }),
-    []
-  );
+  const walletInitialization = useMemo(() => {
+    if (!mpPreferenceId) return null;
+    return {
+      preferenceId: mpPreferenceId,
+      redirectMode: "self" as const,
+    };
+  }, [mpPreferenceId]);
 
   const walletCustomization = useMemo(
     () => ({
@@ -135,12 +146,12 @@ export default function CheckoutPage() {
     []
   );
 
-  const createPreference = useCallback(async (): Promise<string> => {
+  const prepareMercadoPagoPreference = useCallback(async () => {
     const { ok, errors: next } = validateCheckoutForm(form);
     setErrors(next);
     if (!ok) {
       window.scrollTo({ top: 0, behavior: "smooth" });
-      throw new Error("Completa los campos obligatorios.");
+      return;
     }
 
     setSubmitting(true);
@@ -199,15 +210,13 @@ export default function CheckoutPage() {
         throw new Error("Mercado Pago no devolvió la preferencia de pago.");
       }
 
-      // Guarda el orderId temporalmente por si MP no lo regresa en la URL
       sessionStorage.setItem("bricia_pending_order", orderId);
-      setSubmitMessage("");
-      setSubmitting(false);
-      return checkoutData.preferenceId;
+      setMpPreferenceId(checkoutData.preferenceId);
     } catch (err) {
+      alert(err instanceof Error ? err.message : "Error al procesar el pedido");
+    } finally {
       setSubmitting(false);
       setSubmitMessage("");
-      throw err instanceof Error ? err : new Error("Error al procesar el pedido");
     }
   }, [form, items, selectedShippingOption]);
 
@@ -424,18 +433,34 @@ export default function CheckoutPage() {
 
             </section>
 
-            {/* Submit */}
+            {/* Submit: primero preferencia en backend; luego Wallet Brick oficial con preferenceId (documentación MP). */}
             <div className="space-y-4 pt-2">
               {mpReady ? (
-                <div className="min-h-[56px]">
-                  <Wallet
-                    id="bricia-mp-wallet"
-                    locale="es-MX"
-                    initialization={walletInitialization}
-                    customization={walletCustomization}
-                    onSubmit={createPreference}
-                    onError={handleWalletError}
-                  />
+                <div className="space-y-3 min-h-[56px]">
+                  {!walletInitialization ? (
+                    <button
+                      type="button"
+                      disabled={submitting}
+                      onClick={() => void prepareMercadoPagoPreference()}
+                      className="w-full border-2 border-[#009ee3] bg-white text-[#009ee3] py-4 rounded-xl text-xs font-sans font-bold tracking-[0.12em] uppercase hover:bg-[#009ee3]/5 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
+                      {submitting ? "Preparando pago…" : "Ir al pago con Mercado Pago"}
+                    </button>
+                  ) : (
+                    <Wallet
+                      key={mpPreferenceId}
+                      id="bricia-mp-wallet"
+                      locale="es-MX"
+                      initialization={walletInitialization}
+                      customization={walletCustomization}
+                      onError={handleWalletError}
+                    />
+                  )}
+                  {walletInitialization && (
+                    <p className="text-[10px] font-sans text-brand-muted text-center">
+                      Si necesitas corregir tu dirección, modifica el formulario arriba: se generará una nueva preferencia.
+                    </p>
+                  )}
                 </div>
               ) : (
                 <p className="text-[10px] font-sans text-brand-muted text-center">
