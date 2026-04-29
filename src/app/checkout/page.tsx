@@ -4,8 +4,9 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import Script from "next/script";
 import { motion } from "framer-motion";
-import { ArrowLeft, Lock, Loader2, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Loader2, CheckCircle2 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { formatPrice } from "@/data/products";
 import {
@@ -26,6 +27,28 @@ import AddressAutocomplete from "@/components/checkout/AddressAutocomplete";
 import type { ParsedPlaceAddress } from "@/components/checkout/AddressAutocomplete";
 
 type FormState = CheckoutFormInput;
+type CheckoutResponse = {
+  checkoutUrl?: string;
+  preferenceId?: string;
+  error?: string;
+};
+
+declare global {
+  interface Window {
+    MercadoPago?: new (publicKey: string, options?: { locale?: string }) => {
+      bricks: () => {
+        create: (
+          brickName: "wallet",
+          containerId: string,
+          settings: {
+            initialization: { preferenceId: string };
+            customization?: { texts?: { valueProp?: "practicality" | "security" | "convenience" } };
+          }
+        ) => Promise<{ unmount?: () => Promise<void> | void }>;
+      };
+    };
+  }
+}
 
 const initialForm: FormState = {
   name: "",
@@ -50,6 +73,11 @@ export default function CheckoutPage() {
   const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
   const [hydrated, setHydrated] = useState(false);
   const [shippingOptionId, setShippingOptionId] = useState(DEFAULT_SHIPPING_OPTION_ID);
+  const [mpSdkReady, setMpSdkReady] = useState(false);
+  const [mpPreferenceId, setMpPreferenceId] = useState<string | null>(null);
+  const [mpRenderError, setMpRenderError] = useState<string | null>(null);
+  const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
+  const [isCreatingPreference, setIsCreatingPreference] = useState(false);
 
   useEffect(() => {
     setHydrated(true);
@@ -77,6 +105,11 @@ export default function CheckoutPage() {
     const cleaned = sanitizeCheckoutField(key, value) as FormState[K];
     setForm((f) => ({ ...f, [key]: cleaned }));
     if (errors[key]) setErrors((e) => ({ ...e, [key]: undefined }));
+    if (mpPreferenceId) {
+      setMpPreferenceId(null);
+      setMpRenderError(null);
+      setPendingOrderId(null);
+    }
   };
 
   const applyParsedAddress = useCallback((p: ParsedPlaceAddress) => {
@@ -106,6 +139,45 @@ export default function CheckoutPage() {
     });
   }, []);
 
+  useEffect(() => {
+    if (!mpPreferenceId || !mpSdkReady) return;
+    const publicKey = process.env.NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY;
+    if (!publicKey) {
+      setMpRenderError("Falta NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY para mostrar el botón oficial.");
+      return;
+    }
+    if (!window.MercadoPago) {
+      setMpRenderError("No se pudo cargar Mercado Pago.");
+      return;
+    }
+
+    let isCancelled = false;
+    const containerId = "mp-wallet-container";
+
+    const renderWallet = async () => {
+      try {
+        const mp = new window.MercadoPago!(publicKey, { locale: "es-MX" });
+        const bricks = mp.bricks();
+        await bricks.create("wallet", containerId, {
+          initialization: { preferenceId: mpPreferenceId },
+          customization: { texts: { valueProp: "security" } },
+        });
+      } catch {
+        if (!isCancelled) {
+          setMpRenderError("No se pudo renderizar el botón oficial de Mercado Pago.");
+        }
+      }
+    };
+
+    void renderWallet();
+
+    return () => {
+      isCancelled = true;
+      const container = document.getElementById(containerId);
+      if (container) container.innerHTML = "";
+    };
+  }, [mpPreferenceId, mpSdkReady]);
+
   const validate = (): boolean => {
     const { ok, errors: next } = validateCheckoutForm(form);
     setErrors(next);
@@ -120,6 +192,7 @@ export default function CheckoutPage() {
     }
 
     setSubmitting(true);
+    setIsCreatingPreference(true);
     setSubmitMessage("Guardando tu pedido…");
 
     try {
@@ -169,18 +242,25 @@ export default function CheckoutPage() {
         body: JSON.stringify({ orderId, orderSnapshot: orderData.order }),
       });
 
-      const checkoutData = await checkoutRes.json();
+      const checkoutData = (await checkoutRes.json()) as CheckoutResponse;
       if (!checkoutRes.ok) throw new Error(checkoutData?.error ?? "Error al iniciar el pago");
+      if (!checkoutData.preferenceId) {
+        throw new Error("Mercado Pago no devolvió la preferencia de pago.");
+      }
 
       // Guarda el orderId temporalmente por si MP no lo regresa en la URL
       sessionStorage.setItem("bricia_pending_order", orderId);
-
-      window.location.href = checkoutData.checkoutUrl;
+      setPendingOrderId(orderId);
+      setMpPreferenceId(checkoutData.preferenceId);
+      setSubmitMessage("");
+      setSubmitting(false);
     } catch (err) {
       setSubmitting(false);
+      setIsCreatingPreference(false);
       setSubmitMessage("");
       alert(err instanceof Error ? err.message : "Error al procesar el pedido");
     }
+    setIsCreatingPreference(false);
   };
 
   if (!hydrated || items.length === 0) {
@@ -193,6 +273,18 @@ export default function CheckoutPage() {
 
   return (
     <div className="min-h-screen bg-brand-secondary pt-32 pb-20">
+      <Script
+        id="mercadopago-sdk"
+        src="https://sdk.mercadopago.com/js/v2"
+        strategy="afterInteractive"
+        onLoad={() => {
+          setMpSdkReady(true);
+          setMpRenderError(null);
+        }}
+        onError={() => {
+          setMpRenderError("No se pudo cargar el SDK de Mercado Pago.");
+        }}
+      />
       {submitting && (
         <div className="fixed inset-0 z-50 bg-brand-primary/85 backdrop-blur-sm flex flex-col items-center justify-center gap-6">
           <Loader2 size={40} className="animate-spin text-brand-secondary" />
@@ -394,14 +486,27 @@ export default function CheckoutPage() {
 
             {/* Submit */}
             <div className="space-y-4 pt-2">
-              <button
-                type="submit"
-                disabled={submitting}
-                className="w-full bg-brand-primary text-brand-secondary py-4 rounded-xl text-xs font-sans font-bold tracking-[0.25em] uppercase hover:bg-brand-accent transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-3"
-              >
-                <Lock size={14} strokeWidth={1.8} />
-                Continuar a Mercado Pago
-              </button>
+              {!mpPreferenceId ? (
+                <button
+                  type="submit"
+                  disabled={submitting || isCreatingPreference}
+                  className="w-full bg-brand-primary text-brand-secondary py-4 rounded-xl text-xs font-sans font-bold tracking-[0.25em] uppercase hover:bg-brand-accent transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+                >
+                  Continuar a Mercado Pago
+                </button>
+              ) : (
+                <div className="space-y-3">
+                  <div id="mp-wallet-container" className="min-h-[56px]" />
+                  {pendingOrderId && (
+                    <p className="text-[10px] font-sans text-brand-muted text-center">
+                      Pedido preparado: {pendingOrderId}
+                    </p>
+                  )}
+                </div>
+              )}
+              {mpRenderError && (
+                <p className="text-[10px] font-sans text-red-500 text-center">{mpRenderError}</p>
+              )}
               <p className="text-[10px] font-sans text-brand-muted text-center tracking-[0.1em] uppercase">
                 Pago seguro · Tarjeta · OXXO · Transferencia
               </p>

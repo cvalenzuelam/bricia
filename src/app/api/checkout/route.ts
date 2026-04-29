@@ -139,7 +139,11 @@ export async function POST(request: NextRequest) {
       ? result.sandbox_init_point
       : result.init_point;
 
-    return NextResponse.json({ checkoutUrl, orderId: order.id });
+    return NextResponse.json({
+      checkoutUrl,
+      preferenceId: result.id,
+      orderId: order.id,
+    });
   } catch (err) {
     console.error("[checkout] MP error:", err);
     return NextResponse.json(

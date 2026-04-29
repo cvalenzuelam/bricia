@@ -264,7 +264,7 @@ export default function EditarProductoPage({
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               required
-              className="w-full px-4 py-3 border border-brand-primary/10 rounded-lg bg-white text-brand-primary font-serif text-lg focus:outline-none focus:border-brand-accent transition-colors lowercase"
+              className="w-full px-4 py-3 border border-brand-primary/10 rounded-lg bg-white text-brand-primary font-serif text-lg focus:outline-none focus:border-brand-accent transition-colors"
             />
           </div>
 
