@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { uploadCmsImageFile } from "@/lib/cms-upload-image";
-import { ArrowLeft, Upload, Plus, X, Loader2, Save, Video } from "lucide-react";
+import { ArrowLeft, Upload, Plus, X, Loader2, Save, Video, CheckCircle2 } from "lucide-react";
 import AdminCmsLoading from "@/components/admin/AdminCmsLoading";
 import type { Recipe } from "@/data/recipes";
 
@@ -180,6 +180,8 @@ export default function EditRecipePage({ params }: EditPageProps) {
   const [uploading, setUploading] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [publishMessage, setPublishMessage] = useState("");
+  /** Solo true cuando CMS + página pública ya reflejan el último guardado (no redirige al listado automáticamente). */
+  const [liveOnPublicSite, setLiveOnPublicSite] = useState(false);
   const [loading, setLoading] = useState(true);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [uploadedImagePath, setUploadedImagePath] = useState("");
@@ -296,6 +298,7 @@ export default function EditRecipePage({ params }: EditPageProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLiveOnPublicSite(false);
     setSaving(true);
     let mainImagePath = uploadedImagePath || form.image;
 
@@ -359,7 +362,8 @@ export default function EditRecipePage({ params }: EditPageProps) {
           return;
         }
 
-        router.push("/admin");
+        setLiveOnPublicSite(true);
+        router.refresh();
       } else {
         const errData = await res.json().catch(() => null);
         alert(errData?.error || "Error al actualizar la receta");
@@ -401,7 +405,7 @@ export default function EditRecipePage({ params }: EditPageProps) {
               {publishMessage || (uploading ? "Subiendo imagen..." : "Guardando receta...")}
             </p>
             <p className="text-[11px] font-sans text-brand-muted/80">
-              No cierres ni salgas de esta pantalla hasta terminar.
+              Permanece aquí: el loader solo desaparece cuando el cambio está listo para ver en la web.
             </p>
           </div>
         </div>
@@ -423,6 +427,41 @@ export default function EditRecipePage({ params }: EditPageProps) {
         <h1 className="text-3xl font-serif text-brand-primary mb-10">
           Editar: <span className="italic text-brand-accent">{form.title}</span>
         </h1>
+
+        {liveOnPublicSite && (
+          <div
+            role="status"
+            className="mb-10 rounded-2xl border border-emerald-200 bg-emerald-50/95 px-5 py-4 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 text-left"
+          >
+            <div className="flex gap-3">
+              <CheckCircle2 className="shrink-0 text-emerald-700 mt-0.5" size={22} aria-hidden />
+              <div className="space-y-1">
+                <p className="text-sm font-sans font-bold text-emerald-900 tracking-tight">
+                  Cambios publicados en el sitio
+                </p>
+                <p className="text-xs font-sans text-emerald-800/90 leading-relaxed">
+                  Esta receta ya se ve actualizada para quien visita la página pública. Sigue aquí cuando quieras o vuelve al panel.
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2 sm:justify-end shrink-0">
+              <Link
+                href={`/recetas/${slug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center rounded-lg border border-emerald-300 bg-white px-4 py-2 text-[11px] font-sans font-bold uppercase tracking-[0.12em] text-emerald-900 hover:bg-emerald-100 transition-colors"
+              >
+                Ver en la web
+              </Link>
+              <Link
+                href="/admin"
+                className="inline-flex items-center justify-center rounded-lg bg-emerald-800 px-4 py-2 text-[11px] font-sans font-bold uppercase tracking-[0.12em] text-white hover:bg-emerald-900 transition-colors"
+              >
+                Ir al panel de recetas
+              </Link>
+            </div>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Image */}
