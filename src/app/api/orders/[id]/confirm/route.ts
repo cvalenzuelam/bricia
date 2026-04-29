@@ -27,6 +27,50 @@ export async function POST(
 
     const body = await request.json().catch(() => ({}));
 
+    let paymentId: string | undefined =
+      typeof body.paymentId === "string" ? body.paymentId : undefined;
+    let paymentStatus: string | undefined =
+      typeof body.paymentStatus === "string" ? body.paymentStatus : undefined;
+
+    if (typeof body.stripeSessionId === "string" && body.stripeSessionId) {
+      const { getStripe, isStripeConfigured } = await import("@/lib/stripe/server");
+      if (!isStripeConfigured()) {
+        return NextResponse.json(
+          { error: "Stripe no configurado" },
+          { status: 503, headers: NO_STORE }
+        );
+      }
+      const stripe = getStripe();
+      const session = await stripe.checkout.sessions.retrieve(body.stripeSessionId);
+      const sessionOrder =
+        session.metadata?.orderId ?? session.client_reference_id ?? undefined;
+      if (sessionOrder !== id) {
+        return NextResponse.json(
+          { error: "La sesión de pago no corresponde a este pedido" },
+          { status: 403, headers: NO_STORE }
+        );
+      }
+      if (session.payment_status !== "paid") {
+        return NextResponse.json(
+          { error: "El pago con Stripe aún no está completado" },
+          { status: 400, headers: NO_STORE }
+        );
+      }
+      const expected = session.metadata?.expectedTotalCents;
+      if (
+        expected &&
+        session.amount_total != null &&
+        String(session.amount_total) !== expected
+      ) {
+        return NextResponse.json(
+          { error: "Importe del pago no coincide con el pedido" },
+          { status: 400, headers: NO_STORE }
+        );
+      }
+      paymentId = session.id;
+      paymentStatus = session.payment_status ?? "paid";
+    }
+
     let working = order;
     if (
       order.status !== "paid" &&
@@ -36,8 +80,8 @@ export async function POST(
       const updated = await updateOrder(id, {
         status: "paid",
         paidAt: new Date().toISOString(),
-        paymentId: body.paymentId,
-        paymentStatus: body.paymentStatus,
+        paymentId,
+        paymentStatus,
       });
       if (updated) working = updated;
     }

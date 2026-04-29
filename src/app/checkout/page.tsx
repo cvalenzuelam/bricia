@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { ArrowLeft, Loader2, CheckCircle2 } from "lucide-react";
-import { initMercadoPago, Wallet } from "@mercadopago/sdk-react";
 import { useCart } from "@/context/CartContext";
 import { formatPrice } from "@/data/products";
 import {
@@ -56,9 +55,6 @@ export default function CheckoutPage() {
   const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
   const [hydrated, setHydrated] = useState(false);
   const [shippingOptionId, setShippingOptionId] = useState(DEFAULT_SHIPPING_OPTION_ID);
-  const [mpReady, setMpReady] = useState(false);
-  /** Preferencia creada en backend; el Wallet Brick oficial exige `preferenceId` en `initialization` para varias personalizaciones y evita fallos de init. */
-  const [mpPreferenceId, setMpPreferenceId] = useState<string | null>(null);
 
   useEffect(() => {
     setHydrated(true);
@@ -77,10 +73,6 @@ export default function CheckoutPage() {
     }
   }, [subtotal]);
 
-  useEffect(() => {
-    setMpPreferenceId(null);
-  }, [shippingOptionId]);
-
   const selectedShippingOption = getShippingOptionById(shippingOptionId);
   const shippingCost = calculateShipping(subtotal, selectedShippingOption.price);
   const total = subtotal + shippingCost;
@@ -90,11 +82,9 @@ export default function CheckoutPage() {
     const cleaned = sanitizeCheckoutField(key, value) as FormState[K];
     setForm((f) => ({ ...f, [key]: cleaned }));
     if (errors[key]) setErrors((e) => ({ ...e, [key]: undefined }));
-    if (mpPreferenceId) setMpPreferenceId(null);
   };
 
   const applyParsedAddress = useCallback((p: ParsedPlaceAddress) => {
-    setMpPreferenceId(null);
     setErrors((e) => {
       const next = { ...e };
       delete next.street;
@@ -121,32 +111,8 @@ export default function CheckoutPage() {
     });
   }, []);
 
-  useEffect(() => {
-    const publicKey = process.env.NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY;
-    if (!publicKey) return;
-    initMercadoPago(publicKey, { locale: "es-MX" });
-    setMpReady(true);
-  }, []);
-
-  const walletInitialization = useMemo(() => {
-    if (!mpPreferenceId) return null;
-    return {
-      preferenceId: mpPreferenceId,
-      redirectMode: "self" as const,
-    };
-  }, [mpPreferenceId]);
-
-  const walletCustomization = useMemo(
-    () => ({
-      valueProp: "payment_methods_logos" as const,
-      customStyle: {
-        buttonBackground: "default" as const,
-      },
-    }),
-    []
-  );
-
-  const prepareMercadoPagoPreference = useCallback(async () => {
+  const startCheckout = useCallback(
+    async (provider: "mercadopago" | "stripe") => {
     const { ok, errors: next } = validateCheckoutForm(form);
     setErrors(next);
     if (!ok) {
@@ -196,33 +162,54 @@ export default function CheckoutPage() {
       if (!orderRes.ok) throw new Error(orderData?.error ?? "Error al crear el pedido");
 
       const orderId = orderData.order.id;
-      setSubmitMessage("Conectando con Mercado Pago…");
+      sessionStorage.setItem("bricia_pending_order", orderId);
 
-      const checkoutRes = await fetch("/api/checkout", {
+      if (provider === "mercadopago") {
+        setSubmitMessage("Conectando con Mercado Pago…");
+        const checkoutRes = await fetch("/api/checkout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ orderId, orderSnapshot: orderData.order }),
+        });
+
+        const checkoutData = (await checkoutRes.json()) as CheckoutResponse;
+        if (!checkoutRes.ok) throw new Error(checkoutData?.error ?? "Error al iniciar el pago");
+        if (!checkoutData.checkoutUrl) {
+          throw new Error("Mercado Pago no devolvió la URL de pago.");
+        }
+        window.location.href = checkoutData.checkoutUrl;
+        return;
+      }
+
+      setSubmitMessage("Conectando con Stripe…");
+      const stripeRes = await fetch("/api/checkout/stripe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ orderId, orderSnapshot: orderData.order }),
       });
-
-      const checkoutData = (await checkoutRes.json()) as CheckoutResponse;
-      if (!checkoutRes.ok) throw new Error(checkoutData?.error ?? "Error al iniciar el pago");
-      if (!checkoutData.preferenceId) {
-        throw new Error("Mercado Pago no devolvió la preferencia de pago.");
+      const stripeData = (await stripeRes.json()) as { checkoutUrl?: string; error?: string };
+      if (!stripeRes.ok) throw new Error(stripeData?.error ?? "Error al iniciar el pago con Stripe");
+      if (!stripeData.checkoutUrl) {
+        throw new Error("Stripe no devolvió la URL de pago.");
       }
-
-      sessionStorage.setItem("bricia_pending_order", orderId);
-      setMpPreferenceId(checkoutData.preferenceId);
+      window.location.href = stripeData.checkoutUrl;
     } catch (err) {
       alert(err instanceof Error ? err.message : "Error al procesar el pedido");
     } finally {
       setSubmitting(false);
       setSubmitMessage("");
     }
-  }, [form, items, selectedShippingOption]);
+  },
+  [form, items, selectedShippingOption]
+  );
 
-  const handleWalletError = useCallback((error: { message?: string }) => {
-    alert(error?.message ?? "Error con Mercado Pago");
-  }, []);
+  const goToMercadoPagoCheckout = useCallback(() => {
+    void startCheckout("mercadopago");
+  }, [startCheckout]);
+
+  const goToStripeCheckout = useCallback(() => {
+    void startCheckout("stripe");
+  }, [startCheckout]);
 
   if (!hydrated || items.length === 0) {
     return (
@@ -264,13 +251,13 @@ export default function CheckoutPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-12 lg:gap-16">
           {/* ── FORM ── */}
-          <motion.form
-            onSubmit={(e) => e.preventDefault()}
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.1 }}
             className="space-y-12"
           >
+            <form onSubmit={(e) => e.preventDefault()} className="space-y-12">
             {/* Datos personales */}
             <section className="space-y-6">
               <div className="flex items-baseline justify-between border-b border-brand-primary/10 pb-3">
@@ -433,45 +420,33 @@ export default function CheckoutPage() {
 
             </section>
 
-            {/* Submit: primero preferencia en backend; luego Wallet Brick oficial con preferenceId (documentación MP). */}
             <div className="space-y-4 pt-2">
-              {mpReady ? (
-                <div className="space-y-3 min-h-[56px]">
-                  {!walletInitialization ? (
-                    <button
-                      type="button"
-                      disabled={submitting}
-                      onClick={() => void prepareMercadoPagoPreference()}
-                      className="w-full border-2 border-[#009ee3] bg-white text-[#009ee3] py-4 rounded-xl text-xs font-sans font-bold tracking-[0.12em] uppercase hover:bg-[#009ee3]/5 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                    >
-                      {submitting ? "Preparando pago…" : "Ir al pago con Mercado Pago"}
-                    </button>
-                  ) : (
-                    <Wallet
-                      key={mpPreferenceId}
-                      id="bricia-mp-wallet"
-                      locale="es-MX"
-                      initialization={walletInitialization}
-                      customization={walletCustomization}
-                      onError={handleWalletError}
-                    />
-                  )}
-                  {walletInitialization && (
-                    <p className="text-[10px] font-sans text-brand-muted text-center">
-                      Si necesitas corregir tu dirección, modifica el formulario arriba: se generará una nueva preferencia.
-                    </p>
-                  )}
-                </div>
-              ) : (
-                <p className="text-[10px] font-sans text-brand-muted text-center">
-                  Configura NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY para mostrar el botón oficial.
-                </p>
-              )}
+              <button
+                type="button"
+                disabled={submitting}
+                onClick={goToMercadoPagoCheckout}
+                className="w-full rounded-xl bg-black py-4 text-xs font-sans font-bold uppercase tracking-[0.12em] text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {submitting ? "Preparando pago…" : "Pagar con Mercado Pago"}
+              </button>
+              <button
+                type="button"
+                disabled={submitting}
+                onClick={goToStripeCheckout}
+                className="w-full rounded-xl border-2 border-brand-primary/15 bg-white py-4 text-xs font-sans font-bold uppercase tracking-[0.12em] text-brand-primary transition-colors hover:border-brand-accent/40 hover:bg-brand-secondary/30 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {submitting ? "Preparando pago…" : "Pagar con tarjeta o Link (Stripe)"}
+              </button>
+              <p className="text-[10px] font-sans text-brand-muted text-center leading-relaxed">
+                En Stripe Checkout podrás usar{" "}
+                <span className="font-medium text-brand-primary">Link</span> si tu cuenta lo permite (pago rápido con email).
+              </p>
               <p className="text-[10px] font-sans text-brand-muted text-center tracking-[0.1em] uppercase">
                 Pago seguro · Tarjeta · OXXO · Transferencia
               </p>
             </div>
-          </motion.form>
+            </form>
+          </motion.div>
 
           {/* ── ORDER SUMMARY ── */}
           <motion.aside

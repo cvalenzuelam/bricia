@@ -17,8 +17,10 @@ function PagoExitoContent() {
 
   const orderIdParam =
     searchParams.get("orderId") || searchParams.get("external_reference");
-  const paymentId = searchParams.get("payment_id") || undefined;
-  const paymentStatus = searchParams.get("status") || undefined;
+  const sessionId = searchParams.get("session_id");
+  const provider = searchParams.get("provider");
+  const mpPaymentId = searchParams.get("payment_id") || undefined;
+  const mpPaymentStatus = searchParams.get("status") || undefined;
 
   useEffect(() => {
     const orderId =
@@ -40,7 +42,14 @@ function PagoExitoContent() {
         const confirmRes = await fetch(`/api/orders/${orderId}/confirm`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ paymentId, paymentStatus }),
+          body: JSON.stringify({
+            paymentId:
+              provider === "stripe" && sessionId ? sessionId : mpPaymentId,
+            paymentStatus:
+              provider === "stripe" ? "paid" : mpPaymentStatus,
+            stripeSessionId:
+              provider === "stripe" && sessionId ? sessionId : undefined,
+          }),
         });
         const confirmData = await confirmRes.json().catch(() => ({}));
 
@@ -69,7 +78,14 @@ function PagoExitoContent() {
     return () => {
       cancelled = true;
     };
-  }, [orderIdParam, paymentId, paymentStatus, clearCart]);
+  }, [
+    orderIdParam,
+    sessionId,
+    provider,
+    mpPaymentId,
+    mpPaymentStatus,
+    clearCart,
+  ]);
 
   if (loading) {
     return (
