@@ -90,13 +90,13 @@ function featuredImageOverlayStyle(panelHex: string): CSSProperties {
   };
 }
 
-/** Móvil: fundido hacia el panel encima + costados. */
+/** Móvil: fundido hacia el panel encima + costados (refuerzo encima del máscara). */
 function featuredImageMobileOverlayStyle(panelHex: string): CSSProperties {
   const { r, g, b } = hexToRgb(panelHex);
   const sideStops = featuredImageEdgeStopsMobile(panelHex);
   return {
     background: [
-      `linear-gradient(to bottom, rgba(${r},${g},${b},0.28) 0%, rgba(${r},${g},${b},0.14) 22%, transparent 44%)`,
+      `linear-gradient(to bottom, rgba(${r},${g},${b},0.52) 0%, rgba(${r},${g},${b},0.28) 10%, rgba(${r},${g},${b},0.12) 22%, transparent 48%)`,
       `linear-gradient(to left, ${sideStops})`,
       `linear-gradient(to right, ${sideStops})`,
     ].join(", "),
