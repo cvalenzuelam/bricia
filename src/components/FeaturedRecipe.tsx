@@ -53,16 +53,15 @@ function hexToRgb(hex: string): { r: number; g: number; b: number } {
   };
 }
 
-/** Costados: overlay más ligero para no “lavar” la foto. */
+/** Costados (solo desktop): fundido muy suave hacia el panel. */
 function featuredImageEdgeStops(panelHex: string): string {
   const { r, g, b } = hexToRgb(panelHex);
   return [
-    `rgba(${r},${g},${b},0.88) 0%`,
-    `rgba(${r},${g},${b},0.65) 5%`,
-    `rgba(${r},${g},${b},0.38) 14%`,
-    `rgba(${r},${g},${b},0.16) 28%`,
-    `rgba(${r},${g},${b},0.04) 44%`,
-    `transparent 72%`,
+    `rgba(${r},${g},${b},0.42) 0%`,
+    `rgba(${r},${g},${b},0.22) 10%`,
+    `rgba(${r},${g},${b},0.10) 26%`,
+    `rgba(${r},${g},${b},0.03) 45%`,
+    `transparent 68%`,
   ].join(", ");
 }
 /** Paradas laterales en móvil. */
@@ -77,13 +76,13 @@ function featuredImageEdgeStopsMobile(panelHex: string): string {
   ].join(", ");
 }
 
-/** Desktop: viñeta superior + costados (refuerzo suave). */
+/** Desktop: viñeta superior mínima + costados sutiles. */
 function featuredImageOverlayStyle(panelHex: string): CSSProperties {
   const { r, g, b } = hexToRgb(panelHex);
   const stops = featuredImageEdgeStops(panelHex);
   return {
     background: [
-      `linear-gradient(to top, rgba(${r},${g},${b},0.04) 0%, transparent 22%)`,
+      `linear-gradient(to top, rgba(${r},${g},${b},0.02) 0%, transparent 16%)`,
       `linear-gradient(to left, ${stops})`,
       `linear-gradient(to right, ${stops})`,
     ].join(", "),
@@ -185,7 +184,7 @@ export default function FeaturedRecipe({
             src={featured.imageSrc}
             alt={featured.imageAlt}
             fill
-            sizes="50vw"
+            sizes="(max-width: 767px) 100vw, 50vw"
             quality={PHOTO_IMAGE_QUALITY}
             className="featured-recipe-img-mask object-cover"
           />
