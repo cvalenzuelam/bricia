@@ -10,14 +10,22 @@ export function hexToRgb(hex: string): { r: number; g: number; b: number } {
   };
 }
 
-/** Hero (móvil): viñeta superior + fundido hacia el bloque crema a la izquierda. */
+/** Hero (móvil): emplume arriba un poco más marcado que abajo + inferior hacia crema. */
 export function heroMainImageOverlayStyle(bgHex: string): CSSProperties {
   const { r, g, b } = hexToRgb(bgHex);
   return {
     background: [
-      `linear-gradient(to top, rgba(${r},${g},${b},0.1) 0%, transparent 28%)`,
-      `linear-gradient(to left, transparent 52%, rgba(${r},${g},${b},0.2) 80%, rgba(${r},${g},${b},0.32) 100%)`,
+      `linear-gradient(to bottom, rgba(${r},${g},${b},0.13) 0%, rgba(${r},${g},${b},0.05) 12%, transparent 30%)`,
+      `linear-gradient(to top, rgba(${r},${g},${b},0.08) 0%, transparent 26%)`,
     ].join(", "),
+  };
+}
+
+/** Franja inferior del hero (móvil): más ligera si la máscara ya empluma abajo. */
+export function heroBottomFadeStyleMobile(bgHex: string): CSSProperties {
+  const { r, g, b } = hexToRgb(bgHex);
+  return {
+    background: `linear-gradient(to top, rgba(${r},${g},${b},0.22) 0%, rgba(${r},${g},${b},0.08) 22%, transparent 65%)`,
   };
 }
 

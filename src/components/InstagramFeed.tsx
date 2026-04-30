@@ -9,6 +9,10 @@ import ImageFrameFade from "@/components/ImageFrameFade";
 const DEFAULT_INSTAGRAM_PROFILE_HREF =
   "https://www.instagram.com/briciaelizalde/";
 
+/** Hasta 10 fotos en desktop (5×2); solo 6 visibles en viewports &lt;1024px. */
+const COMMUNITY_GRID_MAX = 10;
+const COMMUNITY_MOBILE_VISIBLE = 6;
+
 /** URL de destino: vacío → perfil IG; /ruta → interna; http(s) → externa. */
 function resolveCommunityImageHref(raw: string | undefined): string {
   const t = (raw ?? "").trim();
@@ -36,72 +40,8 @@ interface Config {
   }[];
 }
 
-/**
- * Cola del collage en lg (rejilla 4 columnas, tras el bloque índices 0–4).
- * Filas completas de 4 → celdas 1×1; última fila incompleta: 2+2, 2+1+1 o 1 ancho.
- */
-function lgTailGridClass(positionInTail: number, tailCount: number): string {
-  if (tailCount <= 0) return "";
-  const fullRows = Math.floor(tailCount / 4);
-  const rem = tailCount % 4;
-  const idxFirstPartial = fullRows * 4;
-
-  if (positionInTail < idxFirstPartial) {
-    return "lg:col-span-1 lg:aspect-square";
-  }
-
-  const local = positionInTail - idxFirstPartial;
-
-  if (rem === 1) {
-    return "lg:aspect-[21/9] lg:max-h-[min(24rem,28vw)]";
-  }
-  if (rem === 2) {
-    return "lg:col-span-2 lg:aspect-square";
-  }
-  if (rem === 3) {
-    if (local === 0) return "lg:col-span-2 lg:aspect-square";
-    return "lg:col-span-1 lg:aspect-square";
-  }
-  return "lg:col-span-1 lg:aspect-square";
-}
-
-/** Collage: móvil = rejilla alineada; lg = bento + cola sin huecos (cualquier N desde el CMS). */
-function collageCellClass(index: number, total: number): string {
-  const base =
-    "group relative block overflow-hidden rounded-2xl bg-brand-primary/[0.04] ring-1 ring-black/[0.05] shadow-[0_2px_20px_-6px_rgba(29,29,27,0.1)] transition-[transform,box-shadow] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:z-20 hover:-translate-y-0.5 hover:shadow-[0_16px_44px_-12px_rgba(29,29,27,0.18)] md:rounded-3xl";
-
-  const last = index === total - 1;
-  /** Ancho completo en 2 cols: altura = mitad del ancho → encaja con una fila de dos cuadrados. */
-  const mobFullW = "col-span-2 aspect-[2/1]";
-
-  if (total < 5) {
-    const hero = index === 0;
-    if (hero) {
-      return `${base} ${mobFullW} lg:col-span-2 lg:aspect-[5/3]`;
-    }
-    return `${base} col-span-1 aspect-square`;
-  }
-
-  if (index === 0) {
-    return `${base} ${mobFullW} lg:col-span-2 lg:row-span-2 lg:aspect-auto lg:min-h-[min(52vw,26rem)]`;
-  }
-
-  if (index >= 1 && index <= 4) {
-    return `${base} col-span-1 aspect-square`;
-  }
-
-  const tailLen = total - 5;
-  const posInTail = index - 5;
-  const lgTail = lgTailGridClass(posInTail, tailLen);
-  /** Móvil: franja 2:1; lg: ancho completo (col-span-2 sin prefijo rompía el span en desktop). */
-  const panoramicLastMobile = last && total >= 6 && tailLen % 4 === 1;
-
-  if (panoramicLastMobile) {
-    return `${base} max-lg:col-span-2 max-lg:aspect-[2/1] lg:col-span-full lg:w-full lg:min-w-0 lg:aspect-[21/9] lg:max-h-[min(24rem,28vw)]`;
-  }
-
-  return `${base} col-span-1 aspect-square ${lgTail}`;
-}
+const communityTileClass =
+  "group relative block aspect-square overflow-hidden rounded-xl bg-brand-primary/[0.04] ring-1 ring-black/[0.04] shadow-[0_2px_16px_-6px_rgba(29,29,27,0.09)] transition-[transform,box-shadow] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:z-20 hover:-translate-y-0.5 hover:shadow-[0_14px_40px_-12px_rgba(29,29,27,0.16)] sm:rounded-2xl md:rounded-3xl";
 
 function CommunityBridge() {
   return (
@@ -164,10 +104,15 @@ export default function InstagramFeed({
     [images]
   );
 
-  if (!hasGrid) return null;
+  const gridImages = useMemo(
+    () => visibleImages.slice(0, COMMUNITY_GRID_MAX),
+    [visibleImages]
+  );
+
+  if (!hasGrid || gridImages.length === 0) return null;
 
   return (
-    <section className="relative overflow-hidden bg-brand-secondary pb-0 pt-10 md:pt-14">
+    <section className="relative overflow-hidden bg-brand-secondary pb-12 pt-10 md:pb-16 md:pt-14">
       <div
         className="pointer-events-none absolute -left-32 top-16 h-[28rem] w-[28rem] rounded-full bg-brand-accent/[0.07] blur-3xl"
         aria-hidden
@@ -194,31 +139,31 @@ export default function InstagramFeed({
       </div>
 
       <div
-        className="mx-auto grid w-full max-w-[1600px] grid-cols-2 grid-flow-row gap-2.5 px-3 sm:gap-3 sm:px-5 md:gap-4 md:px-8 lg:grid-cols-4 lg:gap-5"
+        className="mx-auto grid w-full max-w-[1600px] grid-cols-2 gap-2.5 px-4 sm:gap-3 sm:px-5 md:gap-4 md:px-8 lg:grid-cols-5 lg:gap-4 lg:px-10"
       >
-        {visibleImages.map((img, index) => {
+        {gridImages.map((img, index) => {
           const hrefResolved = resolveCommunityImageHref(img.href);
           const internal = isInternalCommunityHref(hrefResolved);
-          const cellClass = collageCellClass(
-            index,
-            visibleImages.length
-          );
+          const tileClass =
+            index >= COMMUNITY_MOBILE_VISIBLE
+              ? `${communityTileClass} max-lg:hidden`
+              : communityTileClass;
           const tile = (
             <>
               <Image
                 src={img.src}
                 alt={img.caption || "Publicación de Bricia"}
                 fill
-                sizes="(max-width: 1024px) 50vw, 40vw"
+                sizes="(max-width: 1024px) 48vw, 18vw"
                 quality={PHOTO_IMAGE_QUALITY}
                 className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
               />
               <ImageFrameFade variant="cream" />
               {img.isVideo && (
                 <div className="pointer-events-none absolute inset-0 z-[2] flex items-center justify-center opacity-100 transition-opacity duration-300 group-hover:opacity-0">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/40 backdrop-blur-sm">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white/40 backdrop-blur-sm sm:h-12 sm:w-12">
                     <svg
-                      className="ml-0.5 h-5 w-5 text-white/90"
+                      className="ml-0.5 h-4 w-4 text-white/90 sm:h-5 sm:w-5"
                       viewBox="0 0 24 24"
                       fill="currentColor"
                     >
@@ -227,9 +172,9 @@ export default function InstagramFeed({
                   </div>
                 </div>
               )}
-              <div className="absolute inset-0 z-[3] flex flex-col items-center justify-center bg-black/60 p-6 text-center opacity-0 transition-opacity duration-500 group-hover:opacity-100">
+              <div className="absolute inset-0 z-[3] flex flex-col items-center justify-center bg-black/60 p-4 text-center opacity-0 transition-opacity duration-500 group-hover:opacity-100 sm:p-6">
                 {img.caption && (
-                  <p className="line-clamp-4 font-sans text-xs leading-relaxed text-white">
+                  <p className="line-clamp-4 font-sans text-[11px] leading-relaxed text-white sm:text-xs">
                     {img.caption}
                   </p>
                 )}
@@ -240,7 +185,7 @@ export default function InstagramFeed({
             <Link
               key={`${img.src}-${index}`}
               href={hrefResolved}
-              className={cellClass}
+              className={tileClass}
             >
               {tile}
             </Link>
@@ -250,7 +195,7 @@ export default function InstagramFeed({
               href={hrefResolved}
               target="_blank"
               rel="noopener noreferrer"
-              className={cellClass}
+              className={tileClass}
             >
               {tile}
             </a>

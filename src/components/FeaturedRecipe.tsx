@@ -53,50 +53,50 @@ function hexToRgb(hex: string): { r: number; g: number; b: number } {
   };
 }
 
-/** Costados: opacidad plena en el borde para empatar con el panel sólido del vecino. */
+/** Costados: overlay más ligero para no “lavar” la foto. */
 function featuredImageEdgeStops(panelHex: string): string {
   const { r, g, b } = hexToRgb(panelHex);
   return [
-    `rgba(${r},${g},${b},1) 0%`,
-    `rgba(${r},${g},${b},0.82) 5%`,
-    `rgba(${r},${g},${b},0.5) 14%`,
-    `rgba(${r},${g},${b},0.22) 28%`,
-    `rgba(${r},${g},${b},0.06) 44%`,
+    `rgba(${r},${g},${b},0.88) 0%`,
+    `rgba(${r},${g},${b},0.65) 5%`,
+    `rgba(${r},${g},${b},0.38) 14%`,
+    `rgba(${r},${g},${b},0.16) 28%`,
+    `rgba(${r},${g},${b},0.04) 44%`,
     `transparent 72%`,
   ].join(", ");
 }
-/** Paradas laterales en móvil (misma lógica, un poco más suave). */
+/** Paradas laterales en móvil. */
 function featuredImageEdgeStopsMobile(panelHex: string): string {
   const { r, g, b } = hexToRgb(panelHex);
   return [
-    `rgba(${r},${g},${b},1) 0%`,
-    `rgba(${r},${g},${b},0.75) 7%`,
-    `rgba(${r},${g},${b},0.35) 20%`,
-    `rgba(${r},${g},${b},0.1) 38%`,
+    `rgba(${r},${g},${b},0.82) 0%`,
+    `rgba(${r},${g},${b},0.55) 7%`,
+    `rgba(${r},${g},${b},0.26) 20%`,
+    `rgba(${r},${g},${b},0.07) 38%`,
     `transparent 70%`,
   ].join(", ");
 }
 
-/** Desktop: refuerzo en costados (la máscara de la imagen ya empluma; esto homogeneiza el tono). */
+/** Desktop: viñeta superior + costados (refuerzo suave). */
 function featuredImageOverlayStyle(panelHex: string): CSSProperties {
   const { r, g, b } = hexToRgb(panelHex);
   const stops = featuredImageEdgeStops(panelHex);
   return {
     background: [
-      `linear-gradient(to top, rgba(${r},${g},${b},0.09) 0%, transparent 28%)`,
+      `linear-gradient(to top, rgba(${r},${g},${b},0.04) 0%, transparent 22%)`,
       `linear-gradient(to left, ${stops})`,
       `linear-gradient(to right, ${stops})`,
     ].join(", "),
   };
 }
 
-/** Móvil: fundido hacia el panel encima + costados (refuerzo encima del máscara). */
+/** Móvil: fundido superior y costados, más contenido. */
 function featuredImageMobileOverlayStyle(panelHex: string): CSSProperties {
   const { r, g, b } = hexToRgb(panelHex);
   const sideStops = featuredImageEdgeStopsMobile(panelHex);
   return {
     background: [
-      `linear-gradient(to bottom, rgba(${r},${g},${b},0.52) 0%, rgba(${r},${g},${b},0.28) 10%, rgba(${r},${g},${b},0.12) 22%, transparent 48%)`,
+      `linear-gradient(to bottom, rgba(${r},${g},${b},0.28) 0%, rgba(${r},${g},${b},0.14) 8%, rgba(${r},${g},${b},0.05) 18%, transparent 36%)`,
       `linear-gradient(to left, ${sideStops})`,
       `linear-gradient(to right, ${sideStops})`,
     ].join(", "),

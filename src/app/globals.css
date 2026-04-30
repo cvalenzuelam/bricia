@@ -85,20 +85,20 @@ img {
   /* Firefox */
 }
 
-/* FeaturedRecipe: base = emplume horizontal; en ≤767px se añade emplume superior vía @media. */
+/* FeaturedRecipe: emplumes algo más contenidos (menos lavado que antes). */
 .featured-recipe-img-mask {
   mask-image: linear-gradient(
     to right,
     transparent 0%,
-    black 9%,
-    black 91%,
+    black 7%,
+    black 93%,
     transparent 100%
   );
   -webkit-mask-image: linear-gradient(
     to right,
     transparent 0%,
-    black 9%,
-    black 91%,
+    black 7%,
+    black 93%,
     transparent 100%
   );
   mask-size: 100% 100%;
@@ -113,14 +113,14 @@ img {
       linear-gradient(
         to right,
         transparent 0%,
-        black 9%,
-        black 91%,
+        black 7%,
+        black 93%,
         transparent 100%
       ),
       linear-gradient(
         to bottom,
         transparent 0%,
-        black 11%,
+        black 6%,
         black 100%
       );
     mask-composite: intersect;
@@ -128,14 +128,14 @@ img {
       linear-gradient(
         to right,
         transparent 0%,
-        black 9%,
-        black 91%,
+        black 7%,
+        black 93%,
         transparent 100%
       ),
       linear-gradient(
         to bottom,
         transparent 0%,
-        black 11%,
+        black 6%,
         black 100%
       );
     -webkit-mask-composite: source-in;
@@ -143,21 +143,21 @@ img {
 }
 
 @media (min-width: 768px) {
-  /* Web: costados + arriba/abajo (intersección de dos máscaras). */
+  /* Web: costados + arriba/abajo, algo más tenue que antes. */
   .featured-recipe-img-mask {
     mask-image:
       linear-gradient(
         to right,
         transparent 0%,
-        black 6%,
-        black 74%,
+        black 5%,
+        black 78%,
         transparent 100%
       ),
       linear-gradient(
         to bottom,
         transparent 0%,
-        black 7%,
-        black 85%,
+        black 5%,
+        black 88%,
         transparent 100%
       );
     mask-composite: intersect;
@@ -165,15 +165,15 @@ img {
       linear-gradient(
         to right,
         transparent 0%,
-        black 6%,
-        black 74%,
+        black 5%,
+        black 78%,
         transparent 100%
       ),
       linear-gradient(
         to bottom,
         transparent 0%,
-        black 7%,
-        black 85%,
+        black 5%,
+        black 88%,
         transparent 100%
       );
     -webkit-mask-composite: source-in;
@@ -255,20 +255,20 @@ img {
   }
 }
 
-/* Hero inicio: móvil = emplume horizontal (costados); web = costados + arriba/abajo en @media. */
+/* Hero inicio: móvil = emplume vertical (arriba un poco más amplio que abajo). */
 .hero-inicio-img-mask {
   mask-image: linear-gradient(
-    to right,
+    to bottom,
     transparent 0%,
-    black 9%,
-    black 91%,
+    black 8%,
+    black 93%,
     transparent 100%
   );
   -webkit-mask-image: linear-gradient(
-    to right,
+    to bottom,
     transparent 0%,
-    black 9%,
-    black 91%,
+    black 8%,
+    black 93%,
     transparent 100%
   );
   mask-size: 100% 100%;

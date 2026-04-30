@@ -7,7 +7,7 @@ import { ArrowDown } from "lucide-react";
 import { useState, useEffect } from "react";
 import { HERO_IMAGE_QUALITY } from "@/lib/image-quality";
 import {
-  heroBottomFadeStyle,
+  heroBottomFadeStyleMobile,
   heroBottomFadeStyleWeb,
   heroMainImageOverlayStyle,
   heroMainImageOverlayStyleWeb,
@@ -108,23 +108,18 @@ export default function Hero({
 
   return (
     <section
-      className={`relative ${sectionMinH} flex flex-col max-md:gap-7 max-md:pb-8 md:flex-row md:gap-0 overflow-hidden md:pb-8`}
+      className={`relative ${sectionMinH} flex flex-col max-md:gap-0 max-md:pb-6 md:flex-row md:gap-0 overflow-hidden md:pb-8`}
       style={{ backgroundColor: bg }}
     >
       {/* Texto — izquierda (móvil: arriba), columna más estrecha */}
       <div
-        className={`relative w-full md:w-[38%] flex flex-col items-center justify-center px-8 md:px-10 lg:px-14 max-md:pb-1 max-md:pt-[max(6.75rem,env(safe-area-inset-top,0px)+5.25rem)] md:pb-2 md:pt-5 md:min-h-[calc(62vw*1.12)] text-center`}
+        className={`relative w-full md:w-[38%] flex flex-col items-center justify-center max-md:px-8 md:px-10 lg:px-14 max-md:pb-0 max-md:pt-[max(6.5rem,env(safe-area-inset-top,0px)+5rem)] md:pb-2 md:pt-5 md:min-h-[calc(62vw*1.12)] text-center`}
       >
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1 }}
-          className="max-w-lg w-full"
-        >
-          <div className="max-md:space-y-5 md:space-y-8 md:-translate-y-28 lg:-translate-y-36">
-          <div className="max-md:space-y-4 md:space-y-6">
+        <div className="max-w-lg w-full max-md:max-w-md">
+          <div className="max-md:space-y-7 md:space-y-8 md:-translate-y-28 lg:-translate-y-36">
+          <div className="max-md:space-y-0 md:space-y-6">
             <h1
-              className="text-3xl md:text-4xl lg:text-5xl leading-tight"
+              className="text-3xl max-md:text-4xl max-md:leading-tight md:text-4xl lg:text-5xl leading-tight"
               style={{
                 fontFamily: FONT_MAP[config.titleFont] || FONT_MAP.serif,
                 color: config.titleColor,
@@ -143,9 +138,9 @@ export default function Hero({
             </span>
           </div>
 
-          <div className="max-md:space-y-4 max-md:pt-1 md:space-y-6">
+          <div className="max-md:space-y-5 max-md:pt-0 md:space-y-6">
             <p
-              className="md:hidden text-sm font-serif leading-snug text-brand-primary/85"
+              className="md:hidden text-sm font-serif leading-relaxed text-brand-primary/88"
               style={{
                 fontStyle: config.taglineItalic ? "italic" : "normal",
               }}
@@ -166,7 +161,7 @@ export default function Hero({
             </p>
             <Link
               href="/recetas"
-              className="block text-[10px] font-sans tracking-[0.18em] md:text-xs md:tracking-[0.25em] uppercase font-medium text-brand-accent leading-snug transition-colors hover:text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/45 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-secondary rounded-sm"
+              className="block text-[10px] font-sans tracking-[0.18em] md:text-xs md:tracking-[0.25em] uppercase font-medium text-brand-accent leading-relaxed transition-colors hover:text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/45 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-secondary rounded-sm max-md:text-[11px] max-md:tracking-[0.22em]"
             >
               {config.ctaText}
             </Link>
@@ -182,12 +177,12 @@ export default function Hero({
             <ArrowDown size={28} strokeWidth={1} className="mx-auto" aria-hidden />
           </motion.a>
           </div>
-        </motion.div>
+        </div>
       </div>
 
       {/* Foto — derecha (móvil: debajo del texto), columna más ancha */}
       <div
-        className={`relative z-[1] w-full md:w-[62%] aspect-[5/4] md:aspect-auto md:min-h-[calc(62vw*1.12)] overflow-hidden min-h-[48svh] max-md:min-h-0 max-md:isolate max-md:[transform:translateZ(0)]`}
+        className={`relative z-[1] w-full md:w-[62%] aspect-[5/4] md:aspect-auto md:min-h-[calc(62vw*1.12)] overflow-hidden min-h-[42svh] max-md:min-h-0 max-md:isolate max-md:[transform:translateZ(0)] max-md:mx-0 max-md:mt-0 max-md:rounded-none md:rounded-none`}
         style={{ backgroundColor: bg }}
       >
         <Image
@@ -197,7 +192,7 @@ export default function Hero({
           priority
           sizes="(max-width: 768px) 100vw, 62vw"
           quality={HERO_IMAGE_QUALITY}
-          className="hero-inicio-img-mask object-cover object-center max-md:origin-bottom max-md:scale-[1.04]"
+          className="hero-inicio-img-mask object-cover object-center max-md:origin-bottom max-md:scale-[1.02]"
         />
         <div
           className="absolute inset-0 pointer-events-none md:hidden"
@@ -208,8 +203,8 @@ export default function Hero({
           style={overlayStyleWeb}
         />
         <div
-          className="pointer-events-none absolute inset-x-0 bottom-0 z-[3] h-[min(38%,12rem)] md:hidden"
-          style={heroBottomFadeStyle(bg)}
+          className="pointer-events-none absolute inset-x-0 bottom-0 z-[3] h-[min(26%,9rem)] md:hidden"
+          style={heroBottomFadeStyleMobile(bg)}
           aria-hidden
         />
         <div
