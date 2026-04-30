@@ -84,3 +84,198 @@ img {
   scrollbar-width: none;
   /* Firefox */
 }
+
+/* FeaturedRecipe: en móvil solo emplume horizontal (costados). */
+.featured-recipe-img-mask {
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 9%,
+    black 91%,
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 9%,
+    black 91%,
+    transparent 100%
+  );
+  mask-size: 100% 100%;
+  -webkit-mask-size: 100% 100%;
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
+}
+
+@media (min-width: 768px) {
+  /* Web: costados + arriba/abajo (intersección de dos máscaras). */
+  .featured-recipe-img-mask {
+    mask-image:
+      linear-gradient(
+        to right,
+        transparent 0%,
+        black 6%,
+        black 74%,
+        transparent 100%
+      ),
+      linear-gradient(
+        to bottom,
+        transparent 0%,
+        black 7%,
+        black 85%,
+        transparent 100%
+      );
+    mask-composite: intersect;
+    -webkit-mask-image:
+      linear-gradient(
+        to right,
+        transparent 0%,
+        black 6%,
+        black 74%,
+        transparent 100%
+      ),
+      linear-gradient(
+        to bottom,
+        transparent 0%,
+        black 7%,
+        black 85%,
+        transparent 100%
+      );
+    -webkit-mask-composite: source-in;
+  }
+}
+
+/* Contacto: móvil = costados + emplume inferior hacia el bloque oscuro; web = igual que featured. */
+.contacto-foto-img-mask {
+  mask-image:
+    linear-gradient(
+      to right,
+      transparent 0%,
+      black 9%,
+      black 91%,
+      transparent 100%
+    ),
+    linear-gradient(
+      to bottom,
+      black 0%,
+      black 70%,
+      transparent 100%
+    );
+  mask-composite: intersect;
+  -webkit-mask-image:
+    linear-gradient(
+      to right,
+      transparent 0%,
+      black 9%,
+      black 91%,
+      transparent 100%
+    ),
+    linear-gradient(
+      to bottom,
+      black 0%,
+      black 70%,
+      transparent 100%
+    );
+  -webkit-mask-composite: source-in;
+  mask-size: 100% 100%;
+  -webkit-mask-size: 100% 100%;
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
+}
+
+@media (min-width: 768px) {
+  .contacto-foto-img-mask {
+    mask-image:
+      linear-gradient(
+        to right,
+        transparent 0%,
+        black 6%,
+        black 74%,
+        transparent 100%
+      ),
+      linear-gradient(
+        to bottom,
+        transparent 0%,
+        black 7%,
+        black 85%,
+        transparent 100%
+      );
+    mask-composite: intersect;
+    -webkit-mask-image:
+      linear-gradient(
+        to right,
+        transparent 0%,
+        black 6%,
+        black 74%,
+        transparent 100%
+      ),
+      linear-gradient(
+        to bottom,
+        transparent 0%,
+        black 7%,
+        black 85%,
+        transparent 100%
+      );
+    -webkit-mask-composite: source-in;
+  }
+}
+
+/* Hero inicio: móvil = emplume horizontal (costados); web = costados + arriba/abajo en @media. */
+.hero-inicio-img-mask {
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 9%,
+    black 91%,
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 9%,
+    black 91%,
+    transparent 100%
+  );
+  mask-size: 100% 100%;
+  -webkit-mask-size: 100% 100%;
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
+}
+
+@media (min-width: 768px) {
+  /* Web: izquierda (crema) + costado derecho + arriba/abajo. */
+  .hero-inicio-img-mask {
+    mask-image:
+      linear-gradient(
+        to right,
+        transparent 0%,
+        black 20%,
+        black 90%,
+        transparent 100%
+      ),
+      linear-gradient(
+        to bottom,
+        transparent 0%,
+        black 6%,
+        black 88%,
+        transparent 100%
+      );
+    mask-composite: intersect;
+    -webkit-mask-image:
+      linear-gradient(
+        to right,
+        transparent 0%,
+        black 20%,
+        black 90%,
+        transparent 100%
+      ),
+      linear-gradient(
+        to bottom,
+        transparent 0%,
+        black 6%,
+        black 88%,
+        transparent 100%
+      );
+    -webkit-mask-composite: source-in;
+  }
+}

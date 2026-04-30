@@ -53,34 +53,52 @@ function hexToRgb(hex: string): { r: number; g: number; b: number } {
   };
 }
 
-/** Costados: panel → foto (paradas más suaves, sin tanta banda opaca). */
+/** Costados: opacidad plena en el borde para empatar con el panel sólido del vecino. */
 function featuredImageEdgeStops(panelHex: string): string {
   const { r, g, b } = hexToRgb(panelHex);
-  return `rgba(${r},${g},${b},0.38) 0%, rgba(${r},${g},${b},0.24) 14%, rgba(${r},${g},${b},0.13) 30%, rgba(${r},${g},${b},0.06) 48%, transparent 72%`;
+  return [
+    `rgba(${r},${g},${b},1) 0%`,
+    `rgba(${r},${g},${b},0.82) 5%`,
+    `rgba(${r},${g},${b},0.5) 14%`,
+    `rgba(${r},${g},${b},0.22) 28%`,
+    `rgba(${r},${g},${b},0.06) 44%`,
+    `transparent 72%`,
+  ].join(", ");
+}
+/** Paradas laterales en móvil (misma lógica, un poco más suave). */
+function featuredImageEdgeStopsMobile(panelHex: string): string {
+  const { r, g, b } = hexToRgb(panelHex);
+  return [
+    `rgba(${r},${g},${b},1) 0%`,
+    `rgba(${r},${g},${b},0.75) 7%`,
+    `rgba(${r},${g},${b},0.35) 20%`,
+    `rgba(${r},${g},${b},0.1) 38%`,
+    `transparent 70%`,
+  ].join(", ");
 }
 
-/** Degradado desktop: viñeta suave arriba ambos costados hacia el panel. */
+/** Desktop: refuerzo en costados (la máscara de la imagen ya empluma; esto homogeneiza el tono). */
 function featuredImageOverlayStyle(panelHex: string): CSSProperties {
   const { r, g, b } = hexToRgb(panelHex);
   const stops = featuredImageEdgeStops(panelHex);
   return {
     background: [
-      `linear-gradient(to top, rgba(${r},${g},${b},0.09) 0%, transparent 30%)`,
+      `linear-gradient(to top, rgba(${r},${g},${b},0.09) 0%, transparent 28%)`,
       `linear-gradient(to left, ${stops})`,
       `linear-gradient(to right, ${stops})`,
     ].join(", "),
   };
 }
 
-/** Móvil: bloque de texto arriba + costados, degradados más ligeros. */
+/** Móvil: fundido hacia el panel encima + costados. */
 function featuredImageMobileOverlayStyle(panelHex: string): CSSProperties {
   const { r, g, b } = hexToRgb(panelHex);
-  const stops = `rgba(${r},${g},${b},0.34) 0%, rgba(${r},${g},${b},0.2) 16%, rgba(${r},${g},${b},0.1) 34%, transparent 62%`;
+  const sideStops = featuredImageEdgeStopsMobile(panelHex);
   return {
     background: [
       `linear-gradient(to bottom, rgba(${r},${g},${b},0.28) 0%, rgba(${r},${g},${b},0.14) 22%, transparent 44%)`,
-      `linear-gradient(to left, ${stops})`,
-      `linear-gradient(to right, ${stops})`,
+      `linear-gradient(to left, ${sideStops})`,
+      `linear-gradient(to right, ${sideStops})`,
     ].join(", "),
   };
 }
@@ -161,6 +179,7 @@ export default function FeaturedRecipe({
           viewport={{ once: true }}
           transition={{ duration: 1.2 }}
           className="relative max-md:min-h-[38vh] md:min-h-full md:w-1/2 md:flex-shrink-0 md:basis-1/2"
+          style={{ backgroundColor: panel }}
         >
           <Image
             src={featured.imageSrc}
@@ -168,7 +187,7 @@ export default function FeaturedRecipe({
             fill
             sizes="50vw"
             quality={PHOTO_IMAGE_QUALITY}
-            className="object-cover"
+            className="featured-recipe-img-mask object-cover"
           />
           {/* Móvil: fundido con el texto encima + ambos costados */}
           <div

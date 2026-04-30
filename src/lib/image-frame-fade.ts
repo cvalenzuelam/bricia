@@ -10,7 +10,7 @@ export function hexToRgb(hex: string): { r: number; g: number; b: number } {
   };
 }
 
-/** Hero: funde la foto con el color de fondo del bloque (mobile + desktop), más suave que antes. */
+/** Hero (móvil): viñeta superior + fundido hacia el bloque crema a la izquierda. */
 export function heroMainImageOverlayStyle(bgHex: string): CSSProperties {
   const { r, g, b } = hexToRgb(bgHex);
   return {
@@ -21,18 +21,15 @@ export function heroMainImageOverlayStyle(bgHex: string): CSSProperties {
   };
 }
 
-/** Hero en `md+`: marco inferior e izquierdo más transparente que en móvil. */
+/** Hero en `md+`: viñeta superior ligera. */
 export function heroMainImageOverlayStyleWeb(bgHex: string): CSSProperties {
   const { r, g, b } = hexToRgb(bgHex);
   return {
-    background: [
-      `linear-gradient(to top, rgba(${r},${g},${b},0.045) 0%, transparent 30%)`,
-      `linear-gradient(to left, transparent 50%, rgba(${r},${g},${b},0.09) 78%, rgba(${r},${g},${b},0.14) 100%)`,
-    ].join(", "),
+    background: `linear-gradient(to top, rgba(${r},${g},${b},0.045) 0%, transparent 30%)`,
   };
 }
 
-/** Franja inferior del hero: menos banda opaca. */
+/** Franja inferior del hero (móvil): funde con la sección siguiente. */
 export function heroBottomFadeStyle(bgHex: string): CSSProperties {
   const { r, g, b } = hexToRgb(bgHex);
   return {

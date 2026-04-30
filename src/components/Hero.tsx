@@ -188,6 +188,7 @@ export default function Hero({
       {/* Foto — derecha (móvil: debajo del texto), columna más ancha */}
       <div
         className={`relative z-[1] w-full md:w-[62%] aspect-[5/4] md:aspect-auto md:min-h-[calc(62vw*1.12)] overflow-hidden min-h-[48svh] max-md:min-h-0 max-md:isolate max-md:[transform:translateZ(0)]`}
+        style={{ backgroundColor: bg }}
       >
         <Image
           src={heroImage}
@@ -196,7 +197,7 @@ export default function Hero({
           priority
           sizes="(max-width: 768px) 100vw, 62vw"
           quality={HERO_IMAGE_QUALITY}
-          className="object-cover object-center max-md:origin-bottom max-md:scale-[1.04]"
+          className="hero-inicio-img-mask object-cover object-center max-md:origin-bottom max-md:scale-[1.04]"
         />
         <div
           className="absolute inset-0 pointer-events-none md:hidden"
@@ -206,7 +207,6 @@ export default function Hero({
           className="absolute inset-0 pointer-events-none hidden md:block"
           style={overlayStyleWeb}
         />
-        {/* Velado inferior + tapa de 1px para subpíxeles entre foto y sección siguiente */}
         <div
           className="pointer-events-none absolute inset-x-0 bottom-0 z-[3] h-[min(38%,12rem)] md:hidden"
           style={heroBottomFadeStyle(bg)}

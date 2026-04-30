@@ -1,6 +1,5 @@
 ﻿import Image from "next/image";
 import { HERO_IMAGE_QUALITY } from "@/lib/image-quality";
-import { contactPhotoSplitFadeStyle } from "@/lib/image-frame-fade";
 import Link from "next/link";
 import { Mail } from "lucide-react";
 
@@ -105,19 +104,19 @@ export default function ContactPage() {
         style={{ backgroundColor: "#1D1D1B" }}
       >
         {/* ── Columna IZQUIERDA: foto ── */}
-        <div className="relative w-full md:w-[45%] aspect-[2/3] md:aspect-auto min-h-[60svh] md:min-h-[calc(45vw*1.5)] overflow-hidden">
+        <div
+          className="relative w-full md:w-[45%] aspect-[2/3] md:aspect-auto min-h-[60svh] md:min-h-[calc(45vw*1.5)] overflow-hidden"
+          style={{ backgroundColor: "#1D1D1B" }}
+        >
           <Image
             src="/images/bricia-contacto-original.jpg"
             alt="Bricia Elizalde"
             fill
             sizes="(max-width: 768px) 100vw, 45vw"
             quality={HERO_IMAGE_QUALITY}
-            className="object-cover object-center"
+            className="contacto-foto-img-mask object-cover object-center"
             priority
           />
-          {/* Overlay degradado para fundir con el texto en mobile */}
-          <div className="absolute inset-0 z-[1]" style={contactPhotoSplitFadeStyle()} />
-
         </div>
 
         {/* ── Columna DERECHA: texto ── */}
