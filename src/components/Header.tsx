@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Menu, X, Search, ShoppingBag, ArrowLeft } from "lucide-react";
+import { Menu, X, Search, ShoppingBag, ArrowLeft, Store } from "lucide-react";
 import { SiteSocialIconRow } from "@/components/SiteSocialLinks";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
@@ -186,7 +186,14 @@ export default function Header() {
               ))}
             </nav>
 
-            <div className="flex gap-4">
+            <div className="flex gap-4 items-center">
+              <Link
+                href="/productos"
+                className={`md:hidden ${iconColor} hover:text-brand-accent transition-colors`}
+                aria-label="Ir a la tienda"
+              >
+                <Store size={18} strokeWidth={1.5} />
+              </Link>
               <button
                 type="button"
                 onClick={() => setSearchOpen(true)}

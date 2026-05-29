@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingBag, Check, Loader2 } from "lucide-react";
+import { ShoppingBag, Check, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { formatPrice } from "@/data/products";
 import type { Product } from "@/data/products";
 import { useCart } from "@/context/CartContext";
@@ -61,6 +61,25 @@ export default function ProductosPage() {
   const [filter, setFilter] = useState("TODOS");
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const [canCarouselPrev, setCanCarouselPrev] = useState(false);
+  const [canCarouselNext, setCanCarouselNext] = useState(false);
+
+  const syncCarouselScroll = useCallback(() => {
+    const el = carouselRef.current;
+    if (!el) return;
+    const { scrollLeft, scrollWidth, clientWidth } = el;
+    const maxScroll = scrollWidth - clientWidth;
+    setCanCarouselPrev(scrollLeft > 4);
+    setCanCarouselNext(maxScroll > 4 && scrollLeft < maxScroll - 4);
+  }, []);
+
+  const scrollCarousel = useCallback((dir: -1 | 1) => {
+    const el = carouselRef.current;
+    if (!el) return;
+    const stride = Math.min(el.clientWidth * 0.75, 360);
+    el.scrollBy({ left: dir * stride, behavior: "smooth" });
+  }, []);
 
   useEffect(() => {
     fetch("/api/productos", { cache: "no-store" })
@@ -80,6 +99,27 @@ export default function ProductosPage() {
   const filtered = filter === "TODOS"
     ? products
     : products.filter((p) => p.category === filter);
+
+  useEffect(() => {
+    if (loading) return;
+    const el = carouselRef.current;
+    if (!el) return;
+    syncCarouselScroll();
+    const ro = new ResizeObserver(syncCarouselScroll);
+    ro.observe(el);
+    el.addEventListener("scroll", syncCarouselScroll, { passive: true });
+    return () => {
+      ro.disconnect();
+      el.removeEventListener("scroll", syncCarouselScroll);
+    };
+  }, [loading, filtered.length, filter, syncCarouselScroll]);
+
+  useEffect(() => {
+    const el = carouselRef.current;
+    if (!el) return;
+    el.scrollTo({ left: 0 });
+    queueMicrotask(syncCarouselScroll);
+  }, [filter, syncCarouselScroll]);
 
   return (
     <article className="min-h-screen bg-brand-secondary pt-32 pb-32">
@@ -143,77 +183,155 @@ export default function ProductosPage() {
             <Loader2 size={24} className="animate-spin text-brand-muted" />
           </div>
         ) : (
-          <motion.div
-            layout
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-20"
-          >
-            <AnimatePresence mode="popLayout">
-              {filtered.map((product, i) => (
-                <motion.div
-                  key={product.id}
-                  layout
-                  initial={{ opacity: 0, y: 24 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.96 }}
-                  transition={{ duration: 0.5, delay: i * 0.07 }}
-                  className="group flex flex-col gap-6"
-                  id={`product-${product.id}`}
-                >
-                  <Link
-                    href={`/productos/${product.id}`}
-                    className="block relative aspect-[4/5] rounded-2xl overflow-hidden bg-white border border-brand-primary/5 shadow-sm group/image"
+          <>
+            {/* Móvil: carrusel (misma idea que ProductSection en la home) */}
+            <div className="md:hidden relative -mx-1 px-1">
+              <div
+                ref={carouselRef}
+                role="region"
+                aria-roledescription="carrusel"
+                aria-label="Productos de la alacena"
+                className="no-scrollbar flex gap-6 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-2"
+              >
+                {filtered.map((product, i) => (
+                  <motion.article
+                    key={product.id}
+                    id={`product-${product.id}`}
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.45, delay: Math.min(i * 0.05, 0.35) }}
+                    className="flex w-[min(78vw,280px)] flex-shrink-0 snap-start flex-col gap-5"
                   >
-                    <Image
-                      src={product.image}
-                      alt={product.name}
-                      fill
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                      quality={PHOTO_IMAGE_QUALITY}
-                      className="object-cover transition-transform duration-[1.4s] ease-out group-hover/image:scale-105"
-                    />
-                    <ImageFrameFade variant="white" />
-                    {/* Category badge */}
-                    <div className="absolute top-4 left-4 z-[2]">
-                      <span className="text-[9px] font-sans font-bold tracking-[0.25em] uppercase bg-white/90 backdrop-blur-sm text-brand-primary/60 px-3 py-1.5 rounded-full">
-                        {product.category}
-                      </span>
-                    </div>
-                  </Link>
-
-                  {/* Info */}
-                  <div className="space-y-4">
-                    <div className="space-y-1">
+                    <Link
+                      href={`/productos/${product.id}`}
+                      className="group/image block relative aspect-[4/5] overflow-hidden rounded-2xl border border-brand-primary/10 bg-white shadow-sm"
+                    >
+                      <Image
+                        src={product.image}
+                        alt={product.name}
+                        fill
+                        sizes="280px"
+                        quality={PHOTO_IMAGE_QUALITY}
+                        className="object-cover transition-transform duration-[1.2s] ease-out group-hover/image:scale-105"
+                      />
+                      <ImageFrameFade variant="white" />
+                      <div className="absolute top-3 left-3 z-[2]">
+                        <span className="rounded-full bg-white/90 px-2.5 py-1 text-[8px] font-sans font-bold uppercase tracking-[0.2em] text-brand-primary/60 backdrop-blur-sm">
+                          {product.category}
+                        </span>
+                      </div>
+                    </Link>
+                    <div className="flex flex-col gap-3 px-0.5">
                       <Link href={`/productos/${product.id}`} className="block">
-                        <h3 className="font-serif text-2xl md:text-3xl text-brand-primary leading-tight group-hover:text-brand-accent transition-colors duration-400">
+                        <h3 className="font-serif text-xl leading-tight text-brand-primary transition-colors hover:text-brand-accent">
                           {product.name}
                         </h3>
                       </Link>
-                      <p className="text-xs font-sans text-brand-muted">{product.subtitle}</p>
-                    </div>
-
-                    <p className="text-sm font-serif italic text-brand-primary/60 leading-relaxed line-clamp-2">
-                      {product.description}
-                    </p>
-
-                    <Link
-                      href={`/productos/${product.id}`}
-                      className="inline-block editorial-spacing text-brand-accent/90 hover:text-brand-primary transition-colors"
-                    >
-                      Ver pieza →
-                    </Link>
-
-                    <div className="pt-1">
-                      <span className="font-serif text-2xl text-brand-primary">
+                      <p className="line-clamp-2 text-xs font-serif italic text-brand-primary/55">
+                        {product.description}
+                      </p>
+                      <span className="font-serif text-lg text-brand-primary">
                         {formatPrice(product.price)}
                       </span>
+                      <AddButton product={product} />
                     </div>
+                  </motion.article>
+                ))}
+              </div>
+              <div className="mt-6 flex items-center justify-center gap-10">
+                <button
+                  type="button"
+                  aria-label="Productos anteriores"
+                  onClick={() => scrollCarousel(-1)}
+                  disabled={!canCarouselPrev}
+                  className="flex h-12 w-12 items-center justify-center rounded-full border border-brand-primary/15 text-brand-accent transition-opacity disabled:opacity-25"
+                >
+                  <ChevronLeft size={24} strokeWidth={1.5} aria-hidden />
+                </button>
+                <button
+                  type="button"
+                  aria-label="Siguientes productos"
+                  onClick={() => scrollCarousel(1)}
+                  disabled={!canCarouselNext}
+                  className="flex h-12 w-12 items-center justify-center rounded-full border border-brand-primary/15 text-brand-accent transition-opacity disabled:opacity-25"
+                >
+                  <ChevronRight size={24} strokeWidth={1.5} aria-hidden />
+                </button>
+              </div>
+            </div>
 
-                    <AddButton product={product} />
-                  </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </motion.div>
+            <motion.div
+              layout
+              className="hidden grid-cols-1 gap-x-10 gap-y-20 md:grid md:grid-cols-2 lg:grid-cols-3"
+            >
+              <AnimatePresence mode="popLayout">
+                {filtered.map((product, i) => (
+                  <motion.div
+                    key={product.id}
+                    layout
+                    initial={{ opacity: 0, y: 24 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.96 }}
+                    transition={{ duration: 0.5, delay: i * 0.07 }}
+                    className="group flex flex-col gap-6"
+                    id={`product-${product.id}-desktop`}
+                  >
+                    <Link
+                      href={`/productos/${product.id}`}
+                      className="block relative aspect-[4/5] rounded-2xl overflow-hidden bg-white border border-brand-primary/5 shadow-sm group/image"
+                    >
+                      <Image
+                        src={product.image}
+                        alt={product.name}
+                        fill
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        quality={PHOTO_IMAGE_QUALITY}
+                        className="object-cover transition-transform duration-[1.4s] ease-out group-hover/image:scale-105"
+                      />
+                      <ImageFrameFade variant="white" />
+                      {/* Category badge */}
+                      <div className="absolute top-4 left-4 z-[2]">
+                        <span className="text-[9px] font-sans font-bold tracking-[0.25em] uppercase bg-white/90 backdrop-blur-sm text-brand-primary/60 px-3 py-1.5 rounded-full">
+                          {product.category}
+                        </span>
+                      </div>
+                    </Link>
+
+                    {/* Info */}
+                    <div className="space-y-4">
+                      <div className="space-y-1">
+                        <Link href={`/productos/${product.id}`} className="block">
+                          <h3 className="font-serif text-2xl md:text-3xl text-brand-primary leading-tight group-hover:text-brand-accent transition-colors duration-400">
+                            {product.name}
+                          </h3>
+                        </Link>
+                        <p className="text-xs font-sans text-brand-muted">{product.subtitle}</p>
+                      </div>
+
+                      <p className="text-sm font-serif italic text-brand-primary/60 leading-relaxed line-clamp-2">
+                        {product.description}
+                      </p>
+
+                      <Link
+                        href={`/productos/${product.id}`}
+                        className="inline-block editorial-spacing text-brand-accent/90 hover:text-brand-primary transition-colors"
+                      >
+                        Ver pieza →
+                      </Link>
+
+                      <div className="pt-1">
+                        <span className="font-serif text-2xl text-brand-primary">
+                          {formatPrice(product.price)}
+                        </span>
+                      </div>
+
+                      <AddButton product={product} />
+                    </div>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </motion.div>
+          </>
         )}
 
         {!loading && filtered.length === 0 && (

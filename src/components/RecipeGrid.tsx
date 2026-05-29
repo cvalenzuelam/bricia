@@ -14,6 +14,8 @@ interface Recipe {
 
 const SEASON_CATEGORIES = ["PRIMAVERA", "VERANO", "OTOÑO", "INVIERNO", "POSTRES"] as const;
 const FILTER_ORDER = [...SEASON_CATEGORIES, "TODAS"] as const;
+/** Landing: primera pestaña = recetas del hero (mismo carrusel/grid que antes). */
+const LANDING_FILTER_ORDER = ["DESTACADAS", ...FILTER_ORDER] as const;
 type SeasonOrAll = (typeof FILTER_ORDER)[number];
 
 type ViewMode = "featured" | SeasonOrAll;
@@ -126,7 +128,6 @@ export default function RecipeGrid({
   }, [recipes, landingSlugs, viewMode]);
 
   useEffect(() => {
-    if (variant !== "landing") return;
     const el = scrollRef.current;
     if (!el) return;
     syncScrollButtons();
@@ -137,7 +138,7 @@ export default function RecipeGrid({
       ro.disconnect();
       el.removeEventListener("scroll", syncScrollButtons);
     };
-  }, [variant, filteredRecipes.length, viewMode, syncScrollButtons]);
+  }, [filteredRecipes.length, viewMode, syncScrollButtons]);
 
   const showFeaturedReset = variant === "landing" && viewMode !== "featured";
 
@@ -153,13 +154,15 @@ export default function RecipeGrid({
               w-full max-md:snap-x max-md:snap-mandatory md:overflow-visible md:pb-4 md:-mb-4 md:px-0 md:w-auto
             "
           >
-            {FILTER_ORDER.map((key) => {
-              const active = viewMode === key;
+            {(variant === "landing" ? LANDING_FILTER_ORDER : FILTER_ORDER).map((key) => {
+              const mode: ViewMode =
+                key === "DESTACADAS" ? "featured" : (key as SeasonOrAll);
+              const active = viewMode === mode;
               return (
                 <button
                   key={key}
                   type="button"
-                  onClick={() => setViewMode(key)}
+                  onClick={() => setViewMode(mode)}
                   className={`
                     group relative shrink-0 snap-start
                     max-md:rounded-full max-md:px-4 max-md:py-2.5 max-md:border max-md:text-[10px] max-md:font-sans max-md:font-bold
@@ -178,7 +181,7 @@ export default function RecipeGrid({
                       ${active ? "md:text-brand-accent" : "md:text-brand-muted md:group-hover:text-brand-primary"}
                     `}
                   >
-                    {key}
+                    {key === "DESTACADAS" ? "DESTACADAS" : key}
                   </span>
                   {active && (
                     <motion.div
@@ -203,7 +206,7 @@ export default function RecipeGrid({
         )}
       </div>
 
-      {variant === "landing" && filteredRecipes.length > 0 && (
+      {filteredRecipes.length > 0 && (
         <div className="md:hidden relative">
           <div
             ref={scrollRef}
@@ -258,11 +261,7 @@ export default function RecipeGrid({
 
       <motion.div
         layout
-        className={
-          variant === "landing"
-            ? "hidden md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-16"
-            : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-16"
-        }
+        className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-16"
       >
         <AnimatePresence mode="popLayout">
           {filteredRecipes.map((recipe, index) => (
