@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { mkdir, writeFile } from "fs/promises";
 import path from "path";
 import crypto from "crypto";
+import { resolveCmsImageMime } from "@/lib/cms-image-mime";
 import { localJsonInDev } from "@/lib/dev-data-source";
 
 export const runtime = "nodejs";
@@ -42,7 +43,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!file.type.startsWith("image/")) {
+    const mime = resolveCmsImageMime(file);
+    if (!mime.startsWith("image/")) {
       return NextResponse.json(
         { error: "El archivo debe ser una imagen válida" },
         { status: 400 }

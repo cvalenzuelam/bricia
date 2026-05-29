@@ -1,6 +1,7 @@
 "use client";
 
 import { createClient } from "@supabase/supabase-js";
+import { resolveCmsImageMime } from "@/lib/cms-image-mime";
 
 function isLocalDevUploadHost(): boolean {
   if (typeof window === "undefined") return false;
@@ -70,11 +71,13 @@ export async function uploadCmsImageFile(
     return null;
   }
 
+  const contentType = resolveCmsImageMime(file);
+
   const signRes = await fetch("/api/upload/sign", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      mime: file.type || "image/jpeg",
+      mime: contentType,
       size: file.size,
       name: file.name || "upload.jpg",
     }),
@@ -94,7 +97,7 @@ export async function uploadCmsImageFile(
   const { error: upErr } = await sb.storage
     .from(bucket)
     .uploadToSignedUrl(path, token, file, {
-      contentType: file.type || "image/jpeg",
+      contentType,
     });
 
   if (upErr) {

@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
+import {
+  isAllowedCmsImageMime,
+  resolveCmsImageMime,
+} from "@/lib/cms-image-mime";
 import { createSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
@@ -29,8 +33,11 @@ export async function POST(request: Request) {
     }
 
     const size = Number(body.size);
-    const mime = String(body.mime ?? "");
     const name = String(body.name ?? "imagen.jpg");
+    const mime = resolveCmsImageMime({
+      type: String(body.mime ?? ""),
+      name,
+    });
 
     if (!Number.isFinite(size) || size <= 0 || size > MAX_IMAGE_SIZE_BYTES) {
       return NextResponse.json(
@@ -41,7 +48,7 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!mime.startsWith("image/")) {
+    if (!isAllowedCmsImageMime(mime)) {
       return NextResponse.json({ error: "Solo se permiten imágenes." }, { status: 400 });
     }
 
