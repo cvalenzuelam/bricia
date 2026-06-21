@@ -4,9 +4,10 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowLeft, Plus, Edit3, Trash2, Loader2, ShoppingBag } from "lucide-react";
+import { ArrowLeft, Plus, Edit3, Trash2, Loader2, ShoppingBag, Sparkles, Save } from "lucide-react";
 import { formatPrice } from "@/data/products";
 import type { Product } from "@/data/products";
+import { DEFAULT_SHOP_CONFIG, type ShopConfig } from "@/data/shop-config";
 import AdminCmsLoading from "@/components/admin/AdminCmsLoading";
 import { PHOTO_IMAGE_QUALITY } from "@/lib/image-quality";
 
@@ -22,12 +23,53 @@ export default function AdminProductosPage() {
   const [loading, setLoading] = useState(true);
   const [initialListReady, setInitialListReady] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [shopConfig, setShopConfig] = useState<ShopConfig>(DEFAULT_SHOP_CONFIG);
+  const [shopSaving, setShopSaving] = useState(false);
+  const [shopMessage, setShopMessage] = useState("");
 
   useEffect(() => {
     const session = sessionStorage.getItem("bricia_admin");
     if (session !== "true") { router.push("/admin"); return; }
     fetchProducts();
+    fetchShopConfig();
   }, [router]);
+
+  const fetchShopConfig = async () => {
+    try {
+      const res = await fetch("/api/shop", { cache: "no-store" });
+      const data = await res.json();
+      if (data && typeof data === "object") {
+        setShopConfig({
+          comingSoon: data.comingSoon === true,
+          title: typeof data.title === "string" ? data.title : DEFAULT_SHOP_CONFIG.title,
+          subtitle: typeof data.subtitle === "string" ? data.subtitle : DEFAULT_SHOP_CONFIG.subtitle,
+          message: typeof data.message === "string" ? data.message : DEFAULT_SHOP_CONFIG.message,
+        });
+      }
+    } catch {
+      /* keep defaults */
+    }
+  };
+
+  const saveShopConfig = async () => {
+    setShopSaving(true);
+    setShopMessage("");
+    try {
+      const res = await fetch("/api/shop", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(shopConfig),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Error al guardar");
+      setShopMessage("Configuración de la tienda guardada.");
+      setTimeout(() => setShopMessage(""), 3000);
+    } catch (e) {
+      setShopMessage(e instanceof Error ? e.message : "No se pudo guardar.");
+    } finally {
+      setShopSaving(false);
+    }
+  };
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -77,6 +119,99 @@ export default function AdminProductosPage() {
             </button>
           </Link>
         </div>
+
+        {/* Modo próximamente */}
+        <section className="mb-12 rounded-2xl border border-brand-primary/8 bg-white p-6 md:p-8 space-y-6">
+          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+            <div className="space-y-2">
+              <h2 className="text-xl font-serif text-brand-primary flex items-center gap-2">
+                <Sparkles size={20} className="text-brand-accent" />
+                Modo próximamente
+              </h2>
+              <p className="text-sm font-sans text-brand-muted max-w-xl leading-relaxed">
+                Cuando está activo, la tienda pública muestra un aviso de próximamente en lugar del catálogo.
+                El carrito se oculta y las páginas de producto redirigen a la tienda.
+              </p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={shopConfig.comingSoon}
+              onClick={() =>
+                setShopConfig((prev) => ({ ...prev, comingSoon: !prev.comingSoon }))
+              }
+              className={`relative inline-flex h-8 w-14 shrink-0 items-center rounded-full transition-colors ${
+                shopConfig.comingSoon ? "bg-brand-accent" : "bg-brand-primary/15"
+              }`}
+            >
+              <span
+                className={`inline-block h-6 w-6 transform rounded-full bg-white shadow transition-transform ${
+                  shopConfig.comingSoon ? "translate-x-7" : "translate-x-1"
+                }`}
+              />
+            </button>
+          </div>
+
+          {shopConfig.comingSoon && (
+            <div className="grid gap-4 md:grid-cols-2 pt-2 border-t border-brand-primary/5">
+              <label className="block space-y-1.5">
+                <span className="text-[10px] font-sans font-bold tracking-[0.2em] uppercase text-brand-muted">
+                  Título
+                </span>
+                <input
+                  type="text"
+                  value={shopConfig.title}
+                  onChange={(e) => setShopConfig((prev) => ({ ...prev, title: e.target.value }))}
+                  className="w-full rounded-lg border border-brand-primary/10 px-4 py-2.5 text-sm font-serif text-brand-primary bg-brand-secondary/50 focus:outline-none focus:border-brand-accent/50"
+                />
+              </label>
+              <label className="block space-y-1.5 md:col-span-2">
+                <span className="text-[10px] font-sans font-bold tracking-[0.2em] uppercase text-brand-muted">
+                  Subtítulo
+                </span>
+                <input
+                  type="text"
+                  value={shopConfig.subtitle}
+                  onChange={(e) => setShopConfig((prev) => ({ ...prev, subtitle: e.target.value }))}
+                  className="w-full rounded-lg border border-brand-primary/10 px-4 py-2.5 text-sm font-serif italic text-brand-primary bg-brand-secondary/50 focus:outline-none focus:border-brand-accent/50"
+                />
+              </label>
+              <label className="block space-y-1.5 md:col-span-2">
+                <span className="text-[10px] font-sans font-bold tracking-[0.2em] uppercase text-brand-muted">
+                  Mensaje
+                </span>
+                <textarea
+                  rows={3}
+                  value={shopConfig.message}
+                  onChange={(e) => setShopConfig((prev) => ({ ...prev, message: e.target.value }))}
+                  className="w-full rounded-lg border border-brand-primary/10 px-4 py-2.5 text-sm font-sans text-brand-primary bg-brand-secondary/50 focus:outline-none focus:border-brand-accent/50 resize-y"
+                />
+              </label>
+            </div>
+          )}
+
+          <div className="flex flex-wrap items-center gap-4 pt-2">
+            <button
+              type="button"
+              onClick={saveShopConfig}
+              disabled={shopSaving}
+              className="inline-flex items-center gap-2 bg-brand-primary text-brand-secondary px-5 py-2.5 rounded-lg text-xs font-sans font-bold tracking-[0.15em] uppercase hover:bg-brand-accent transition-colors disabled:opacity-50"
+            >
+              {shopSaving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+              Guardar configuración
+            </button>
+            {shopMessage && (
+              <p className="text-xs font-sans text-brand-accent">{shopMessage}</p>
+            )}
+            <Link
+              href="/productos"
+              target="_blank"
+              className="text-xs font-sans text-brand-muted hover:text-brand-accent transition-colors ml-auto"
+            >
+              Ver tienda pública →
+            </Link>
+          </div>
+        </section>
 
         {/* Product List */}
         {loading ? (

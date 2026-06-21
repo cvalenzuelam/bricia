@@ -45,6 +45,7 @@ export default function Header() {
   const [articles, setArticles] = useState<MesaArticle[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [catalogLoaded, setCatalogLoaded] = useState(false);
+  const [shopComingSoon, setShopComingSoon] = useState(false);
   const pathname = usePathname();
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -73,12 +74,14 @@ export default function Header() {
       fetch("/api/recipes").then((r) => r.json()),
       fetch("/api/mesa").then((r) => r.json()),
       fetch("/api/productos").then((r) => r.json()),
+      fetch("/api/shop", { cache: "no-store" }).then((r) => r.json()),
     ])
-      .then(([rRecipes, rMesa, rProducts]) => {
+      .then(([rRecipes, rMesa, rProducts, rShop]) => {
         if (cancelled) return;
         setRecipes(Array.isArray(rRecipes) ? rRecipes : []);
         setArticles(Array.isArray(rMesa) ? rMesa : []);
         setProducts(Array.isArray(rProducts) ? rProducts : []);
+        setShopComingSoon(rShop?.comingSoon === true);
         setCatalogLoaded(true);
       })
       .catch(() => {
@@ -116,17 +119,17 @@ export default function Header() {
   }, [isOpen]);
 
   const suggestions = useMemo(
-    () => mixedSuggestions(recipes, articles, products, 6),
-    [recipes, articles, products]
+    () => mixedSuggestions(recipes, articles, shopComingSoon ? [] : products, 6),
+    [recipes, articles, products, shopComingSoon]
   );
 
   const runSearch = useCallback(
     (value: string) => {
       setQuery(value);
-      const hits = searchSite(value, recipes, articles, products);
+      const hits = searchSite(value, recipes, articles, shopComingSoon ? [] : products);
       setResults(hits);
     },
-    [recipes, articles, products]
+    [recipes, articles, products, shopComingSoon]
   );
 
   return (
@@ -205,7 +208,7 @@ export default function Header() {
               <button
                 type="button"
                 onClick={openCart}
-                className={`${iconColor} hover:text-brand-accent transition-colors relative`}
+                className={`${iconColor} hover:text-brand-accent transition-colors relative ${shopComingSoon ? "hidden" : ""}`}
                 aria-label="Abrir carrito"
               >
                 <ShoppingBag size={18} strokeWidth={1.5} />

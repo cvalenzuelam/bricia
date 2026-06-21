@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, Layers, Ruler } from "lucide-react";
 import { getProducts } from "@/data/products-server";
+import { loadShopConfig } from "@/data/shop-config-loader";
 import { formatPrice } from "@/data/products";
 import type { Product } from "@/data/products";
 import ProductDetailAddToCart from "@/components/productos/ProductDetailAddToCart";
@@ -118,6 +119,11 @@ function productJsonLd(product: Product, origin: string) {
 }
 
 export default async function ProductoDetallePage({ params }: PageProps) {
+  const shopConfig = await loadShopConfig();
+  if (shopConfig.comingSoon) {
+    redirect("/productos");
+  }
+
   const { id } = await params;
   const products = await getProducts();
   const product = products.find((p) => p.id === id);

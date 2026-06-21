@@ -14,6 +14,7 @@ import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import type { Product } from "@/data/products";
 import { PHOTO_IMAGE_QUALITY } from "@/lib/image-quality";
 import ImageFrameFade from "@/components/ImageFrameFade";
+import ShopComingSoon from "@/components/productos/ShopComingSoon";
 
 function formatPriceMx(price: number): string {
   return new Intl.NumberFormat("es-MX", {
@@ -25,9 +26,17 @@ function formatPriceMx(price: number): string {
 
 export default function ProductSection({
   initialProducts,
+  shopComingSoon,
+  shopComingSoonConfig,
 }: {
   /** Precargados en el servidor = evita otro GET /api/productos en cliente */
   initialProducts?: Product[];
+  shopComingSoon?: boolean;
+  shopComingSoonConfig?: {
+    title: string;
+    subtitle: string;
+    message: string;
+  };
 }): JSX.Element | null {
   const [products, setProducts] = useState<Product[]>(() =>
     Array.isArray(initialProducts) ? initialProducts : []
@@ -88,6 +97,10 @@ export default function ProductSection({
     const stride = Math.min(el.clientWidth * 0.75, 360);
     el.scrollBy({ left: dir * stride, behavior: "smooth" });
   }, []);
+
+  if (shopComingSoon && shopComingSoonConfig) {
+    return <ShopComingSoon config={shopComingSoonConfig} variant="section" />;
+  }
 
   if (products.length === 0) return null;
 

@@ -4,14 +4,18 @@ import RecipeGrid from "@/components/RecipeGrid";
 import ProductSection from "@/components/ProductSection";
 import InstagramFeed from "@/components/InstagramFeed";
 import { loadHeroPayload } from "@/data/hero-config-loader";
+import { loadShopConfig } from "@/data/shop-config-loader";
 import { getProducts } from "@/data/products-server";
 import { getRecipes } from "@/data/recipes";
 
+export const dynamic = "force-dynamic";
+
 export default async function Home() {
-  const [products, recipes, heroRaw] = await Promise.all([
+  const [products, recipes, heroRaw, shopConfig] = await Promise.all([
     getProducts(),
     getRecipes(),
     loadHeroPayload(),
+    loadShopConfig(),
   ]);
 
   const hero =
@@ -69,7 +73,19 @@ export default async function Home() {
       </section>
 
       {/* 4. Tienda — carrusel */}
-      <ProductSection initialProducts={products} />
+      <ProductSection
+        initialProducts={shopConfig.comingSoon ? undefined : products}
+        shopComingSoon={shopConfig.comingSoon}
+        shopComingSoonConfig={
+          shopConfig.comingSoon
+            ? {
+                title: shopConfig.title,
+                subtitle: shopConfig.subtitle,
+                message: shopConfig.message,
+              }
+            : undefined
+        }
+      />
 
       {/* 5–6. Comunidad / Instagram */}
       <InstagramFeed

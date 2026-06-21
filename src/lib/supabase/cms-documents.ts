@@ -5,6 +5,7 @@ import { createSupabaseAdmin, isSupabaseConfigured } from "./admin";
 export const CMS_DOC_KEYS = {
   hero: "hero_config",
   contact: "contact_config",
+  shop: "shop_config",
   recipes: "recipes",
   lamesa: "lamesa_articles",
   orders: "orders",

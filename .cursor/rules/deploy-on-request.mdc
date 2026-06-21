@@ -1,0 +1,15 @@
+---
+description: Despliegue a git y Vercel cuando el usuario lo autorice explícitamente
+alwaysApply: true
+---
+
+# Despliegue bajo autorización
+
+Cuando el usuario diga **"puedes subirlo"**, **"sube los cambios"**, **"deploy"** o una frase equivalente que autorice publicar el trabajo actual:
+
+1. Verifica el estado con `git status` y `git diff`.
+2. Crea un commit con mensaje claro (solo si hay cambios pendientes).
+3. Haz `git push` al remoto configurado.
+4. Vercel despliega automáticamente al hacer push; si el proyecto usa CLI de Vercel y el push no basta, ejecuta `vercel --prod` desde la raíz del repo.
+
+No hagas push ni deploy hasta recibir esa autorización explícita del usuario.

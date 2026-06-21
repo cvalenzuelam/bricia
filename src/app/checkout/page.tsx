@@ -61,6 +61,18 @@ export default function CheckoutPage() {
     setHydrated(true);
   }, []);
 
+  useEffect(() => {
+    if (!hydrated) return;
+    fetch("/api/shop", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data?.comingSoon === true) {
+          router.replace("/productos");
+        }
+      })
+      .catch(() => {});
+  }, [hydrated, router]);
+
   // Si el carrito queda vacío, regresa a la tienda
   useEffect(() => {
     if (hydrated && items.length === 0 && !submitting) {
