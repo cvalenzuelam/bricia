@@ -155,7 +155,12 @@ export default function NuevaRecetaPage() {
     });
 
     if (res.ok) {
-      router.push("/admin");
+      const data = (await res.json()) as { recipe?: { slug?: string } };
+      const slug = data.recipe?.slug;
+      if (slug) {
+        sessionStorage.setItem("bricia_admin_added_recipe", slug);
+      }
+      router.push("/admin", { scroll: false });
     } else {
       alert("Error al guardar la receta");
     }

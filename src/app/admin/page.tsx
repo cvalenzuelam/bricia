@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { shouldUnoptimizeRemoteImage } from "@/lib/next-image-remote";
@@ -17,8 +17,11 @@ interface Recipe {
 }
 
 const ADMIN_PASSWORD = "bricia2026";
+const ADDED_RECIPE_SESSION_KEY = "bricia_admin_added_recipe";
 
 export default function AdminPage() {
+  const scrolledToAddedRef = useRef(false);
+  const [highlightSlug, setHighlightSlug] = useState<string | null>(null);
   // Same initial state on server and client avoids hydration mismatch; session is read after mount.
   const [authChecked, setAuthChecked] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
@@ -55,6 +58,21 @@ export default function AdminPage() {
       cancelled = true;
     };
   }, [authChecked, authenticated]);
+
+  useEffect(() => {
+    if (!recipesHydrated || scrolledToAddedRef.current) return;
+    const slug = sessionStorage.getItem(ADDED_RECIPE_SESSION_KEY);
+    if (!slug) return;
+    const row = document.getElementById(`recipe-row-${slug}`);
+    if (!row) return;
+
+    scrolledToAddedRef.current = true;
+    sessionStorage.removeItem(ADDED_RECIPE_SESSION_KEY);
+    setHighlightSlug(slug);
+    requestAnimationFrame(() => {
+      row.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+  }, [recipesHydrated, recipes]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -189,7 +207,12 @@ export default function AdminPage() {
           {recipes.map((recipe) => (
             <div
               key={recipe.slug}
-              className="bg-white rounded-xl p-4 flex items-center gap-5 border border-brand-primary/5 hover:border-brand-accent/20 transition-colors group"
+              id={`recipe-row-${recipe.slug}`}
+              className={`bg-white rounded-xl p-4 flex items-center gap-5 border transition-colors group ${
+                highlightSlug === recipe.slug
+                  ? "border-brand-accent/50 ring-1 ring-brand-accent/25"
+                  : "border-brand-primary/5 hover:border-brand-accent/20"
+              }`}
             >
               {/* Thumbnail */}
               <div className="relative w-20 h-20 rounded-lg overflow-hidden shrink-0 bg-brand-secondary">
