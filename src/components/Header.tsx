@@ -34,6 +34,13 @@ function hitBadgeClass(kind: SiteSearchHit["kind"]): string {
   return "text-brand-muted";
 }
 
+/** Primera letra en mayúscula; el resto se conserva como en el CMS (como en las tarjetas de receta). */
+function sentenceCaseTitle(text: string): string {
+  const t = text.trim();
+  if (!t) return t;
+  return t.charAt(0).toLocaleUpperCase("es") + t.slice(1);
+}
+
 export default function Header() {
   const { itemCount, openCart } = useCart();
   const [isOpen, setIsOpen] = useState(false);
@@ -371,8 +378,8 @@ export default function Header() {
                         <p className={`text-[9px] font-sans font-bold tracking-[0.25em] uppercase ${hitBadgeClass(hit.kind)}`}>
                           {hit.badge}
                         </p>
-                        <p className="text-lg font-serif text-brand-primary group-hover:text-brand-accent transition-colors truncate lowercase">
-                          {hit.title}
+                        <p className="text-lg font-serif text-brand-primary group-hover:text-brand-accent transition-colors truncate">
+                          {sentenceCaseTitle(hit.title)}
                         </p>
                         <p className="text-xs font-sans text-brand-muted truncate">
                           {hit.subtitle}
@@ -418,8 +425,8 @@ export default function Header() {
                                 <p className={`text-[9px] font-sans font-bold tracking-[0.22em] uppercase ${hitBadgeClass(hit.kind)} mb-0.5`}>
                                   {hit.badge}
                                 </p>
-                                <p className="text-[15px] font-serif text-brand-primary group-hover:text-brand-accent transition-colors truncate lowercase">
-                                  {hit.title}
+                                <p className="text-[15px] font-serif text-brand-primary group-hover:text-brand-accent transition-colors truncate">
+                                  {sentenceCaseTitle(hit.title)}
                                 </p>
                                 <p className="text-[10px] font-sans text-brand-muted line-clamp-1 mt-0.5">
                                   {hit.subtitle}
