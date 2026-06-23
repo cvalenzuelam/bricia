@@ -159,13 +159,14 @@ export default function Hero({
             <p className="hidden md:block text-sm font-sans text-brand-muted leading-relaxed">
               {config.description}
             </p>
-            <Link
-              href="/recetas"
-              className="block text-[10px] font-sans tracking-[0.18em] md:text-xs md:tracking-[0.25em] uppercase font-medium text-brand-accent leading-relaxed transition-colors hover:text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/45 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-secondary rounded-sm max-md:text-[11px] max-md:tracking-[0.22em]"
-            >
-              {config.ctaText}
-            </Link>
           </div>
+
+          <Link
+            href="/recetas"
+            className="hidden md:block text-xs font-sans tracking-[0.25em] uppercase font-medium text-brand-accent leading-relaxed transition-colors hover:text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/45 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-secondary rounded-sm md:pt-2"
+          >
+            {config.ctaText}
+          </Link>
 
           <motion.a
             href="#seccion-destacada"
