@@ -112,6 +112,9 @@ const DEFAULT_FEATURED_SECTION: FeaturedSectionConfig = {
 };
 
 interface HeroConfig {
+  eyebrow: string;
+  titlePlain: string;
+  titleHighlight: string;
   title: string;
   titleColor: string;
   titleFont: string;
@@ -157,6 +160,9 @@ export default function AdminInicioPage() {
   const productInputRefs = useRef<Record<number, HTMLInputElement | null>>({});
   const [cmsRecipes, setCmsRecipes] = useState<{ slug: string; title: string }[]>([]);
   const [config, setConfig] = useState<HeroConfig>({
+    eyebrow: "",
+    titlePlain: "",
+    titleHighlight: "",
     title: "",
     titleColor: "#5C3D2E",
     titleFont: "serif",
@@ -271,7 +277,7 @@ export default function AdminInicioPage() {
           const sameMainImage =
             (current?.collageImages?.[0]?.src || "") ===
             (expected.collageImages?.[0]?.src || "");
-          if (sameMainImage && current?.title === expected.title) return true;
+          if (sameMainImage && current?.titlePlain === expected.titlePlain) return true;
         }
       } catch {
         // keep polling
@@ -288,7 +294,7 @@ export default function AdminInicioPage() {
         const res = await fetchWithTimeout(`/?t=${Date.now()}`, { cache: "no-store" });
         if (res.ok) {
           const html = await res.text();
-          const hasTitle = html.includes(expected.title);
+          const hasTitle = html.includes(expected.titlePlain);
           const hasImage = html.includes(expected.collageImages?.[0]?.src || "");
           if (hasTitle && hasImage) return true;
         }
@@ -554,17 +560,24 @@ export default function AdminInicioPage() {
           <div className="bg-white rounded-2xl p-8 border border-brand-primary/5 space-y-6">
             <h2 className="text-lg font-serif text-brand-primary border-b border-brand-primary/5 pb-4">📝 Textos</h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <label className="text-[10px] font-sans font-bold tracking-[0.25em] text-brand-muted uppercase">Título Principal</label>
-                <input value={config.title} onChange={(e) => setConfig({ ...config, title: e.target.value })}
+                <label className="text-[10px] font-sans font-bold tracking-[0.25em] text-brand-muted uppercase">Etiqueta superior</label>
+                <input value={config.eyebrow} onChange={(e) => setConfig({ ...config, eyebrow: e.target.value })}
+                  placeholder="Bienvenidos a mi blog"
+                  className="w-full px-4 py-3 border border-brand-primary/10 rounded-lg bg-brand-secondary text-brand-primary font-sans text-sm focus:outline-none focus:border-brand-accent transition-colors" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-sans font-bold tracking-[0.25em] text-brand-muted uppercase">Título (parte principal)</label>
+                <input value={config.titlePlain} onChange={(e) => setConfig({ ...config, titlePlain: e.target.value })}
+                  placeholder="Historias que nacen"
                   className="w-full px-4 py-3 border border-brand-primary/10 rounded-lg bg-brand-secondary text-brand-primary font-serif focus:outline-none focus:border-brand-accent transition-colors" />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-sans font-bold tracking-[0.25em] text-brand-muted uppercase">Logo</label>
-                <input value={config.logo} onChange={(e) => setConfig({ ...config, logo: e.target.value })}
-                  className="w-full px-4 py-3 border border-brand-primary/10 rounded-lg bg-brand-secondary text-brand-primary text-center text-xl tracking-[0.2em] focus:outline-none focus:border-brand-accent transition-colors"
-                  style={{ fontFamily: 'var(--font-aboreto)' }} />
+                <label className="text-[10px] font-sans font-bold tracking-[0.25em] text-brand-muted uppercase">Título (palabra destacada)</label>
+                <input value={config.titleHighlight} onChange={(e) => setConfig({ ...config, titleHighlight: e.target.value })}
+                  placeholder="la cocina"
+                  className="w-full px-4 py-3 border border-brand-primary/10 rounded-lg bg-brand-secondary text-brand-primary font-serif italic focus:outline-none focus:border-brand-accent transition-colors" />
               </div>
             </div>
 
@@ -583,7 +596,7 @@ export default function AdminInicioPage() {
             <div className="space-y-2">
               <label className="text-[10px] font-sans font-bold tracking-[0.25em] text-brand-muted uppercase">Tagline móvil (breve)</label>
               <p className="text-xs text-brand-muted leading-relaxed">
-                Solo pantallas pequeñas: una frase corta. En móvil el logo del hero no se muestra (ya está en el menú).
+                Solo pantallas pequeñas: una frase corta que resume el mensaje del hero.
               </p>
               <input value={config.taglineMobile} onChange={(e) => setConfig({ ...config, taglineMobile: e.target.value })}
                 className="w-full px-4 py-3 border border-brand-primary/10 rounded-lg bg-brand-secondary text-brand-primary font-serif text-sm focus:outline-none focus:border-brand-accent transition-colors" />

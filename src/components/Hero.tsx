@@ -3,66 +3,72 @@
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowDown } from "lucide-react";
+import { ArrowDown, ArrowRight } from "lucide-react";
 import { useState, useEffect } from "react";
 import { HERO_IMAGE_QUALITY } from "@/lib/image-quality";
-import {
-  heroBottomFadeStyleMobile,
-  heroBottomFadeStyleWeb,
-  heroMainImageOverlayStyle,
-  heroMainImageOverlayStyleWeb,
-} from "@/lib/image-frame-fade";
 
 interface HeroConfig {
-  title: string;
-  titleColor: string;
-  titleFont: string;
-  logo: string;
-  logoColor: string;
-  logoFont: string;
+  eyebrow?: string;
+  titlePlain?: string;
+  titleHighlight?: string;
+  /** @deprecated Usar titlePlain + titleHighlight */
+  title?: string;
   tagline: string;
-  /** Frase corta solo en móvil (el logo del hero se oculta en móvil porque ya está en el nav). */
   taglineMobile?: string;
-  taglineItalic: boolean;
   description: string;
   ctaText: string;
   collageImages: { src: string; alt: string }[];
   backgroundColor: string;
 }
 
-/** Contenido por defecto (local) para que el landing nunca quede sin título mientras carga el CMS. */
 const HERO_FALLBACK: HeroConfig = {
-  title: "Historias que nacen en la cocina",
-  titleColor: "#5C3D2E",
-  titleFont: "serif",
-  logo: "|BRICIA|",
-  logoColor: "#1D1D1B",
-  logoFont: "aboreto",
-  tagline: "Un blog que celebra la cocina emocional y los placeres cotidianos.",
-  taglineMobile:
-    "Cocina emocional y cotidiana: recetas cálidas para disfrutar en casa.",
-  taglineItalic: true,
-  description:
+  eyebrow: "Bienvenidos a mi blog",
+  titlePlain: "Historias que nacen",
+  titleHighlight: "en la cocina",
+  tagline:
     "Aquí la cocina cotidiana cobra vida a través de recetas cálidas, deliciosas y pensadas para disfrutarse en casa.",
-  ctaText: "Ven para descubrir recetas inspiradoras cada semana.",
+  taglineMobile:
+    "Aquí la cocina cotidiana cobra vida a través de recetas cálidas, deliciosas y pensadas para disfrutarse en casa.",
+  description:
+    "Celebramos esos momentos simples alrededor de la mesa y dejamos que los aromas, los sabores y los ingredientes despierten la curiosidad del paladar.",
+  ctaText: "Descubre recetas inspiradoras cada semana",
   collageImages: [
     { src: "/images/hero-inicio-bricia.jpg", alt: "Bricia en picnic al aire libre" },
   ],
   backgroundColor: "#FAF9F4",
 };
 
-const FONT_MAP: Record<string, string> = {
-  serif: "var(--font-playfair)",
-  sans: "var(--font-inter)",
-  aboreto: "var(--font-aboreto)",
-};
-
 const DEFAULT_BG = "#FAF9F4";
 
-function mergeHeroResponse(
-  base: HeroConfig,
-  patch: unknown
-): HeroConfig {
+function resolveTitleParts(config: HeroConfig): {
+  plain: string;
+  highlight: string;
+} {
+  if (config.titlePlain?.trim() && config.titleHighlight?.trim()) {
+    return {
+      plain: config.titlePlain.trim(),
+      highlight: config.titleHighlight.trim(),
+    };
+  }
+  if (config.title?.trim()) {
+    const words = config.title.trim().split(/\s+/);
+    if (words.length >= 3) {
+      const highlight = words.slice(-2).join(" ");
+      const plain = words.slice(0, -2).join(" ");
+      return { plain, highlight };
+    }
+    if (words.length === 2) {
+      return { plain: words[0], highlight: words[1] };
+    }
+    return { plain: config.title.trim(), highlight: "" };
+  }
+  return {
+    plain: HERO_FALLBACK.titlePlain!,
+    highlight: HERO_FALLBACK.titleHighlight!,
+  };
+}
+
+function mergeHeroResponse(base: HeroConfig, patch: unknown): HeroConfig {
   if (!patch || typeof patch !== "object") return base;
   const d = patch as Partial<HeroConfig>;
   return {
@@ -78,7 +84,6 @@ function mergeHeroResponse(
 export default function Hero({
   initialHero,
 }: {
-  /** Si llega desde el servidor (ej. página de inicio), no hacemos fetch extra a /api/hero */
   initialHero?: unknown;
 }) {
   const [config, setConfig] = useState<HeroConfig>(() =>
@@ -101,87 +106,104 @@ export default function Hero({
     config.collageImages?.[0]?.alt || "Foto principal de Bricia";
 
   const bg = config.backgroundColor || DEFAULT_BG;
-  const overlayStyleMobile = heroMainImageOverlayStyle(bg);
-  const overlayStyleWeb = heroMainImageOverlayStyleWeb(bg);
-  /** Móvil: sin min-h forzado (evita franja crema vacía). Escritorio: igual que antes. */
   const sectionMinH = "max-md:min-h-0 md:min-h-[calc(62vw*1.12)]";
+  const { plain: titlePlain, highlight: titleHighlight } = resolveTitleParts(config);
+  const eyebrow = config.eyebrow?.trim() || HERO_FALLBACK.eyebrow!;
 
   return (
     <section
-      className={`relative ${sectionMinH} flex flex-col max-md:gap-0 max-md:pb-6 md:flex-row md:gap-0 overflow-hidden md:pb-8`}
+      className={`relative ${sectionMinH} flex flex-col max-md:gap-0 max-md:pb-0 md:flex-row md:gap-0 overflow-hidden md:pb-0`}
       style={{ backgroundColor: bg }}
     >
-      {/* Texto — izquierda (móvil: arriba), columna más estrecha */}
+      {/* Texto — izquierda */}
       <div
-        className={`relative w-full md:w-[38%] flex flex-col items-center justify-center max-md:px-8 md:px-10 lg:px-14 max-md:pb-0 max-md:pt-[max(6.5rem,env(safe-area-inset-top,0px)+5rem)] md:pb-2 md:pt-5 md:min-h-[calc(62vw*1.12)] text-center`}
+        className={`relative w-full md:w-[38%] flex flex-col max-md:px-8 md:px-10 lg:px-14 xl:px-16 max-md:pb-0 max-md:pt-[max(6.5rem,env(safe-area-inset-top,0px)+5rem)] md:py-12 md:min-h-[calc(62vw*1.12)] text-left`}
       >
-        <div className="max-w-lg w-full max-md:max-w-md">
-          <div className="max-md:space-y-7 md:space-y-8 md:-translate-y-28 lg:-translate-y-36">
-          <div className="max-md:space-y-0 md:space-y-6">
-            <h1
-              className="text-3xl max-md:text-4xl max-md:leading-tight md:text-4xl lg:text-5xl leading-tight"
-              style={{
-                fontFamily: FONT_MAP[config.titleFont] || FONT_MAP.serif,
-                color: config.titleColor,
-              }}
+        <div className="flex flex-1 flex-col justify-center max-w-xl w-full max-md:mx-auto md:max-w-none md:mx-0 md:-translate-y-16 lg:-translate-y-20">
+          <div className="flex flex-col space-y-6 md:space-y-7">
+            <motion.p
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="text-[13px] md:text-[14px] font-sans font-bold tracking-[0.45em] uppercase text-brand-accent"
             >
-              {config.title}
-            </h1>
-            <span
-              className="hidden md:block text-4xl md:text-5xl lg:text-6xl tracking-[0.2em]"
-              style={{
-                color: config.logoColor,
-                fontFamily: FONT_MAP[config.logoFont] || FONT_MAP.aboreto,
-              }}
-            >
-              {config.logo}
-            </span>
-          </div>
+              {eyebrow}
+            </motion.p>
 
-          <div className="max-md:space-y-5 max-md:pt-0 md:space-y-6">
-            <p
-              className="md:hidden text-sm font-serif leading-relaxed text-brand-primary/88"
-              style={{
-                fontStyle: config.taglineItalic ? "italic" : "normal",
-              }}
+            <motion.h1
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.1 }}
+              className="font-serif text-brand-primary tracking-tight leading-[1.05]"
             >
-              {(config.taglineMobile && config.taglineMobile.trim()) ||
-                HERO_FALLBACK.taglineMobile}
-            </p>
-            <p
-              className="hidden md:block text-base md:text-lg font-serif leading-relaxed text-brand-primary/85"
-              style={{
-                fontStyle: config.taglineItalic ? "italic" : "normal",
-              }}
+              <span className="block text-[2.8125rem] max-md:text-[3.4375rem] md:text-[3.3125rem] lg:text-[3.75rem] xl:text-[4.0625rem]">
+                {titlePlain}
+              </span>
+              {titleHighlight ? (
+                <span className="block text-[2.8125rem] max-md:text-[3.4375rem] md:text-[3.3125rem] lg:text-[3.75rem] xl:text-[4.0625rem] italic text-brand-accent mt-0.5">
+                  {titleHighlight}
+                </span>
+              ) : null}
+            </motion.h1>
+
+            <motion.div
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="w-[4.375rem] h-px bg-brand-accent opacity-60 origin-left"
+            />
+
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="space-y-5 pt-1"
             >
-              {config.tagline}
-            </p>
-            <p className="hidden md:block text-sm font-sans text-brand-muted leading-relaxed">
-              {config.description}
-            </p>
-          </div>
+              <p className="text-[17.5px] md:text-[18.75px] font-sans text-brand-primary leading-relaxed">
+                {config.tagline}
+              </p>
+              {config.description ? (
+                <p className="text-[17.5px] md:text-[18.75px] font-sans text-brand-primary leading-relaxed">
+                  {config.description}
+                </p>
+              ) : null}
+            </motion.div>
 
-          <Link
-            href="/recetas"
-            className="hidden md:block text-xs font-sans tracking-[0.25em] uppercase font-medium text-brand-accent leading-relaxed transition-colors hover:text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/45 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-secondary rounded-sm md:pt-2"
-          >
-            {config.ctaText}
-          </Link>
-
-          <motion.a
-            href="#seccion-destacada"
-            animate={{ y: [0, 8, 0] }}
-            transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-            className="hidden md:inline-flex pt-4 text-brand-primary/35 transition-colors hover:text-brand-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/40 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-secondary rounded-full"
-            aria-label="Bajar a la sección destacada"
-          >
-            <ArrowDown size={28} strokeWidth={1} className="mx-auto" aria-hidden />
-          </motion.a>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className="pt-2 md:pt-5"
+            >
+              <Link
+                href="/recetas"
+                className="inline-flex items-center gap-4 text-[13px] md:text-[14px] font-sans font-bold tracking-[0.35em] uppercase text-brand-accent transition-colors hover:text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/45 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-secondary rounded-sm"
+              >
+                {config.ctaText}
+                <ArrowRight size={20} strokeWidth={1.25} aria-hidden />
+              </Link>
+            </motion.div>
           </div>
         </div>
+
+        <motion.a
+          href="#seccion-destacada"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.5 }}
+          className="hidden md:inline-flex mt-auto pb-2 text-brand-primary/30 transition-colors hover:text-brand-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/40 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-secondary rounded-full"
+          aria-label="Bajar a la sección destacada"
+        >
+          <motion.span
+            animate={{ y: [0, 6, 0] }}
+            transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <ArrowDown size={30} strokeWidth={1} aria-hidden />
+          </motion.span>
+        </motion.a>
       </div>
 
-      {/* Foto — derecha (móvil: debajo del texto), columna más ancha */}
+      {/* Foto — derecha */}
       <div
         className={`relative z-[1] w-full md:w-[62%] aspect-[5/4] md:aspect-auto md:min-h-[calc(62vw*1.12)] overflow-hidden min-h-[42svh] max-md:min-h-0 max-md:isolate max-md:[transform:translateZ(0)] max-md:mx-0 max-md:mt-0 max-md:rounded-none md:rounded-none`}
         style={{ backgroundColor: bg }}
@@ -193,30 +215,7 @@ export default function Hero({
           priority
           sizes="(max-width: 768px) 100vw, 62vw"
           quality={HERO_IMAGE_QUALITY}
-          className="hero-inicio-img-mask object-cover object-center max-md:origin-bottom max-md:scale-[1.02]"
-        />
-        <div
-          className="absolute inset-0 pointer-events-none md:hidden"
-          style={overlayStyleMobile}
-        />
-        <div
-          className="absolute inset-0 pointer-events-none hidden md:block"
-          style={overlayStyleWeb}
-        />
-        <div
-          className="pointer-events-none absolute inset-x-0 bottom-0 z-[3] h-[min(26%,9rem)] md:hidden"
-          style={heroBottomFadeStyleMobile(bg)}
-          aria-hidden
-        />
-        <div
-          className="pointer-events-none absolute inset-x-0 bottom-0 z-[3] hidden md:block h-32"
-          style={heroBottomFadeStyleWeb(bg)}
-          aria-hidden
-        />
-        <div
-          className="pointer-events-none absolute inset-x-0 bottom-0 z-[4] h-[3px] max-md:block md:hidden"
-          style={{ backgroundColor: bg }}
-          aria-hidden
+          className="object-cover object-center"
         />
       </div>
     </section>

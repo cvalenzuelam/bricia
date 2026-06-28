@@ -107,14 +107,14 @@ export default function ProductSection({
   return (
     <section className="bg-brand-primary text-brand-secondary py-24 md:py-32 px-6 border-t border-white/10">
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-12 md:mb-14 space-y-4">
-          <span className="editorial-spacing text-[#C2A878] block">LA TIENDA</span>
-          <h2 className="text-4xl md:text-6xl font-serif text-brand-secondary tracking-tight">
-            Objetos con Alma
-            <br />
-            <span className="italic text-[#C2A878]">para Tu Mesa</span>
+        <div className="text-center mb-12 md:mb-14 space-y-6">
+          <span className="editorial-spacing text-brand-accent block">La tienda</span>
+          <h2 className="text-5xl md:text-7xl font-serif text-brand-secondary lowercase tracking-tighter">
+            objetos con alma{" "}
+            <span className="italic text-brand-accent">para tu mesa</span>
           </h2>
-          <p className="text-sm font-sans text-brand-secondary/55 max-w-lg mx-auto pt-2 leading-relaxed">
+          <div className="w-16 h-px bg-brand-accent mx-auto opacity-40" />
+          <p className="text-base font-serif italic text-brand-secondary/60 max-w-xl mx-auto leading-relaxed">
             Descubre ideas, estéticas y secretos para que tu comedor y tu cocina sean los lugares
             favoritos de tus invitados.
           </p>

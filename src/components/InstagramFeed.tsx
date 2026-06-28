@@ -124,15 +124,16 @@ export default function InstagramFeed({
 
       <CommunityBridge />
 
-      <div className="relative z-[1] mx-auto mb-14 max-w-7xl px-6 pt-2 text-center md:mb-16 md:pt-0 md:text-left">
-        <span className="editorial-spacing text-brand-accent mb-4 block md:mb-5">
+      <div className="relative z-[1] mx-auto mb-14 max-w-7xl px-6 pt-2 text-center md:mb-16 md:pt-0">
+        <span className="editorial-spacing text-brand-accent mb-6 block">
           Comunidad
         </span>
-        <h2 className="mb-4 font-serif text-3xl tracking-tight text-brand-primary md:text-[2.75rem] md:leading-tight">
-          Cocina, inspiración y{" "}
+        <h2 className="mb-6 font-serif text-5xl md:text-7xl text-brand-primary lowercase tracking-tighter">
+          cocina, inspiración y{" "}
           <span className="italic text-brand-accent">comunidad</span>
         </h2>
-        <p className="mx-auto max-w-2xl font-sans text-sm leading-relaxed text-brand-muted/85 md:mx-0 md:text-base">
+        <div className="w-16 h-px bg-brand-accent mx-auto mb-6 opacity-40" />
+        <p className="mx-auto max-w-xl font-serif text-base italic leading-relaxed text-brand-primary/60">
           Encuéntrame en mis redes: recetas, ideas para la mesa y el día a
           día. Comparte tus creaciones y acompáñanos en la comunidad.
         </p>

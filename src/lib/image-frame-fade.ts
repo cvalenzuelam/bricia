@@ -10,14 +10,11 @@ export function hexToRgb(hex: string): { r: number; g: number; b: number } {
   };
 }
 
-/** Hero (móvil): emplume arriba un poco más marcado que abajo + inferior hacia crema. */
+/** Hero (móvil): emplume superior ligero hacia crema. */
 export function heroMainImageOverlayStyle(bgHex: string): CSSProperties {
   const { r, g, b } = hexToRgb(bgHex);
   return {
-    background: [
-      `linear-gradient(to bottom, rgba(${r},${g},${b},0.13) 0%, rgba(${r},${g},${b},0.05) 12%, transparent 30%)`,
-      `linear-gradient(to top, rgba(${r},${g},${b},0.08) 0%, transparent 26%)`,
-    ].join(", "),
+    background: `linear-gradient(to bottom, rgba(${r},${g},${b},0.13) 0%, rgba(${r},${g},${b},0.05) 12%, transparent 30%)`,
   };
 }
 

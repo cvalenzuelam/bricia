@@ -4,21 +4,16 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
-import { Fragment, useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { PHOTO_IMAGE_QUALITY } from "@/lib/image-quality";
 
 /** Mismo negro editorial que `--color-brand-primary` (resto del sitio). */
 const BRAND_DARK = "#1D1D1B";
 
-const FONT_MAP: Record<string, string> = {
-  serif: "var(--font-playfair)",
-  sans: "var(--font-inter)",
-  aboreto: "var(--font-aboreto)",
-};
-
 export interface FeaturedSectionConfig {
   imageSrc: string;
   imageAlt: string;
+  eyebrow?: string;
   panelBackgroundColor: string;
   heading: string;
   description: string;
@@ -31,17 +26,36 @@ export interface FeaturedSectionConfig {
 
 const DEFAULT_FEATURED: FeaturedSectionConfig = {
   imageSrc: "/images/tiradito.png",
-  imageAlt: "Nuevas Recetas Cada Semana",
+  imageAlt: "Nuevas recetas cada semana",
+  eyebrow: "Cada semana",
   panelBackgroundColor: BRAND_DARK,
-  heading: "Nuevas Recetas\nCada Semana",
+  heading: "Nuevas recetas\nCada semana",
   description:
     "Descubre recetas que tocan el corazón y despiertan tus sentidos. Cada semana traemos algo nuevo para que disfrutes en tu cocina. ¡Explora y déjate inspirar!",
-  ctaText: "Ver Recetas",
+  ctaText: "Ver recetas",
   ctaHref: "/recetas",
   titleFont: "serif",
   buttonBackgroundColor: "#FFFFFF",
   buttonTextColor: BRAND_DARK,
 };
+
+function resolveHeadingParts(heading: string): { plain: string; highlight: string } {
+  const lines = heading.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  if (lines.length >= 2) {
+    return { plain: lines[0], highlight: lines[1] };
+  }
+  const words = (lines[0] ?? heading).trim().split(/\s+/);
+  if (words.length >= 3) {
+    return {
+      plain: words.slice(0, -2).join(" "),
+      highlight: words.slice(-2).join(" "),
+    };
+  }
+  if (words.length === 2) {
+    return { plain: words[0], highlight: words[1] };
+  }
+  return { plain: lines[0] ?? heading, highlight: "" };
+}
 
 function hexToRgb(hex: string): { r: number; g: number; b: number } {
   const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex.trim());
@@ -135,10 +149,12 @@ export default function FeaturedRecipe({
       .catch(() => {});
   }, [fromServer]);
 
-  const titleFont = FONT_MAP[featured.titleFont] || FONT_MAP.serif;
-  const headingLines = featured.heading.split(/\r?\n/).filter((line) => line.length > 0);
+  const { plain: headingPlain, highlight: headingHighlight } = resolveHeadingParts(
+    featured.heading
+  );
   const panel = featured.panelBackgroundColor;
   const mobileImageOverlay = featuredImageMobileOverlayStyle(panel);
+  const eyebrow = featured.eyebrow?.trim() || DEFAULT_FEATURED.eyebrow!;
 
   return (
     <section
@@ -146,29 +162,6 @@ export default function FeaturedRecipe({
       className="relative scroll-mt-24 overflow-x-hidden overflow-y-visible pb-0 pt-0 md:scroll-mt-28"
       style={{ backgroundColor: panel }}
     >
-      {/* Puente hero (crema) → panel: ola orgánica que se superpone un poco al hero */}
-      <div
-        className="pointer-events-none relative z-[3] max-md:-mt-4 max-md:bg-brand-secondary md:-mt-[2.75rem] lg:-mt-[3rem] w-full select-none"
-        aria-hidden
-      >
-        <svg
-          viewBox="0 0 1200 56"
-          role="presentation"
-          xmlns="http://www.w3.org/2000/svg"
-          preserveAspectRatio="none"
-          className="relative z-[2] block h-[clamp(2.5rem,6.5vw,3.75rem)] w-[115%] max-w-none -translate-x-[7.5%] text-brand-secondary max-md:drop-shadow-none md:h-16 md:w-[110%] md:-translate-x-[5%] md:drop-shadow-[0_-6px_18px_rgba(29,29,27,0.055)]"
-        >
-          <path fill="currentColor" d="M0 0h1200v28Q600 58 0 28V0z" />
-        </svg>
-        {/* Solo desktop: en móvil el degradado a negro quedaba visible sobre el padding crema del hero. */}
-        <div
-          className="pointer-events-none absolute inset-x-[5%] bottom-0 z-[1] hidden h-10 md:block md:inset-x-[3%] md:h-14"
-          style={{
-            background: `linear-gradient(180deg, transparent 0%, ${panel} 72%)`,
-          }}
-        />
-      </div>
-
       <div className="relative z-[1] mx-auto flex min-h-0 max-w-[1600px] flex-col-reverse items-stretch md:min-h-[70vh] md:flex-row">
 
         {/* Left: Full-bleed image */}
@@ -202,62 +195,75 @@ export default function FeaturedRecipe({
           />
         </motion.div>
 
-        {/* Panel: contenido centrado en la columna, sin pegarlo al borde de la foto */}
+        {/* Panel editorial — alineado a la izquierda, tipografía del sitio */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 1.2, delay: 0.2 }}
-          className="relative z-[3] flex flex-col justify-center px-8 py-16 text-center text-white max-md:py-10 md:w-1/2 md:basis-1/2 md:px-10 md:py-20 lg:px-14"
+          className="relative z-[3] flex flex-col justify-center px-8 py-16 text-left max-md:py-12 md:w-1/2 md:basis-1/2 md:px-10 md:py-20 lg:px-14 xl:px-16"
           style={{ backgroundColor: panel }}
         >
-          <div className="relative z-[1] mx-auto w-full max-w-md space-y-8">
-            <h2
-              className="text-4xl leading-tight md:text-5xl"
-              style={{ fontFamily: titleFont }}
+          <div className="relative z-[1] mx-auto w-full max-w-lg space-y-8 md:mx-0">
+            <motion.p
+              initial={{ opacity: 0, y: 8 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="text-[10px] font-sans font-bold tracking-[0.45em] uppercase text-brand-accent"
             >
-              {headingLines.map((line, i) => (
-                <Fragment key={i}>
-                  {i > 0 && <br />}
-                  {line}
-                </Fragment>
-              ))}
-            </h2>
+              {eyebrow}
+            </motion.p>
 
-            <div className="mx-auto h-px w-12 bg-white/30"></div>
+            <motion.h2
+              initial={{ opacity: 0, y: 12 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7, delay: 0.1 }}
+              className="text-5xl md:text-6xl lg:text-7xl font-serif text-white/95 leading-[1.05] tracking-tight"
+            >
+              {headingPlain}
+              {headingHighlight ? (
+                <>
+                  <br />
+                  <span className="italic text-brand-accent">{headingHighlight}</span>
+                </>
+              ) : null}
+            </motion.h2>
 
-            <p
-              className="text-sm leading-relaxed text-white/80 md:text-base"
-              style={{ fontFamily: "var(--font-inter), system-ui, sans-serif" }}
+            <motion.div
+              initial={{ scaleX: 0 }}
+              whileInView={{ scaleX: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="w-12 h-px bg-brand-accent opacity-35 origin-left"
+            />
+
+            <motion.p
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="text-base md:text-lg font-serif text-white/70 leading-relaxed"
             >
               {featured.description}
-            </p>
+            </motion.p>
 
-            <div className="flex justify-center pt-2">
+            <motion.div
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className="pt-2"
+            >
               <Link
                 href={featured.ctaHref || "/recetas"}
-                className="group relative inline-flex w-fit max-w-full items-center gap-3 overflow-hidden rounded-full border border-transparent py-3.5 pl-9 pr-3 text-[11px] font-sans font-bold tracking-[0.26em] uppercase shadow-[0_8px_32px_-6px_rgba(20,15,12,0.28)] ring-1 ring-black/[0.07] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] before:absolute before:inset-0 before:rounded-full before:bg-gradient-to-br before:from-white/25 before:to-transparent before:opacity-0 before:transition-opacity before:duration-500 hover:-translate-y-1 hover:!border-[#C2A878] hover:!bg-[#C2A878] hover:!text-brand-primary hover:shadow-[0_14px_44px_-12px_rgba(194,168,120,0.42)] hover:ring-[#C2A878]/55 hover:before:opacity-100 hover:before:from-white/35 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C2A878]/70 active:translate-y-0 md:gap-3.5 md:py-4 md:pl-10 md:pr-3.5"
-                style={{
-                  backgroundColor: featured.buttonBackgroundColor,
-                  color: featured.buttonTextColor,
-                }}
+                className="inline-flex items-center gap-3 text-[10px] font-sans font-bold tracking-[0.35em] uppercase text-brand-accent transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/45 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-primary rounded-sm"
               >
-                <span className="relative z-[1] pr-0.5">{featured.ctaText}</span>
-                <span
-                  className="relative z-[1] flex h-10 w-10 shrink-0 items-center justify-center rounded-full border transition-all duration-500 group-hover:scale-105 group-hover:!border-brand-primary/35 group-hover:!bg-white/35 md:h-11 md:w-11"
-                  style={{
-                    borderColor: `${featured.buttonTextColor}33`,
-                    backgroundColor: `${featured.buttonTextColor}14`,
-                  }}
-                  aria-hidden
-                >
-                  <ArrowRight
-                    className="h-3.5 w-3.5 text-current transition-transform duration-500 group-hover:translate-x-0.5 md:h-4 md:w-4"
-                    strokeWidth={1.75}
-                  />
-                </span>
+                {featured.ctaText}
+                <ArrowRight size={16} strokeWidth={1.25} aria-hidden />
               </Link>
-            </div>
+            </motion.div>
           </div>
         </motion.div>
       </div>

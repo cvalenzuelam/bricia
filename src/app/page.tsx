@@ -54,13 +54,13 @@ export default async function Home() {
 
       {/* 3. Recipe Grid */}
       <section className="py-12 md:py-28">
-        <div className="max-w-7xl mx-auto px-6 text-center mb-10 md:mb-20">
-          <span className="editorial-spacing text-brand-accent block mb-4">EXPLORA</span>
-          <h2 className="text-4xl md:text-6xl font-serif text-brand-primary tracking-tight">
-            Recetas de <span className="italic text-brand-accent">Temporada</span>
+        <div className="max-w-7xl mx-auto px-6 text-center mb-10 md:mb-20 space-y-6 md:space-y-8">
+          <span className="editorial-spacing text-brand-accent block">Explora</span>
+          <h2 className="text-5xl md:text-7xl lg:text-8xl font-serif text-brand-primary lowercase tracking-tighter">
+            recetas de <span className="italic text-brand-accent">temporada</span>
           </h2>
-          <div className="w-12 h-px bg-brand-accent mx-auto my-6 opacity-30"></div>
-          <p className="text-sm font-sans text-brand-muted max-w-lg mx-auto">
+          <div className="w-16 h-px bg-brand-accent mx-auto opacity-40" />
+          <p className="text-base md:text-lg font-serif italic text-brand-primary/60 max-w-xl mx-auto leading-relaxed">
             Descubre los sabores que acompañan el clima de hoy.
             Recetas frescas, caseras y llenas de historia.
           </p>
