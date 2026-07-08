@@ -8,6 +8,7 @@ import { isSupabaseConfigured } from "@/lib/supabase/admin";
 
 export type ContentBlock =
   | { type: "paragraph"; text: string }
+  | { type: "subtitle"; text: string }
   | { type: "quote"; text: string; author?: string }
   | { type: "image"; url: string; alt: string; caption?: string }
   | { type: "gallery"; images: { url: string; alt: string }[] };

@@ -120,16 +120,27 @@ export default function LaMesaArticlePage({ params }: { params: Promise<{ slug: 
               <span>{article.readingTime} de lectura</span>
             </div>
 
-            {article.body.map((block, i) => {
+            {(() => {
+              const firstParagraphIndex = article.body.findIndex((b) => b.type === "paragraph");
+              return article.body.map((block, i) => {
+              if (block.type === "subtitle") {
+                return (
+                  <h2 key={i} className="text-2xl md:text-3xl font-serif text-brand-primary tracking-tight pt-2">
+                    {block.text}
+                  </h2>
+                );
+              }
+
               if (block.type === "paragraph") {
+                const isFirstParagraph = i === firstParagraphIndex;
                 return (
                   <p key={i} className="text-xl md:text-[22px] font-serif font-light leading-relaxed text-[#4A453E]">
-                    {i === 0 && (
+                    {isFirstParagraph && (
                       <span className="float-left text-7xl font-serif text-[#C2A878] leading-[0.8] pr-4 pt-4">
                         {block.text.charAt(0)}
                       </span>
                     )}
-                    {i === 0 ? block.text.slice(1) : block.text}
+                    {isFirstParagraph ? block.text.slice(1) : block.text}
                   </p>
                 );
               }
@@ -175,7 +186,8 @@ export default function LaMesaArticlePage({ params }: { params: Promise<{ slug: 
               }
 
               return null;
-            })}
+            });
+            })()}
           </motion.div>
         </div>
 

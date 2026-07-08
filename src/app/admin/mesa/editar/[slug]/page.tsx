@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { uploadCmsImageFile } from "@/lib/cms-upload-image";
-import { ArrowLeft, Save, Upload, Loader2, AlignLeft, Quote, ImageIcon, X } from "lucide-react";
+import { ArrowLeft, Save, Upload, Loader2, AlignLeft, Quote, ImageIcon, Heading2, X } from "lucide-react";
 import type { ContentBlock, MesaArticle } from "@/data/lamesa";
 import AdminCmsLoading from "@/components/admin/AdminCmsLoading";
 import { PHOTO_IMAGE_QUALITY } from "@/lib/image-quality";
@@ -169,6 +169,7 @@ export default function EditarMesaPage({ params }: EditPageProps) {
   const addBlock = (type: ContentBlock["type"]) => {
     let block: BlockWithId;
     if (type === "paragraph") block = { _id: mkId(), type: "paragraph", text: "" } as BlockWithId;
+    else if (type === "subtitle") block = { _id: mkId(), type: "subtitle", text: "" } as BlockWithId;
     else if (type === "quote") block = { _id: mkId(), type: "quote", text: "", author: "" } as BlockWithId;
     else if (type === "image") block = { _id: mkId(), type: "image", url: "", alt: "", caption: "" } as BlockWithId;
     else return;
@@ -194,6 +195,7 @@ export default function EditarMesaPage({ params }: EditPageProps) {
     const cleanBlocks: ContentBlock[] = blocks
       .filter((bl) => {
         if (bl.type === "paragraph") return bl.text.trim() !== "";
+        if (bl.type === "subtitle") return bl.text.trim() !== "";
         if (bl.type === "quote") return bl.text.trim() !== "";
         if (bl.type === "image") return bl.url.trim() !== "";
         return false;
@@ -376,6 +378,10 @@ export default function EditarMesaPage({ params }: EditPageProps) {
                 className="flex items-center gap-2 text-xs font-sans font-bold tracking-[0.15em] uppercase text-brand-muted border border-brand-primary/10 px-4 py-2.5 rounded-lg hover:border-brand-accent/40 hover:text-brand-accent transition-colors">
                 <AlignLeft size={14} /> Párrafo
               </button>
+              <button type="button" onClick={() => addBlock("subtitle")}
+                className="flex items-center gap-2 text-xs font-sans font-bold tracking-[0.15em] uppercase text-brand-muted border border-brand-primary/10 px-4 py-2.5 rounded-lg hover:border-brand-accent/40 hover:text-brand-accent transition-colors">
+                <Heading2 size={14} /> Subtítulo
+              </button>
               <button type="button" onClick={() => addBlock("quote")}
                 className="flex items-center gap-2 text-xs font-sans font-bold tracking-[0.15em] uppercase text-brand-muted border border-brand-primary/10 px-4 py-2.5 rounded-lg hover:border-brand-accent/40 hover:text-brand-accent transition-colors">
                 <Quote size={14} /> Cita
@@ -430,12 +436,21 @@ function BlockEditor({ block, index, onUpdate, onRemove, onImageUpload }: BlockE
     <div className="relative rounded-xl border border-brand-primary/8 bg-brand-secondary p-4 space-y-3">
       <div className="flex items-center justify-between">
         <span className="text-[9px] font-sans font-bold tracking-[0.2em] uppercase text-brand-accent/70">
-          {index + 1} · {block.type === "paragraph" ? "Párrafo" : block.type === "quote" ? "Cita" : "Imagen"}
+          {index + 1} · {block.type === "paragraph" ? "Párrafo" : block.type === "subtitle" ? "Subtítulo" : block.type === "quote" ? "Cita" : "Imagen"}
         </span>
         <button type="button" onClick={onRemove} className="text-brand-muted hover:text-red-500 transition-colors">
           <X size={15} />
         </button>
       </div>
+
+      {block.type === "subtitle" && (
+        <input
+          value={block.text}
+          onChange={(e) => onUpdate({ text: e.target.value } as Partial<BlockWithId>)}
+          placeholder="Escribe el subtítulo aquí..."
+          className={`${inputCls} font-serif text-lg`}
+        />
+      )}
 
       {block.type === "paragraph" && (
         <textarea
