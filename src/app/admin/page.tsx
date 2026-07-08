@@ -16,7 +16,7 @@ interface Recipe {
   image: string;
 }
 
-const ADMIN_PASSWORD = "bricia2026";
+const ADMIN_PASSWORD = "bricia2026$";
 const ADDED_RECIPE_SESSION_KEY = "bricia_admin_added_recipe";
 
 export default function AdminPage() {
