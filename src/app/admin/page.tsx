@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { shouldUnoptimizeRemoteImage } from "@/lib/next-image-remote";
 import { PHOTO_IMAGE_QUALITY } from "@/lib/image-quality";
-import { Plus, Edit3, Trash2, Lock, ChefHat, LayoutList, ShoppingBag, Package, Mail, Home } from "lucide-react";
+import { Plus, Edit3, Trash2, Lock, ChefHat, LayoutList, ShoppingBag, Package, Mail, Home, ChevronUp, ChevronDown } from "lucide-react";
 import AdminCmsLoading from "@/components/admin/AdminCmsLoading";
 
 interface Recipe {
@@ -31,6 +31,7 @@ export default function AdminPage() {
   /** Primera carga desde /api/recipes tras autenticar; evita mostrar “0 recetas” o listas vacías previas al CMS */
   const [recipesHydrated, setRecipesHydrated] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [savingOrder, setSavingOrder] = useState(false);
 
   useEffect(() => {
     setAuthenticated(sessionStorage.getItem("bricia_admin") === "true");
@@ -93,6 +94,40 @@ export default function AdminPage() {
     const data = await res.json();
     setRecipes(Array.isArray(data) ? data : []);
     setDeleting(null);
+  };
+
+  const reloadRecipes = async () => {
+    const res = await fetch("/api/recipes", { cache: "no-store" });
+    const data = await res.json();
+    setRecipes(Array.isArray(data) ? data : []);
+  };
+
+  const moveRecipe = async (slug: string, direction: -1 | 1) => {
+    const index = recipes.findIndex((r) => r.slug === slug);
+    const targetIndex = index + direction;
+    if (index < 0 || targetIndex < 0 || targetIndex >= recipes.length) return;
+
+    const next = [...recipes];
+    [next[index], next[targetIndex]] = [next[targetIndex], next[index]];
+    setRecipes(next);
+    setSavingOrder(true);
+
+    try {
+      const res = await fetch("/api/recipes/reorder", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slugs: next.map((r) => r.slug) }),
+      });
+      if (!res.ok) {
+        await reloadRecipes();
+        alert("Error al guardar el orden");
+      }
+    } catch {
+      await reloadRecipes();
+      alert("Error al guardar el orden");
+    } finally {
+      setSavingOrder(false);
+    }
   };
 
   if (!authChecked) {
@@ -159,6 +194,7 @@ export default function AdminPage() {
               </h1>
               <p className="text-sm font-sans text-brand-muted">
                 {recipes.length} recetas publicadas
+                {savingOrder ? " · Guardando orden…" : ""}
               </p>
             </div>
             <Link href="/admin/nueva">
@@ -202,9 +238,13 @@ export default function AdminPage() {
           </div>
         </div>
 
+        <p className="text-xs font-sans text-brand-muted mb-4">
+          Usa las flechas para ordenar las recetas. El orden aquí define cómo aparecen en el filtro &quot;Todas&quot;.
+        </p>
+
         {/* Recipe List */}
         <div className="space-y-4">
-          {recipes.map((recipe) => (
+          {recipes.map((recipe, index) => (
             <div
               key={recipe.slug}
               id={`recipe-row-${recipe.slug}`}
@@ -214,6 +254,28 @@ export default function AdminPage() {
                   : "border-brand-primary/5 hover:border-brand-accent/20"
               }`}
             >
+              {/* Order */}
+              <div className="flex flex-col gap-1 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => moveRecipe(recipe.slug, -1)}
+                  disabled={index === 0 || savingOrder || deleting !== null}
+                  className="p-1.5 rounded-lg border border-brand-primary/10 text-brand-muted hover:text-brand-accent hover:border-brand-accent/30 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                  aria-label={`Subir ${recipe.title}`}
+                >
+                  <ChevronUp size={16} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => moveRecipe(recipe.slug, 1)}
+                  disabled={index === recipes.length - 1 || savingOrder || deleting !== null}
+                  className="p-1.5 rounded-lg border border-brand-primary/10 text-brand-muted hover:text-brand-accent hover:border-brand-accent/30 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                  aria-label={`Bajar ${recipe.title}`}
+                >
+                  <ChevronDown size={16} />
+                </button>
+              </div>
+
               {/* Thumbnail */}
               <div className="relative w-20 h-20 rounded-lg overflow-hidden shrink-0 bg-brand-secondary">
                 <Image

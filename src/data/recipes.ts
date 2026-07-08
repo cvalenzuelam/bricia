@@ -23,21 +23,6 @@ export interface Recipe {
   createdAt?: string;
 }
 
-/** Más recientes primero; recetas sin fecha conservan el orden del array (índice mayor = más nueva por push). */
-function sortRecipesNewestFirst(recipes: Recipe[]): Recipe[] {
-  return recipes
-    .map((recipe, index) => ({ recipe, index }))
-    .sort((a, b) => {
-      const aDate = a.recipe.createdAt;
-      const bDate = b.recipe.createdAt;
-      if (aDate && bDate) return bDate.localeCompare(aDate);
-      if (aDate) return -1;
-      if (bDate) return 1;
-      return b.index - a.index;
-    })
-    .map(({ recipe }) => recipe);
-}
-
 const LOCAL_RECIPES_PATH = path.join(process.cwd(), "src/data/recipes.json");
 const FETCH_TIMEOUT_MS = 10000;
 const SAVE_TIMEOUT_MS = 15000;
@@ -99,7 +84,7 @@ async function loadRecipesRaw(): Promise<Recipe[]> {
 }
 
 export async function getRecipes(): Promise<Recipe[]> {
-  return sortRecipesNewestFirst(await loadRecipesRaw());
+  return loadRecipesRaw();
 }
 
 export async function getRecipeBySlug(slug: string): Promise<Recipe | undefined> {
@@ -134,11 +119,32 @@ export async function addRecipe(recipe: Recipe): Promise<void> {
   await saveRecipes(recipes);
 }
 
+export async function reorderRecipes(orderedSlugs: string[]): Promise<Recipe[]> {
+  const recipes = await loadRecipesRaw();
+  const bySlug = new Map(recipes.map((r) => [r.slug, r]));
+  const reordered: Recipe[] = [];
+
+  for (const slug of orderedSlugs) {
+    const recipe = bySlug.get(slug);
+    if (recipe) {
+      reordered.push(recipe);
+      bySlug.delete(slug);
+    }
+  }
+
+  for (const recipe of bySlug.values()) {
+    reordered.push(recipe);
+  }
+
+  await saveRecipes(reordered);
+  return reordered;
+}
+
 export async function updateRecipe(
   slug: string,
   updated: Partial<Recipe>
 ): Promise<Recipe | null> {
-  const recipes = await getRecipes();
+  const recipes = await loadRecipesRaw();
   const index = recipes.findIndex((r) => r.slug === slug);
   if (index === -1) return null;
   recipes[index] = { ...recipes[index], ...updated };
@@ -147,7 +153,7 @@ export async function updateRecipe(
 }
 
 export async function deleteRecipe(slug: string): Promise<boolean> {
-  const recipes = await getRecipes();
+  const recipes = await loadRecipesRaw();
   const filtered = recipes.filter((r) => r.slug !== slug);
   if (filtered.length === recipes.length) return false;
   await saveRecipes(filtered);
