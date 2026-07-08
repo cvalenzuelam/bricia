@@ -20,6 +20,22 @@ export interface Recipe {
   steps: string[];
   prepTime: string;
   servings: string;
+  createdAt?: string;
+}
+
+/** Más recientes primero; recetas sin fecha conservan el orden del array (índice mayor = más nueva por push). */
+function sortRecipesNewestFirst(recipes: Recipe[]): Recipe[] {
+  return recipes
+    .map((recipe, index) => ({ recipe, index }))
+    .sort((a, b) => {
+      const aDate = a.recipe.createdAt;
+      const bDate = b.recipe.createdAt;
+      if (aDate && bDate) return bDate.localeCompare(aDate);
+      if (aDate) return -1;
+      if (bDate) return 1;
+      return b.index - a.index;
+    })
+    .map(({ recipe }) => recipe);
 }
 
 const LOCAL_RECIPES_PATH = path.join(process.cwd(), "src/data/recipes.json");
@@ -49,7 +65,7 @@ async function withTimeout<T>(
 /** Solo para modo sin Supabase (JSON empaquetado); con Supabase no cacheamos en proceso — evita vistas viejas entre instancias serverless durante minutos */
 const bundledRecipesFallbackCache = new MemoryCache<Recipe[]>(60_000);
 
-export async function getRecipes(): Promise<Recipe[]> {
+async function loadRecipesRaw(): Promise<Recipe[]> {
   if (shouldPersistRecipesLocally()) {
     try {
       const raw = await readFile(LOCAL_RECIPES_PATH, "utf-8");
@@ -82,6 +98,10 @@ export async function getRecipes(): Promise<Recipe[]> {
   return fallback;
 }
 
+export async function getRecipes(): Promise<Recipe[]> {
+  return sortRecipesNewestFirst(await loadRecipesRaw());
+}
+
 export async function getRecipeBySlug(slug: string): Promise<Recipe | undefined> {
   const recipes = await getRecipes();
   return recipes.find((r) => r.slug === slug);
@@ -109,8 +129,8 @@ export async function saveRecipes(recipes: Recipe[]): Promise<void> {
 }
 
 export async function addRecipe(recipe: Recipe): Promise<void> {
-  const recipes = await getRecipes();
-  recipes.push(recipe);
+  const recipes = await loadRecipesRaw();
+  recipes.unshift(recipe);
   await saveRecipes(recipes);
 }
 

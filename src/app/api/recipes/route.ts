@@ -72,6 +72,7 @@ export async function POST(request: NextRequest) {
       steps: steps || [],
       prepTime: prepTime || "",
       servings: servings || "",
+      createdAt: new Date().toISOString(),
     };
 
     await addRecipe(recipe);
