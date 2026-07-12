@@ -196,13 +196,13 @@ export default function AdminPreviewPage() {
               {uploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
               {uploading ? "Subiendo…" : hasImage ? "Cambiar imagen" : "Subir imagen"}
             </button>
-            {hasImage && (
+            {hasImage && config.ogImageSrc !== DEFAULT_SITE_METADATA.ogImageSrc && (
               <button
                 type="button"
-                onClick={() => patch({ ogImageSrc: "" })}
+                onClick={() => patch({ ogImageSrc: DEFAULT_SITE_METADATA.ogImageSrc })}
                 className="text-xs font-sans text-brand-muted hover:text-brand-accent px-2"
               >
-                Quitar imagen
+                Restaurar imagen por defecto
               </button>
             )}
           </div>

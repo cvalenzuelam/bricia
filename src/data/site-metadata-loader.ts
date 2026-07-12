@@ -27,7 +27,10 @@ function normalizeConfig(raw: unknown): SiteMetadataConfig {
       typeof data.description === "string" && data.description.trim()
         ? data.description.trim()
         : DEFAULT_SITE_METADATA.description,
-    ogImageSrc: typeof data.ogImageSrc === "string" ? data.ogImageSrc.trim() : "",
+    ogImageSrc:
+      typeof data.ogImageSrc === "string" && data.ogImageSrc.trim()
+        ? data.ogImageSrc.trim()
+        : DEFAULT_SITE_METADATA.ogImageSrc,
     ogImageAlt:
       typeof data.ogImageAlt === "string" && data.ogImageAlt.trim()
         ? data.ogImageAlt.trim()

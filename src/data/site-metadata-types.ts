@@ -8,6 +8,6 @@ export type SiteMetadataConfig = {
 export const DEFAULT_SITE_METADATA: SiteMetadataConfig = {
   title: "Bricia | Recetas con Historias",
   description: "Recetario personal de Bricia. Cocina con amor, historias que alimentan.",
-  ogImageSrc: "",
+  ogImageSrc: "/images/og-default.jpg",
   ogImageAlt: "Bricia | Recetas con Historias",
 };
