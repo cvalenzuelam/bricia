@@ -21,9 +21,37 @@ const aboreto = Aboreto({
   variable: "--font-aboreto",
 });
 
+const siteUrl = (
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://casabricia.com")
+).replace(/\/$/, "");
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: "Bricia | Recetas con Historias",
   description: "Recetario personal de Bricia. Cocina con amor, historias que alimentan.",
+  openGraph: {
+    title: "Bricia | Recetas con Historias",
+    description: "Recetario personal de Bricia. Cocina con amor, historias que alimentan.",
+    url: siteUrl,
+    siteName: "Bricia",
+    locale: "es_MX",
+    type: "website",
+    images: [
+      {
+        url: "/images/hero-inicio-bricia.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Bricia | Recetas con Historias",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Bricia | Recetas con Historias",
+    description: "Recetario personal de Bricia. Cocina con amor, historias que alimentan.",
+    images: ["/images/hero-inicio-bricia.jpg"],
+  },
 };
 
 export default function RootLayout({
