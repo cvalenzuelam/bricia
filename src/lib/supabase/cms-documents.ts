@@ -9,6 +9,7 @@ export const CMS_DOC_KEYS = {
   recipes: "recipes",
   lamesa: "lamesa_articles",
   orders: "orders",
+  siteMetadata: "site_metadata",
 } as const;
 
 function toJson(value: unknown): Json {

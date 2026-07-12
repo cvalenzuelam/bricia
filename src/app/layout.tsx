@@ -4,6 +4,11 @@ import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ClientShell from "@/components/ClientShell";
+import {
+  loadSiteMetadata,
+  resolveSiteOrigin,
+  toAbsoluteAssetUrl,
+} from "@/data/site-metadata-loader";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -21,38 +26,43 @@ const aboreto = Aboreto({
   variable: "--font-aboreto",
 });
 
-const siteUrl = (
-  process.env.NEXT_PUBLIC_SITE_URL ||
-  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://casabricia.com")
-).replace(/\/$/, "");
+export async function generateMetadata(): Promise<Metadata> {
+  const siteUrl = resolveSiteOrigin();
+  const meta = await loadSiteMetadata();
+  const ogImageUrl = toAbsoluteAssetUrl(meta.ogImageSrc, siteUrl);
 
-export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
-  title: "Bricia | Recetas con Historias",
-  description: "Recetario personal de Bricia. Cocina con amor, historias que alimentan.",
-  openGraph: {
-    title: "Bricia | Recetas con Historias",
-    description: "Recetario personal de Bricia. Cocina con amor, historias que alimentan.",
-    url: siteUrl,
-    siteName: "Bricia",
-    locale: "es_MX",
-    type: "website",
-    images: [
-      {
-        url: "/images/hero-inicio-bricia.jpg",
-        width: 1200,
-        height: 630,
-        alt: "Bricia | Recetas con Historias",
-      },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Bricia | Recetas con Historias",
-    description: "Recetario personal de Bricia. Cocina con amor, historias que alimentan.",
-    images: ["/images/hero-inicio-bricia.jpg"],
-  },
-};
+  const openGraphImages = ogImageUrl
+    ? [
+        {
+          url: ogImageUrl,
+          width: 1200,
+          height: 630,
+          alt: meta.ogImageAlt,
+        },
+      ]
+    : undefined;
+
+  return {
+    metadataBase: new URL(siteUrl),
+    title: meta.title,
+    description: meta.description,
+    openGraph: {
+      title: meta.title,
+      description: meta.description,
+      url: siteUrl,
+      siteName: "Bricia",
+      locale: "es_MX",
+      type: "website",
+      ...(openGraphImages ? { images: openGraphImages } : {}),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: meta.title,
+      description: meta.description,
+      ...(ogImageUrl ? { images: [ogImageUrl] } : {}),
+    },
+  };
+}
 
 export default function RootLayout({
   children,
@@ -73,5 +83,3 @@ export default function RootLayout({
     </html>
   );
 }
-
-
