@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import RecipeCard from "./RecipeCard";
 
 interface Recipe {
@@ -16,17 +17,25 @@ const SEASON_CATEGORIES = ["PRIMAVERA", "VERANO", "OTOÑO", "INVIERNO", "POSTRES
 const FILTER_ORDER = [...SEASON_CATEGORIES, "TODAS"] as const;
 type SeasonOrAll = (typeof FILTER_ORDER)[number];
 
+const LANDING_TODAS_LIMIT = 4;
+
 function filterByCategory(all: Recipe[], key: SeasonOrAll): Recipe[] {
   if (key === "TODAS") return all;
   return all.filter((r) => r.category.toUpperCase() === key);
 }
 
 export type RecipeGridProps = {
+  /**
+   * `landing`: en TODAS solo muestra las primeras 4 del orden del CMS + enlace a /recetas.
+   * `full`: índice completo.
+   */
+  variant?: "landing" | "full";
   /** Precargado desde el servidor para no duplicar /api/recipes */
   initialRecipes?: Recipe[];
 };
 
 export default function RecipeGrid({
+  variant = "full",
   initialRecipes,
 }: RecipeGridProps) {
   const [recipes, setRecipes] = useState<Recipe[]>(() =>
@@ -70,10 +79,18 @@ export default function RecipeGrid({
     };
   }, [initialRecipes]);
 
-  const filteredRecipes = useMemo(
-    () => filterByCategory(recipes, viewMode),
-    [recipes, viewMode]
-  );
+  const filteredRecipes = useMemo(() => {
+    const list = filterByCategory(recipes, viewMode);
+    if (variant === "landing" && viewMode === "TODAS") {
+      return list.slice(0, LANDING_TODAS_LIMIT);
+    }
+    return list;
+  }, [recipes, viewMode, variant]);
+
+  const showMoreLink =
+    variant === "landing" &&
+    viewMode === "TODAS" &&
+    recipes.length > LANDING_TODAS_LIMIT;
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -218,6 +235,22 @@ export default function RecipeGrid({
           ))}
         </AnimatePresence>
       </motion.div>
+
+      {showMoreLink && (
+        <div className="flex justify-center -mt-4 md:-mt-8">
+          <Link
+            href="/recetas"
+            className="group inline-flex items-center gap-3 text-[11px] font-sans font-bold tracking-[0.22em] uppercase text-brand-primary hover:text-brand-accent transition-colors"
+          >
+            Ver más recetas
+            <ArrowRight
+              size={14}
+              className="transition-transform duration-300 group-hover:translate-x-1"
+              aria-hidden
+            />
+          </Link>
+        </div>
+      )}
 
       {filteredRecipes.length === 0 && (
         <div className="py-20 text-center">

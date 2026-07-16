@@ -57,7 +57,7 @@ export default async function Home() {
             Recetas frescas, caseras y llenas de historia.
           </p>
         </div>
-        <RecipeGrid initialRecipes={recipes} />
+        <RecipeGrid variant="landing" initialRecipes={recipes} />
       </section>
 
       {/* 4. Tienda — carrusel */}
