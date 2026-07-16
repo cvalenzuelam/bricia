@@ -23,14 +23,6 @@ export default async function Home() {
       ? (heroRaw as Record<string, unknown>)
       : {};
 
-  const landingSlugList = hero["landingRecipeSlugs"];
-  const landingSlugs = Array.isArray(landingSlugList)
-    ? landingSlugList.filter(
-        (x): x is string =>
-          typeof x === "string" && x.trim().length > 0
-      )
-    : [];
-
   const instagramRaw = hero["instagramImages"];
   const instagramImages = Array.isArray(instagramRaw)
     ? (instagramRaw as {
@@ -65,11 +57,7 @@ export default async function Home() {
             Recetas frescas, caseras y llenas de historia.
           </p>
         </div>
-        <RecipeGrid
-          variant="landing"
-          initialRecipes={recipes}
-          initialLandingSlugs={landingSlugs}
-        />
+        <RecipeGrid initialRecipes={recipes} />
       </section>
 
       {/* 4. Tienda — carrusel */}
