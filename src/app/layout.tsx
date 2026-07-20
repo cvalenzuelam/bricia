@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Playfair_Display, Inter, Aboreto } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -79,6 +80,7 @@ export default function RootLayout({
           </div>
           <Footer />
         </ClientShell>
+        <Analytics />
       </body>
     </html>
   );
