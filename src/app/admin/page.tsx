@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { shouldUnoptimizeRemoteImage } from "@/lib/next-image-remote";
 import { PHOTO_IMAGE_QUALITY } from "@/lib/image-quality";
-import { Plus, Edit3, Trash2, Lock, ChefHat, LayoutList, ShoppingBag, Package, Mail, Home, ChevronUp, ChevronDown, Share2 } from "lucide-react";
+import { Plus, Edit3, Trash2, Lock, ChefHat, LayoutList, ShoppingBag, Package, Mail, Home, ChevronUp, ChevronDown, Share2, BarChart3 } from "lucide-react";
 import AdminCmsLoading from "@/components/admin/AdminCmsLoading";
 
 interface Recipe {
@@ -239,6 +239,12 @@ export default function AdminPage() {
               <button className="flex items-center gap-2 border border-brand-primary/10 text-brand-primary px-4 py-2.5 rounded-lg text-xs font-sans font-bold tracking-[0.15em] uppercase hover:border-brand-accent hover:text-brand-accent transition-colors">
                 <Share2 size={14} />
                 Preview link
+              </button>
+            </Link>
+            <Link href="/admin/analytics">
+              <button className="flex items-center gap-2 border border-brand-primary/10 text-brand-primary px-4 py-2.5 rounded-lg text-xs font-sans font-bold tracking-[0.15em] uppercase hover:border-brand-accent hover:text-brand-accent transition-colors">
+                <BarChart3 size={14} />
+                Analytics
               </button>
             </Link>
           </div>
