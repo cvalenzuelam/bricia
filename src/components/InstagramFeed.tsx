@@ -45,24 +45,52 @@ const communityTileClass =
 
 function CommunityBridge() {
   return (
-    <div className="relative z-[1] w-full px-4" aria-hidden>
+    <div className="relative z-[1] w-full px-4">
       <svg
         className="mx-auto block h-10 w-[min(72rem,100%)] text-brand-accent/[0.09] md:h-14"
         viewBox="0 0 1200 48"
         preserveAspectRatio="none"
         xmlns="http://www.w3.org/2000/svg"
+        aria-hidden
       >
         <path
           fill="currentColor"
           d="M0 40c200-18 400-18 600 0s400 18 600 0V48H0V40z"
         />
       </svg>
-      <div className="-mt-6 flex items-center justify-center gap-5 md:-mt-8 md:gap-8">
-        <span className="h-px w-[min(7rem,22vw)] bg-gradient-to-r from-transparent to-brand-accent/35 md:w-32" />
+
+      {/* Móvil: foto → /contacto (entre tienda y comunidad) */}
+      <div className="-mt-8 flex flex-col items-center md:hidden">
+        <Link
+          href="/contacto"
+          className="group flex flex-col items-center gap-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-accent"
+        >
+          <span className="relative h-[7.25rem] w-[7.25rem] overflow-hidden rounded-full border border-brand-accent/25 bg-brand-secondary shadow-[0_8px_28px_-10px_rgba(29,29,27,0.35)] ring-4 ring-brand-secondary transition-transform duration-500 ease-out group-hover:scale-[1.03] group-active:scale-[0.98]">
+            <Image
+              src="/images/bricia-contacto-original.jpg"
+              alt="Bricia — ir a contacto"
+              fill
+              sizes="116px"
+              quality={PHOTO_IMAGE_QUALITY}
+              className="object-cover object-top"
+            />
+          </span>
+          <span className="text-[10px] font-sans font-bold tracking-[0.28em] uppercase text-brand-accent transition-colors group-hover:text-brand-primary">
+            Contacto
+          </span>
+        </Link>
+      </div>
+
+      {/* Desktop: puente decorativo */}
+      <div
+        className="-mt-6 hidden items-center justify-center gap-5 md:-mt-8 md:flex md:gap-8"
+        aria-hidden
+      >
+        <span className="h-px w-32 bg-gradient-to-r from-transparent to-brand-accent/35" />
         <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-brand-accent/20 bg-brand-secondary/90 shadow-[0_1px_0_rgba(29,29,27,0.04)]">
           <span className="block h-2 w-2 rotate-45 bg-brand-accent/55" />
         </span>
-        <span className="h-px w-[min(7rem,22vw)] bg-gradient-to-l from-transparent to-brand-accent/35 md:w-32" />
+        <span className="h-px w-32 bg-gradient-to-l from-transparent to-brand-accent/35" />
       </div>
     </div>
   );

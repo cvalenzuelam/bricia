@@ -1,12 +1,12 @@
-"use client";
-
 import RecipeGrid from "@/components/RecipeGrid";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { getRecipes } from "@/data/recipes";
 
 export const dynamic = "force-dynamic";
 
-export default function RecetasPage() {
+export default async function RecetasPage() {
+  const recipes = await getRecipes();
 
   return (
     <article className="min-h-screen bg-brand-secondary pt-32 pb-20">
@@ -21,12 +21,15 @@ export default function RecetasPage() {
         </p>
       </div>
 
-      {/* Full Filterable Grid */}
-      <RecipeGrid />
+      {/* Índice completo: todas las recetas */}
+      <RecipeGrid variant="full" initialRecipes={recipes} />
 
       {/* Back link */}
       <div className="text-center mt-20 md:mt-32">
-        <Link href="/" className="editorial-spacing hover:text-brand-accent transition-colors flex items-center justify-center gap-2">
+        <Link
+          href="/"
+          className="editorial-spacing hover:text-brand-accent transition-colors flex items-center justify-center gap-2"
+        >
           <ArrowLeft size={16} /> VOLVER AL INICIO
         </Link>
       </div>

@@ -1,9 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowDown, ArrowRight } from "lucide-react";
+import { ArrowDown } from "lucide-react";
 import { useState, useEffect } from "react";
 import { HERO_IMAGE_QUALITY } from "@/lib/image-quality";
 
@@ -120,7 +119,7 @@ export default function Hero({
         className={`relative w-full md:w-[38%] flex flex-col max-md:px-8 md:px-10 lg:px-14 xl:px-16 max-md:pb-0 max-md:pt-[max(6.5rem,env(safe-area-inset-top,0px)+5rem)] md:py-12 md:min-h-[calc(62vw*1.12)] text-left`}
       >
         <div className="flex flex-1 flex-col justify-center max-w-xl w-full max-md:mx-auto md:max-w-none md:mx-0 md:-translate-y-16 lg:-translate-y-20">
-          <div className="flex flex-col space-y-6 md:space-y-7">
+          <div className="flex flex-col space-y-5 max-md:pb-5 md:space-y-7">
             <motion.p
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
@@ -168,21 +167,6 @@ export default function Hero({
                 </p>
               ) : null}
             </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-              className="pt-2 md:pt-5"
-            >
-              <Link
-                href="/recetas"
-                className="inline-flex items-center gap-4 text-[13px] md:text-[14px] font-sans font-bold tracking-[0.35em] uppercase text-brand-accent transition-colors hover:text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/45 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-secondary rounded-sm"
-              >
-                {config.ctaText}
-                <ArrowRight size={20} strokeWidth={1.25} aria-hidden />
-              </Link>
-            </motion.div>
           </div>
         </div>
 
@@ -203,9 +187,9 @@ export default function Hero({
         </motion.a>
       </div>
 
-      {/* Foto — derecha */}
+      {/* Foto — derecha (móvil más alta: ocupa el espacio del CTA quitado) */}
       <div
-        className={`relative z-[1] w-full md:w-[62%] aspect-[5/4] md:aspect-auto md:min-h-[calc(62vw*1.12)] overflow-hidden min-h-[42svh] max-md:min-h-0 max-md:isolate max-md:[transform:translateZ(0)] max-md:mx-0 max-md:mt-0 max-md:rounded-none md:rounded-none`}
+        className="relative z-[1] w-full overflow-hidden max-md:aspect-[4/5] max-md:min-h-[52svh] max-md:isolate max-md:[transform:translateZ(0)] md:w-[62%] md:aspect-auto md:min-h-[calc(62vw*1.12)]"
         style={{ backgroundColor: bg }}
       >
         <Image
@@ -215,7 +199,7 @@ export default function Hero({
           priority
           sizes="(max-width: 768px) 100vw, 62vw"
           quality={HERO_IMAGE_QUALITY}
-          className="object-cover object-center"
+          className="object-cover object-center max-md:object-[center_20%]"
         />
       </div>
     </section>

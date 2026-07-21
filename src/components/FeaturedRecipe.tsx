@@ -27,7 +27,7 @@ export interface FeaturedSectionConfig {
 const DEFAULT_FEATURED: FeaturedSectionConfig = {
   imageSrc: "/images/tiradito.png",
   imageAlt: "Nuevas recetas cada semana",
-  eyebrow: "Cada semana",
+  eyebrow: "",
   panelBackgroundColor: BRAND_DARK,
   heading: "Nuevas recetas\nCada semana",
   description:
@@ -154,7 +154,7 @@ export default function FeaturedRecipe({
   );
   const panel = featured.panelBackgroundColor;
   const mobileImageOverlay = featuredImageMobileOverlayStyle(panel);
-  const eyebrow = featured.eyebrow?.trim() || DEFAULT_FEATURED.eyebrow!;
+  const eyebrow = featured.eyebrow?.trim() ?? "";
 
   return (
     <section
@@ -205,15 +205,17 @@ export default function FeaturedRecipe({
           style={{ backgroundColor: panel }}
         >
           <div className="relative z-[1] mx-auto w-full max-w-lg space-y-8 md:mx-0">
-            <motion.p
-              initial={{ opacity: 0, y: 8 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-              className="text-[10px] font-sans font-bold tracking-[0.45em] uppercase text-brand-accent"
-            >
-              {eyebrow}
-            </motion.p>
+            {eyebrow ? (
+              <motion.p
+                initial={{ opacity: 0, y: 8 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
+                className="text-[10px] font-sans font-bold tracking-[0.45em] uppercase text-brand-accent"
+              >
+                {eyebrow}
+              </motion.p>
+            ) : null}
 
             <motion.h2
               initial={{ opacity: 0, y: 12 }}

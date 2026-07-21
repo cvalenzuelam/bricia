@@ -29,7 +29,7 @@
   "featuredSection": {
     "imageSrc": "/images/tiradito.png",
     "imageAlt": "Nuevas recetas cada semana",
-    "eyebrow": "Cada semana",
+    "eyebrow": "",
     "panelBackgroundColor": "#1D1D1B",
     "heading": "Nuevas recetas\nCada semana",
     "description": "Descubre recetas que tocan el corazón y despiertan tus sentidos. Cada semana traemos algo nuevo para que disfrutes en tu cocina. ¡Explora y déjate inspirar!",

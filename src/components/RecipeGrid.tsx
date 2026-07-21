@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import RecipeCard from "./RecipeCard";
 
 interface Recipe {
@@ -17,7 +17,8 @@ const SEASON_CATEGORIES = ["PRIMAVERA", "VERANO", "OTOÑO", "INVIERNO", "POSTRES
 const FILTER_ORDER = [...SEASON_CATEGORIES, "TODAS"] as const;
 type SeasonOrAll = (typeof FILTER_ORDER)[number];
 
-const LANDING_TODAS_LIMIT = 4;
+/** En inicio + TODAS: muestra hasta 16; el resto en /recetas. */
+const LANDING_TODAS_LIMIT = 16;
 
 function filterByCategory(all: Recipe[], key: SeasonOrAll): Recipe[] {
   if (key === "TODAS") return all;
@@ -26,7 +27,7 @@ function filterByCategory(all: Recipe[], key: SeasonOrAll): Recipe[] {
 
 export type RecipeGridProps = {
   /**
-   * `landing`: en TODAS solo muestra las primeras 4 del orden del CMS + enlace a /recetas.
+   * `landing`: en TODAS muestra hasta 16 + enlace a /recetas.
    * `full`: índice completo.
    */
   variant?: "landing" | "full";
@@ -42,26 +43,6 @@ export default function RecipeGrid({
     initialRecipes && initialRecipes.length > 0 ? initialRecipes : []
   );
   const [viewMode, setViewMode] = useState<SeasonOrAll>("TODAS");
-
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [canPrev, setCanPrev] = useState(false);
-  const [canNext, setCanNext] = useState(false);
-
-  const syncScrollButtons = useCallback(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const { scrollLeft, scrollWidth, clientWidth } = el;
-    const maxScroll = scrollWidth - clientWidth;
-    setCanPrev(scrollLeft > 4);
-    setCanNext(maxScroll > 4 && scrollLeft < maxScroll - 4);
-  }, []);
-
-  const scrollBySnap = useCallback((dir: -1 | 1) => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const stride = Math.min(el.clientWidth * 0.75, 360);
-    el.scrollBy({ left: dir * stride, behavior: "smooth" });
-  }, []);
 
   useEffect(() => {
     if (initialRecipes !== undefined) return;
@@ -79,31 +60,20 @@ export default function RecipeGrid({
     };
   }, [initialRecipes]);
 
+  const isLanding = variant === "landing";
+
   const filteredRecipes = useMemo(() => {
     const list = filterByCategory(recipes, viewMode);
-    if (variant === "landing" && viewMode === "TODAS") {
+    if (isLanding && viewMode === "TODAS") {
       return list.slice(0, LANDING_TODAS_LIMIT);
     }
     return list;
-  }, [recipes, viewMode, variant]);
+  }, [recipes, viewMode, isLanding]);
 
   const showMoreLink =
-    variant === "landing" &&
+    isLanding &&
     viewMode === "TODAS" &&
     recipes.length > LANDING_TODAS_LIMIT;
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    syncScrollButtons();
-    const ro = new ResizeObserver(syncScrollButtons);
-    ro.observe(el);
-    el.addEventListener("scroll", syncScrollButtons, { passive: true });
-    return () => {
-      ro.disconnect();
-      el.removeEventListener("scroll", syncScrollButtons);
-    };
-  }, [filteredRecipes.length, viewMode, syncScrollButtons]);
 
   return (
     <div className="max-w-7xl mx-auto px-6 space-y-16">
@@ -158,62 +128,9 @@ export default function RecipeGrid({
         </div>
       </div>
 
-      {filteredRecipes.length > 0 && (
-        <div className="md:hidden relative">
-          <div
-            ref={scrollRef}
-            role="region"
-            aria-roledescription="carrusel"
-            aria-label="Recetas de temporada"
-            className="no-scrollbar flex gap-6 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-2 -mx-1 px-1"
-          >
-            {filteredRecipes.map((recipe, index) => (
-              <div
-                key={recipe.slug}
-                className="flex-shrink-0 snap-start w-[min(78vw,280px)] sm:w-[min(42vw,280px)]"
-              >
-                <motion.div
-                  initial={{ opacity: 0, y: 16 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: Math.min(index * 0.04, 0.4), duration: 0.45 }}
-                >
-                  <RecipeCard
-                    slug={recipe.slug}
-                    title={recipe.title}
-                    category={recipe.category}
-                    image={recipe.image}
-                  />
-                </motion.div>
-              </div>
-            ))}
-          </div>
-          <div className="mt-6 flex items-center justify-center gap-10">
-            <button
-              type="button"
-              aria-label="Recetas anteriores"
-              onClick={() => scrollBySnap(-1)}
-              disabled={!canPrev}
-              className="flex h-12 w-12 items-center justify-center rounded-full border border-brand-primary/15 text-brand-accent transition-opacity disabled:opacity-25"
-            >
-              <ChevronLeft size={24} strokeWidth={1.5} aria-hidden />
-            </button>
-            <button
-              type="button"
-              aria-label="Siguientes recetas"
-              onClick={() => scrollBySnap(1)}
-              disabled={!canNext}
-              className="flex h-12 w-12 items-center justify-center rounded-full border border-brand-primary/15 text-brand-accent transition-opacity disabled:opacity-25"
-            >
-              <ChevronRight size={24} strokeWidth={1.5} aria-hidden />
-            </button>
-          </div>
-        </div>
-      )}
-
       <motion.div
         layout
-        className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-16"
+        className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-5 gap-y-10 sm:gap-x-6 sm:gap-y-12 md:gap-x-8 md:gap-y-16"
       >
         <AnimatePresence mode="popLayout">
           {filteredRecipes.map((recipe, index) => (
@@ -223,7 +140,7 @@ export default function RecipeGrid({
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              transition={{ duration: 0.4, delay: index * 0.05 }}
+              transition={{ duration: 0.4, delay: Math.min(index * 0.03, 0.45) }}
             >
               <RecipeCard
                 slug={recipe.slug}
