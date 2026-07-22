@@ -158,7 +158,7 @@ export default async function ProductoDetallePage({ params }: PageProps) {
       <nav className="max-w-7xl mx-auto px-6 py-8 md:py-12 border-b border-brand-primary/5 mb-10 md:mb-16">
         <Link
           href="/productos"
-          className="editorial-spacing inline-flex items-center gap-2 hover:text-brand-accent transition-colors text-brand-primary/80"
+          className="editorial-spacing nav-link-underline inline-flex items-center gap-2 hover:text-brand-accent text-brand-primary/80"
         >
           <ArrowLeft size={16} strokeWidth={1.5} /> Volver a la tienda
         </Link>
@@ -207,24 +207,28 @@ export default async function ProductoDetallePage({ params }: PageProps) {
                 <p className="text-[10px] font-sans font-bold tracking-[0.25em] uppercase text-brand-muted">
                   Detalles
                 </p>
-                <dl className="space-y-4">
+                <dl className="grid grid-cols-[max-content_minmax(0,1fr)] gap-x-5 gap-y-4 items-start">
                   {dim && (
-                    <div className="flex gap-3 md:gap-4">
-                      <dt className="shrink-0 flex items-start gap-2 text-[11px] font-sans font-bold uppercase tracking-[0.12em] text-brand-primary/55">
+                    <>
+                      <dt className="flex items-start gap-2 text-[11px] font-sans font-bold uppercase tracking-[0.12em] text-brand-primary/55">
                         <Ruler size={14} strokeWidth={1.5} className="mt-0.5 text-brand-accent/80 shrink-0" aria-hidden />
                         Dimensiones
                       </dt>
-                      <dd className="text-sm md:text-[15px] font-sans text-brand-primary/85 leading-snug">{dim}</dd>
-                    </div>
+                      <dd className="text-sm md:text-[15px] font-sans text-brand-primary/85 leading-snug min-w-0">
+                        {dim}
+                      </dd>
+                    </>
                   )}
                   {mat && (
-                    <div className="flex gap-3 md:gap-4">
-                      <dt className="shrink-0 flex items-start gap-2 text-[11px] font-sans font-bold uppercase tracking-[0.12em] text-brand-primary/55">
+                    <>
+                      <dt className="flex items-start gap-2 text-[11px] font-sans font-bold uppercase tracking-[0.12em] text-brand-primary/55">
                         <Layers size={14} strokeWidth={1.5} className="mt-0.5 text-brand-accent/80 shrink-0" aria-hidden />
                         Material
                       </dt>
-                      <dd className="text-sm md:text-[15px] font-sans text-brand-primary/85 leading-snug">{mat}</dd>
-                    </div>
+                      <dd className="text-sm md:text-[15px] font-sans text-brand-primary/85 leading-snug min-w-0">
+                        {mat}
+                      </dd>
+                    </>
                   )}
                 </dl>
               </div>

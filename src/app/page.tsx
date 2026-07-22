@@ -3,6 +3,7 @@ import FeaturedRecipe from "@/components/FeaturedRecipe";
 import RecipeGrid from "@/components/RecipeGrid";
 import ProductSection from "@/components/ProductSection";
 import InstagramFeed from "@/components/InstagramFeed";
+import { SectionIntro } from "@/components/motion/Reveal";
 import { loadHeroPayload } from "@/data/hero-config-loader";
 import { loadShopConfig } from "@/data/shop-config-loader";
 import { getProducts } from "@/data/products-server";
@@ -46,16 +47,13 @@ export default async function Home() {
 
       {/* 3. Recipe Grid */}
       <section className="py-12 md:py-28">
-        <div className="max-w-7xl mx-auto px-6 text-center mb-10 md:mb-20 space-y-6 md:space-y-8">
-          <span className="editorial-spacing text-brand-accent block">Explora</span>
-          <h2 className="text-5xl md:text-7xl lg:text-8xl font-serif text-brand-primary lowercase tracking-tighter">
-            recetas de <span className="italic text-brand-accent">temporada</span>
-          </h2>
-          <div className="w-16 h-px bg-brand-accent mx-auto opacity-40" />
-          <p className="text-base md:text-lg font-serif italic text-brand-primary/60 max-w-xl mx-auto leading-relaxed">
-            Descubre los sabores que acompañan el clima de hoy.
-            Recetas frescas, caseras y llenas de historia.
-          </p>
+        <div className="max-w-7xl mx-auto px-6 mb-10 md:mb-20">
+          <SectionIntro
+            eyebrow="Explora"
+            title="recetas de"
+            titleAccent="temporada"
+            subtitle="Descubre los sabores que acompañan el clima de hoy. Recetas frescas, caseras y llenas de historia."
+          />
         </div>
         <RecipeGrid variant="landing" initialRecipes={recipes} />
       </section>

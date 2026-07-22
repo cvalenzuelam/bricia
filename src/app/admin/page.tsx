@@ -238,7 +238,7 @@ export default function AdminPage() {
             <Link href="/admin/preview">
               <button className="flex items-center gap-2 border border-brand-primary/10 text-brand-primary px-4 py-2.5 rounded-lg text-xs font-sans font-bold tracking-[0.15em] uppercase hover:border-brand-accent hover:text-brand-accent transition-colors">
                 <Share2 size={14} />
-                Preview link
+                Preview y favicon
               </button>
             </Link>
             <Link href="/admin/analytics">

@@ -2,6 +2,7 @@
 import { HERO_IMAGE_QUALITY } from "@/lib/image-quality";
 import Link from "next/link";
 import { Mail } from "lucide-react";
+import { Reveal, Stagger, StaggerItem } from "@/components/motion/Reveal";
 
 /* ─── SVG Icons ─────────────────────────────────────────────── */
 const InstagramIcon = ({ size = 20 }: { size?: number }) => (
@@ -124,50 +125,59 @@ export default function ContactPage() {
           className="relative w-full md:w-[55%] px-8 md:pl-12 md:pr-12 lg:pl-16 lg:pr-16 xl:pr-24 pb-16 md:pb-24 pt-10 md:pt-64 lg:pt-72 md:min-h-[calc(45vw*1.5)]"
         >
           <div className="max-w-lg space-y-8 w-full">
-            {/* Eyebrow */}
-            <p
-              className="text-[10px] font-sans font-bold tracking-[0.45em] uppercase"
-              style={{ color: "#B08D57" }}
-            >
-              Quién soy
-            </p>
+            <Reveal>
+              <p
+                className="text-[10px] font-sans font-bold tracking-[0.45em] uppercase"
+                style={{ color: "#B08D57" }}
+              >
+                Quién soy
+              </p>
+            </Reveal>
 
-            {/* Headline */}
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-serif text-white/95 leading-[1.05] tracking-tight">
-              Hola,{" "}
-              <br />
-              <span className="italic" style={{ color: "#B08D57" }}>
-                soy Bricia
-              </span>
-            </h1>
+            <Reveal delay={0.08}>
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-serif text-white/95 leading-[1.05] tracking-tight">
+                Hola,{" "}
+                <br />
+                <span className="italic" style={{ color: "#B08D57" }}>
+                  soy Bricia
+                </span>
+              </h1>
+            </Reveal>
 
-            {/* Separador */}
-            <div
-              className="w-12 h-px"
-              style={{ backgroundColor: "#B08D57", opacity: 0.35 }}
-            />
+            <Reveal delay={0.14}>
+              <div
+                className="w-12 h-px"
+                style={{ backgroundColor: "#B08D57", opacity: 0.35 }}
+              />
+            </Reveal>
 
-            {/* Bio principal */}
-            <p className="text-base md:text-lg font-serif text-white/70 leading-relaxed">
-              Soy arquitecta e interiorista de profesión,{" "}
-              <span className="italic" style={{ color: "rgba(176,141,87,0.85)" }}>pero cocinera de corazón.</span>
-            </p>
+            <Reveal delay={0.18}>
+              <p className="text-base md:text-lg font-serif text-white/70 leading-relaxed">
+                Soy arquitecta e interiorista de profesión,{" "}
+                <span className="italic" style={{ color: "rgba(176,141,87,0.85)" }}>pero cocinera de corazón.</span>
+              </p>
+            </Reveal>
 
-            <p className="text-sm font-sans text-white/50 leading-relaxed">
-              Desde hace años he encontrado en el diseño una forma de transformar
-              espacios, y en la cocina una manera de crear momentos.
-            </p>
+            <Reveal delay={0.22}>
+              <p className="text-sm font-sans text-white/50 leading-relaxed">
+                Desde hace años he encontrado en el diseño una forma de transformar
+                espacios, y en la cocina una manera de crear momentos.
+              </p>
+            </Reveal>
 
-            {/* Pills / tags */}
-            <div className="flex flex-wrap gap-2 pt-2">
-              <Pill>Arquitecta</Pill>
-              <Pill>Interiorista</Pill>
-              <Pill>Cocina con intención</Pill>
-              <Pill>Decoración</Pill>
-              <Pill>Estética del hogar</Pill>
-            </div>
+            <Reveal delay={0.28}>
+              <div className="flex flex-wrap gap-2 pt-2">
+                <Pill>Arquitecta</Pill>
+                <Pill>Interiorista</Pill>
+                <Pill>Cocina con intención</Pill>
+                <Pill>Decoración</Pill>
+                <Pill>Estética del hogar</Pill>
+              </div>
+            </Reveal>
 
-            <AboutHeroVisual />
+            <Reveal delay={0.34}>
+              <AboutHeroVisual />
+            </Reveal>
           </div>
         </div>
       </section>
@@ -178,8 +188,7 @@ export default function ContactPage() {
       <section className="py-24 md:py-36 px-6 bg-brand-secondary">
         <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-16 md:gap-24 items-start">
 
-          {/* Izquierda: pregunta editorial grande */}
-          <div className="space-y-6">
+          <Reveal className="space-y-6">
             <p
               className="text-[10px] font-sans font-bold tracking-[0.4em] uppercase"
               style={{ color: "#B08D57" }}
@@ -200,10 +209,9 @@ export default function ContactPage() {
               la mesa. Así como diseñamos espacios para habitarlos, también
               podemos crear experiencias a través de lo que cocinamos.
             </p>
-          </div>
+          </Reveal>
 
-          {/* Derecha: tres razones */}
-          <div className="space-y-10">
+          <Stagger className="space-y-10">
             {[
               {
                 num: "01",
@@ -221,24 +229,26 @@ export default function ContactPage() {
                 body: "Porque el espacio que rodea la mesa importa tanto como lo que hay en ella. Aquí encontrarás recetas, pero también ideas para que tu hogar se sienta más tuyo.",
               },
             ].map((item) => (
-              <div key={item.num} className="flex gap-6">
-                <span
-                  className="text-[11px] font-sans font-bold tracking-[0.2em] shrink-0 pt-1"
-                  style={{ color: "#B08D57" }}
-                >
-                  {item.num}
-                </span>
-                <div>
-                  <p className="font-serif text-brand-primary text-lg mb-1">
-                    {item.title}
-                  </p>
-                  <p className="text-sm font-sans text-brand-muted leading-relaxed">
-                    {item.body}
-                  </p>
+              <StaggerItem key={item.num}>
+                <div className="flex gap-6">
+                  <span
+                    className="text-[11px] font-sans font-bold tracking-[0.2em] shrink-0 pt-1"
+                    style={{ color: "#B08D57" }}
+                  >
+                    {item.num}
+                  </span>
+                  <div>
+                    <p className="font-serif text-brand-primary text-lg mb-1">
+                      {item.title}
+                    </p>
+                    <p className="text-sm font-sans text-brand-muted leading-relaxed">
+                      {item.body}
+                    </p>
+                  </div>
                 </div>
-              </div>
+              </StaggerItem>
             ))}
-          </div>
+          </Stagger>
         </div>
       </section>
 
@@ -263,8 +273,7 @@ export default function ContactPage() {
 
         <div className="relative z-0 max-w-4xl mx-auto space-y-20">
 
-          {/* Header */}
-          <div className="text-center space-y-5">
+          <Reveal className="text-center space-y-5">
             <p
               className="text-[10px] font-sans font-bold tracking-[0.5em] uppercase"
               style={{ color: "#B08D57" }}
@@ -282,14 +291,14 @@ export default function ContactPage() {
               Para colaboraciones, preguntas sobre recetas, decoración del hogar
               o simplemente para platicar con calma.
             </p>
-          </div>
+          </Reveal>
 
           {/* Email CTA — premium card */}
           <a
             href="https://mail.google.com/mail/?view=cm&to=briciaelizaldes@gmail.com&su=Hola%20Bricia"
             target="_blank"
             rel="noopener noreferrer"
-            className="group relative z-10 block rounded-3xl p-10 md:p-14 transition-all duration-500 hover:scale-[1.01] cursor-pointer"
+            className="group relative z-10 block rounded-3xl p-10 md:p-14 btn-lift cursor-pointer hover:scale-[1.015]"
             style={{
               background: "linear-gradient(135deg, rgba(176,141,87,0.12) 0%, rgba(176,141,87,0.04) 100%)",
               border: "1px solid rgba(176,141,87,0.2)",
@@ -355,7 +364,7 @@ export default function ContactPage() {
                 href={social.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group relative flex flex-col items-center gap-5 p-8 rounded-3xl overflow-hidden transition-all duration-500 hover:scale-[1.03] hover:-translate-y-1"
+            className="group relative flex flex-col items-center gap-5 p-8 rounded-3xl overflow-hidden btn-lift hover:scale-[1.03] hover:-translate-y-1"
                 style={{
                   background: "rgba(255,255,255,0.03)",
                   border: "1px solid rgba(176,141,87,0.12)",

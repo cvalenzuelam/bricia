@@ -15,6 +15,8 @@ import type { Product } from "@/data/products";
 import { PHOTO_IMAGE_QUALITY } from "@/lib/image-quality";
 import ImageFrameFade from "@/components/ImageFrameFade";
 import ShopComingSoon from "@/components/productos/ShopComingSoon";
+import { SectionIntro } from "@/components/motion/Reveal";
+import { duration, easeOutExpo, viewportOnce } from "@/lib/motion";
 
 function formatPriceMx(price: number): string {
   return new Intl.NumberFormat("es-MX", {
@@ -107,17 +109,15 @@ export default function ProductSection({
   return (
     <section className="bg-brand-primary text-brand-secondary py-24 md:py-32 px-6 border-t border-white/10">
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-12 md:mb-14 space-y-6">
-          <span className="editorial-spacing text-brand-accent block">La tienda</span>
-          <h2 className="text-5xl md:text-7xl font-serif text-brand-secondary lowercase tracking-tighter">
-            objetos con alma{" "}
-            <span className="italic text-brand-accent">para tu mesa</span>
-          </h2>
-          <div className="w-16 h-px bg-brand-accent mx-auto opacity-40" />
-          <p className="text-base font-serif italic text-brand-secondary/60 max-w-xl mx-auto leading-relaxed">
-            Descubre ideas, estéticas y secretos para que tu comedor y tu cocina sean los lugares
-            favoritos de tus invitados.
-          </p>
+        <div className="mb-12 md:mb-14">
+          <SectionIntro
+            dark
+            eyebrow="La tienda"
+            title="objetos con alma"
+            titleAccent="para tu mesa"
+            subtitle="Descubre ideas, estéticas y secretos para que tu comedor y tu cocina sean los lugares favoritos de tus invitados."
+            titleClassName="text-5xl md:text-7xl font-serif text-brand-secondary lowercase tracking-tighter"
+          />
         </div>
 
         <div className="relative">
@@ -126,7 +126,7 @@ export default function ProductSection({
             aria-label="Productos anteriores"
             onClick={() => scrollBySnap(-1)}
             disabled={!canPrev}
-            className="hidden md:flex absolute left-0 top-1/2 z-10 -translate-y-1/2 -translate-x-3 lg:-translate-x-6 w-11 h-11 items-center justify-center rounded-full border border-white/20 bg-brand-primary/90 text-[#C2A878] shadow-lg backdrop-blur-sm transition-colors hover:bg-white/10 hover:border-white/35 disabled:pointer-events-none disabled:opacity-20"
+            className="carousel-btn hidden md:flex absolute left-0 top-1/2 z-10 -translate-y-1/2 -translate-x-3 lg:-translate-x-6 w-11 h-11 items-center justify-center rounded-full border border-white/20 bg-brand-primary/90 text-[#C2A878] shadow-lg backdrop-blur-sm hover:bg-white/15 hover:border-white/45 disabled:pointer-events-none disabled:opacity-20"
           >
             <ChevronLeft size={22} strokeWidth={1.5} aria-hidden />
           </button>
@@ -135,7 +135,7 @@ export default function ProductSection({
             aria-label="Siguientes productos"
             onClick={() => scrollBySnap(1)}
             disabled={!canNext}
-            className="hidden md:flex absolute right-0 top-1/2 z-10 -translate-y-1/2 translate-x-3 lg:translate-x-6 w-11 h-11 items-center justify-center rounded-full border border-white/20 bg-brand-primary/90 text-[#C2A878] shadow-lg backdrop-blur-sm transition-colors hover:bg-white/10 hover:border-white/35 disabled:pointer-events-none disabled:opacity-20"
+            className="carousel-btn hidden md:flex absolute right-0 top-1/2 z-10 -translate-y-1/2 translate-x-3 lg:translate-x-6 w-11 h-11 items-center justify-center rounded-full border border-white/20 bg-brand-primary/90 text-[#C2A878] shadow-lg backdrop-blur-sm hover:bg-white/15 hover:border-white/45 disabled:pointer-events-none disabled:opacity-20"
           >
             <ChevronRight size={22} strokeWidth={1.5} aria-hidden />
           </button>
@@ -154,10 +154,11 @@ export default function ProductSection({
                 className="group flex-shrink-0 snap-start w-[min(78vw,280px)] sm:w-[min(42vw,280px)] md:w-[min(31vw,300px)]"
               >
                 <motion.article
-                  initial={{ opacity: 0, y: 16 }}
+                  initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: Math.min(i * 0.04, 0.4), duration: 0.45 }}
+                  viewport={viewportOnce}
+                  transition={{ delay: Math.min(i * 0.06, 0.45), duration: duration.base, ease: easeOutExpo }}
+                  whileHover={{ y: -4 }}
                   className="cursor-pointer space-y-5 h-full"
                 >
                   <div className="relative aspect-[4/5] rounded-xl overflow-hidden bg-white/5 border border-white/10">
@@ -190,7 +191,7 @@ export default function ProductSection({
               aria-label="Productos anteriores"
               onClick={() => scrollBySnap(-1)}
               disabled={!canPrev}
-              className="flex w-12 h-12 items-center justify-center rounded-full border border-white/20 text-[#C2A878] disabled:opacity-25"
+              className="carousel-btn flex w-12 h-12 items-center justify-center rounded-full border border-white/20 text-[#C2A878] hover:bg-white/10 hover:border-white/40 disabled:opacity-25"
             >
               <ChevronLeft size={24} strokeWidth={1.5} aria-hidden />
             </button>
@@ -199,7 +200,7 @@ export default function ProductSection({
               aria-label="Siguientes productos"
               onClick={() => scrollBySnap(1)}
               disabled={!canNext}
-              className="flex w-12 h-12 items-center justify-center rounded-full border border-white/20 text-[#C2A878] disabled:opacity-25"
+              className="carousel-btn flex w-12 h-12 items-center justify-center rounded-full border border-white/20 text-[#C2A878] hover:bg-white/10 hover:border-white/40 disabled:opacity-25"
             >
               <ChevronRight size={24} strokeWidth={1.5} aria-hidden />
             </button>

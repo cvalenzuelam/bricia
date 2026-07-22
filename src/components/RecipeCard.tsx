@@ -25,8 +25,9 @@ export default function RecipeCard({
   return (
     <Link href={`/recetas/${slug}`}>
       <motion.div
-        whileHover={{ y: -4 }}
-        transition={{ duration: 0.3, ease: "easeOut" }}
+        whileHover={{ y: -6 }}
+        whileTap={{ scale: 0.985 }}
+        transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
         className={`group cursor-pointer flex flex-col gap-4 ${className}`}
       >
         {/* Image */}

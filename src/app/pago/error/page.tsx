@@ -37,7 +37,7 @@ export default function PagoErrorPage() {
 
         <div className="flex flex-col items-center gap-3">
           <Link href="/productos">
-            <button className="bg-brand-primary text-brand-secondary px-8 py-3.5 rounded-xl text-xs font-sans font-bold tracking-[0.2em] uppercase hover:bg-brand-accent transition-colors">
+            <button className="btn-solid px-8 py-3.5 rounded-xl text-xs font-sans font-bold tracking-[0.2em] uppercase">
               Volver a la tienda
             </button>
           </Link>

@@ -13,6 +13,8 @@ export interface Recipe {
   category: string;
   image: string;
   history: string;
+  /** Frase de cierre romántica al final de la receta */
+  closingPhrase?: string;
   gallery?: string[];
   videoUrl?: string;
   videoThumbnail?: string;

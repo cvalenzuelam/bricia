@@ -35,6 +35,8 @@ function normalizeConfig(raw: unknown): SiteMetadataConfig {
       typeof data.ogImageAlt === "string" && data.ogImageAlt.trim()
         ? data.ogImageAlt.trim()
         : DEFAULT_SITE_METADATA.ogImageAlt,
+    faviconSrc:
+      typeof data.faviconSrc === "string" ? data.faviconSrc.trim() : DEFAULT_SITE_METADATA.faviconSrc,
   };
 }
 

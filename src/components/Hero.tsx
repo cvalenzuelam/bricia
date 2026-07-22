@@ -1,10 +1,16 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowDown } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useState, useEffect } from "react";
 import { HERO_IMAGE_QUALITY } from "@/lib/image-quality";
+
+interface HeroImage {
+  src: string;
+  alt: string;
+}
 
 interface HeroConfig {
   eyebrow?: string;
@@ -16,7 +22,10 @@ interface HeroConfig {
   taglineMobile?: string;
   description: string;
   ctaText: string;
-  collageImages: { src: string; alt: string }[];
+  /** Imagen hero escritorio (web) */
+  collageImages: HeroImage[];
+  /** Imagen hero móvil; si falta, usa collageImages[0] */
+  mobileHeroImage?: HeroImage;
   backgroundColor: string;
 }
 
@@ -30,10 +39,14 @@ const HERO_FALLBACK: HeroConfig = {
     "Aquí la cocina cotidiana cobra vida a través de recetas cálidas, deliciosas y pensadas para disfrutarse en casa.",
   description:
     "Celebramos esos momentos simples alrededor de la mesa y dejamos que los aromas, los sabores y los ingredientes despierten la curiosidad del paladar.",
-  ctaText: "Descubre recetas inspiradoras cada semana",
+  ctaText: "Ver recetas",
   collageImages: [
     { src: "/images/hero-inicio-bricia.jpg", alt: "Bricia en picnic al aire libre" },
   ],
+  mobileHeroImage: {
+    src: "/images/hero-inicio-bricia.jpg",
+    alt: "Bricia en picnic al aire libre",
+  },
   backgroundColor: "#FAF9F4",
 };
 
@@ -67,9 +80,23 @@ function resolveTitleParts(config: HeroConfig): {
   };
 }
 
+function normalizeHeroImage(value: unknown): HeroImage | undefined {
+  if (!value || typeof value !== "object") return undefined;
+  const o = value as Partial<HeroImage>;
+  const src = typeof o.src === "string" ? o.src.trim() : "";
+  if (!src) return undefined;
+  return {
+    src,
+    alt: typeof o.alt === "string" && o.alt.trim() ? o.alt.trim() : "Foto principal de Bricia",
+  };
+}
+
 function mergeHeroResponse(base: HeroConfig, patch: unknown): HeroConfig {
   if (!patch || typeof patch !== "object") return base;
   const d = patch as Partial<HeroConfig>;
+  const mobileHeroImage =
+    normalizeHeroImage(d.mobileHeroImage) ??
+    (d.mobileHeroImage === null ? undefined : base.mobileHeroImage);
   return {
     ...base,
     ...d,
@@ -77,6 +104,7 @@ function mergeHeroResponse(base: HeroConfig, patch: unknown): HeroConfig {
       Array.isArray(d.collageImages) && d.collageImages.length > 0
         ? (d.collageImages as HeroConfig["collageImages"])
         : base.collageImages,
+    mobileHeroImage,
   };
 }
 
@@ -99,47 +127,88 @@ export default function Hero({
       .catch(() => {});
   }, [initialHero]);
 
-  const heroImage =
+  const desktopImage =
     config.collageImages?.[0]?.src || "/images/hero-inicio-bricia.jpg";
-  const heroImageAlt =
+  const desktopAlt =
     config.collageImages?.[0]?.alt || "Foto principal de Bricia";
+  const mobileImage =
+    config.mobileHeroImage?.src?.trim() || desktopImage;
+  const mobileAlt =
+    config.mobileHeroImage?.alt?.trim() || desktopAlt;
 
   const bg = config.backgroundColor || DEFAULT_BG;
-  const sectionMinH = "max-md:min-h-0 md:min-h-[calc(62vw*1.12)]";
   const { plain: titlePlain, highlight: titleHighlight } = resolveTitleParts(config);
   const eyebrow = config.eyebrow?.trim() || HERO_FALLBACK.eyebrow!;
+  const ctaLabel = config.ctaText?.trim() || HERO_FALLBACK.ctaText;
+  const tagline =
+    config.taglineMobile?.trim() || config.tagline?.trim() || HERO_FALLBACK.tagline;
 
   return (
     <section
-      className={`relative ${sectionMinH} flex flex-col max-md:gap-0 max-md:pb-0 md:flex-row md:gap-0 overflow-hidden md:pb-0`}
+      className="relative isolate w-full overflow-hidden max-md:min-h-[78svh] md:min-h-[100svh]"
       style={{ backgroundColor: bg }}
     >
-      {/* Texto — izquierda */}
-      <div
-        className={`relative w-full md:w-[38%] flex flex-col max-md:px-8 md:px-10 lg:px-14 xl:px-16 max-md:pb-0 max-md:pt-[max(6.5rem,env(safe-area-inset-top,0px)+5rem)] md:py-12 md:min-h-[calc(62vw*1.12)] text-left`}
+      {/* Foto a sangre — web y móvil independientes (CMS) */}
+      <motion.div
+        initial={{ scale: 1.03 }}
+        animate={{ scale: 1 }}
+        transition={{ duration: 1.8, ease: [0.16, 1, 0.3, 1] }}
+        className="absolute inset-0 overflow-hidden"
       >
-        <div className="flex flex-1 flex-col justify-center max-w-xl w-full max-md:mx-auto md:max-w-none md:mx-0 md:-translate-y-16 lg:-translate-y-20">
-          <div className="flex flex-col space-y-5 max-md:pb-5 md:space-y-7">
+        <Image
+          src={mobileImage}
+          alt={mobileAlt}
+          fill
+          priority
+          sizes="100vw"
+          quality={HERO_IMAGE_QUALITY}
+          className="object-cover object-[58%_22%] md:hidden"
+        />
+        <Image
+          src={desktopImage}
+          alt={desktopAlt}
+          fill
+          priority
+          sizes="100vw"
+          quality={HERO_IMAGE_QUALITY}
+          className="object-cover object-[center_30%] hidden md:block"
+        />
+      </motion.div>
+
+      {/* Veladura suave solo donde va el texto — la foto conserva su contraste */}
+      <div
+        className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/15"
+        aria-hidden
+      />
+      <div
+        className="absolute inset-0 bg-gradient-to-r from-black/35 via-transparent to-transparent md:from-black/30"
+        aria-hidden
+      />
+
+      {/* Texto sobre la imagen */}
+      <div className="relative z-10 flex max-md:min-h-[78svh] md:min-h-[100svh] flex-col justify-end">
+        <div className="w-full max-w-7xl mx-auto px-6 md:px-10 lg:px-14 pb-10 md:pb-20 lg:pb-24 pt-[max(6.5rem,env(safe-area-inset-top,0px)+5rem)]">
+          <div className="max-w-xl lg:max-w-[34rem] space-y-4 md:space-y-6">
             <motion.p
-              initial={{ opacity: 0, y: 8 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="text-[13px] md:text-[14px] font-sans font-bold tracking-[0.45em] uppercase text-brand-accent"
+              transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
+              className="text-[11px] md:text-[12px] font-sans font-medium tracking-[0.42em] uppercase text-white [text-shadow:0_2px_4px_rgba(0,0,0,0.65),0_6px_24px_rgba(0,0,0,0.5)]"
             >
               {eyebrow}
             </motion.p>
 
             <motion.h1
-              initial={{ opacity: 0, y: 12 }}
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.1 }}
-              className="font-serif text-brand-primary tracking-tight leading-[1.05]"
+              transition={{ duration: 0.75, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
+              className="font-serif text-white tracking-tight leading-[1.05] [text-shadow:0_2px_6px_rgba(0,0,0,0.7),0_10px_32px_rgba(0,0,0,0.55)]"
             >
-              <span className="block text-[2.8125rem] max-md:text-[3.4375rem] md:text-[3.3125rem] lg:text-[3.75rem] xl:text-[4.0625rem]">
+              <span className="block text-[2.35rem] sm:text-[2.85rem] md:text-[3.75rem] lg:text-[4.25rem]">
                 {titlePlain}
               </span>
               {titleHighlight ? (
-                <span className="block text-[2.8125rem] max-md:text-[3.4375rem] md:text-[3.3125rem] lg:text-[3.75rem] xl:text-[4.0625rem] italic text-brand-accent mt-0.5">
+                <span className="block text-[2.35rem] sm:text-[2.85rem] md:text-[3.75rem] lg:text-[4.25rem] italic text-[#E8D5B0] mt-1">
                   {titleHighlight}
                 </span>
               ) : null}
@@ -148,59 +217,45 @@ export default function Hero({
             <motion.div
               initial={{ scaleX: 0 }}
               animate={{ scaleX: 1 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="w-[4.375rem] h-px bg-brand-accent opacity-60 origin-left"
+              transition={{ duration: 0.65, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              className="w-14 h-px bg-[#E8D5B0] origin-left shadow-[0_1px_8px_rgba(0,0,0,0.45)]"
+              aria-hidden
             />
 
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              className="space-y-5 pt-1"
+            <motion.p
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.65, delay: 0.28, ease: [0.16, 1, 0.3, 1] }}
+              className="max-w-md text-[14px] md:text-[16px] font-sans text-white leading-relaxed [text-shadow:0_2px_4px_rgba(0,0,0,0.65),0_6px_22px_rgba(0,0,0,0.5)]"
             >
-              <p className="text-[17.5px] md:text-[18.75px] font-sans text-brand-primary leading-relaxed">
-                {config.tagline}
-              </p>
-              {config.description ? (
-                <p className="text-[17.5px] md:text-[18.75px] font-sans text-brand-primary leading-relaxed">
-                  {config.description}
-                </p>
-              ) : null}
+              {tagline}
+            </motion.p>
+
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.65, delay: 0.38, ease: [0.16, 1, 0.3, 1] }}
+              className="pt-1 md:pt-2"
+            >
+              <Link
+                href="/recetas"
+                className="group relative inline-flex items-center gap-3 overflow-hidden rounded-md border border-white/90 bg-white/95 px-8 py-3.5 text-[11px] md:text-[12px] font-sans font-semibold tracking-[0.28em] uppercase text-brand-primary shadow-[0_10px_32px_rgba(0,0,0,0.28)] backdrop-blur-[2px] btn-lift hover:border-[#E8D5B0] hover:bg-[#E8D5B0] hover:shadow-[0_16px_40px_rgba(0,0,0,0.32)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black/40"
+              >
+                <span
+                  className="hero-cta-sheen pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-white/70 to-transparent"
+                  aria-hidden
+                />
+                <span className="relative">{ctaLabel}</span>
+                <ArrowRight
+                  size={14}
+                  strokeWidth={1.75}
+                  className="relative shrink-0 transition-transform duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-1"
+                  aria-hidden
+                />
+              </Link>
             </motion.div>
           </div>
         </div>
-
-        <motion.a
-          href="#seccion-destacada"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.5 }}
-          className="hidden md:inline-flex mt-auto pb-2 text-brand-primary/30 transition-colors hover:text-brand-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/40 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-secondary rounded-full"
-          aria-label="Bajar a la sección destacada"
-        >
-          <motion.span
-            animate={{ y: [0, 6, 0] }}
-            transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-          >
-            <ArrowDown size={30} strokeWidth={1} aria-hidden />
-          </motion.span>
-        </motion.a>
-      </div>
-
-      {/* Foto — derecha (móvil más alta: ocupa el espacio del CTA quitado) */}
-      <div
-        className="relative z-[1] w-full overflow-hidden max-md:aspect-[4/5] max-md:min-h-[52svh] max-md:isolate max-md:[transform:translateZ(0)] md:w-[62%] md:aspect-auto md:min-h-[calc(62vw*1.12)]"
-        style={{ backgroundColor: bg }}
-      >
-        <Image
-          src={heroImage}
-          alt={heroImageAlt}
-          fill
-          priority
-          sizes="(max-width: 768px) 100vw, 62vw"
-          quality={HERO_IMAGE_QUALITY}
-          className="object-cover object-center max-md:object-[center_20%]"
-        />
       </div>
     </section>
   );

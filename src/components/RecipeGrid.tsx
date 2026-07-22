@@ -1,10 +1,12 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import RecipeCard from "./RecipeCard";
+import { duration, easeOutExpo } from "@/lib/motion";
+import { getCurrentSeasonCategory } from "@/lib/season";
 
 interface Recipe {
   slug: string;
@@ -14,7 +16,8 @@ interface Recipe {
 }
 
 const SEASON_CATEGORIES = ["PRIMAVERA", "VERANO", "OTOÑO", "INVIERNO", "POSTRES"] as const;
-const FILTER_ORDER = [...SEASON_CATEGORIES, "TODAS"] as const;
+/** Misma lógica visual que la tienda: TODAS primero, luego el resto. */
+const FILTER_ORDER = ["TODAS", ...SEASON_CATEGORIES] as const;
 type SeasonOrAll = (typeof FILTER_ORDER)[number];
 
 /** En inicio + TODAS: muestra hasta 16; el resto en /recetas. */
@@ -39,10 +42,12 @@ export default function RecipeGrid({
   variant = "full",
   initialRecipes,
 }: RecipeGridProps) {
+  const seasonDefault = useMemo(() => getCurrentSeasonCategory(), []);
   const [recipes, setRecipes] = useState<Recipe[]>(() =>
     initialRecipes && initialRecipes.length > 0 ? initialRecipes : []
   );
-  const [viewMode, setViewMode] = useState<SeasonOrAll>("TODAS");
+  const [viewMode, setViewMode] = useState<SeasonOrAll>(seasonDefault);
+  const [userPicked, setUserPicked] = useState(false);
 
   useEffect(() => {
     if (initialRecipes !== undefined) return;
@@ -59,6 +64,13 @@ export default function RecipeGrid({
       cancelled = true;
     };
   }, [initialRecipes]);
+
+  /** Si la estación actual no tiene recetas, cae a TODAS (salvo que el usuario ya eligió). */
+  useEffect(() => {
+    if (userPicked || recipes.length === 0) return;
+    const count = filterByCategory(recipes, seasonDefault).length;
+    if (count === 0) setViewMode("TODAS");
+  }, [recipes, seasonDefault, userPicked]);
 
   const isLanding = variant === "landing";
 
@@ -77,54 +89,28 @@ export default function RecipeGrid({
 
   return (
     <div className="max-w-7xl mx-auto px-6 space-y-16">
-      <div className="flex flex-col items-center gap-4">
-        <div className="flex justify-start md:justify-center w-full min-w-0">
-          <div
-            className="
-              flex flex-nowrap items-stretch md:items-center gap-2 md:gap-12
-              overflow-x-auto no-scrollbar scroll-smooth
-              max-md:pt-0.5 max-md:pb-1 max-md:pl-0 max-md:pr-8 max-md:-mx-1 max-md:px-1
-              w-full max-md:snap-x max-md:snap-mandatory md:overflow-visible md:pb-4 md:-mb-4 md:px-0 md:w-auto
-            "
-          >
-            {FILTER_ORDER.map((key) => {
-              const active = viewMode === key;
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => setViewMode(key)}
-                  className={`
-                    group relative shrink-0 snap-start
-                    max-md:rounded-full max-md:px-4 max-md:py-2.5 max-md:border max-md:text-[10px] max-md:font-sans max-md:font-bold
-                    max-md:tracking-[0.18em] max-md:uppercase max-md:transition-all max-md:duration-300
-                    ${active
-                      ? "max-md:bg-brand-primary max-md:text-brand-secondary max-md:border-brand-primary"
-                      : "max-md:bg-white/90 max-md:backdrop-blur-sm max-md:text-brand-muted max-md:border-brand-primary/15 max-md:hover:border-brand-accent/40 max-md:hover:text-brand-accent"
-                    }
-                    md:py-2 md:rounded-none md:border-0 md:bg-transparent md:backdrop-blur-none md:px-0
-                  `}
-                >
-                  <span
-                    className={`
-                      max-md:text-inherit
-                      text-[9px] md:text-sm font-sans font-bold tracking-[0.1em] md:tracking-[0.2em] uppercase transition-colors duration-300
-                      ${active ? "md:text-brand-accent" : "md:text-brand-muted md:group-hover:text-brand-primary"}
-                    `}
-                  >
-                    {key}
-                  </span>
-                  {active && (
-                    <motion.div
-                      layoutId="activeFilter"
-                      className="hidden md:block absolute -bottom-1 left-0 right-0 h-px bg-brand-accent"
-                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                    />
-                  )}
-                </button>
-              );
-            })}
-          </div>
+      <div className="flex justify-center">
+        <div className="flex gap-2 flex-wrap justify-center">
+          {FILTER_ORDER.map((key) => {
+            const active = viewMode === key;
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => {
+                  setUserPicked(true);
+                  setViewMode(key);
+                }}
+                className={`chip-btn px-5 py-2 rounded-full text-[10px] font-sans font-bold tracking-[0.2em] uppercase ${
+                  active
+                    ? "bg-brand-primary text-brand-secondary shadow-[0_8px_20px_-10px_rgba(29,29,27,0.45)]"
+                    : "border border-brand-primary/10 text-brand-muted hover:border-brand-accent/50 hover:text-brand-accent hover:bg-brand-accent/[0.08]"
+                }`}
+              >
+                {key}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -140,7 +126,7 @@ export default function RecipeGrid({
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              transition={{ duration: 0.4, delay: Math.min(index * 0.03, 0.45) }}
+              transition={{ duration: duration.base, delay: Math.min(index * 0.04, 0.4), ease: easeOutExpo }}
             >
               <RecipeCard
                 slug={recipe.slug}
@@ -157,7 +143,7 @@ export default function RecipeGrid({
         <div className="flex justify-center -mt-4 md:-mt-8">
           <Link
             href="/recetas"
-            className="group inline-flex items-center gap-3 text-[11px] font-sans font-bold tracking-[0.22em] uppercase text-brand-primary hover:text-brand-accent transition-colors"
+            className="group inline-flex items-center gap-3 text-[11px] font-sans font-bold tracking-[0.22em] uppercase text-brand-primary hover:text-brand-accent px-4 py-2 rounded-full hover:bg-brand-accent/[0.08]"
           >
             Ver más recetas
             <ArrowRight

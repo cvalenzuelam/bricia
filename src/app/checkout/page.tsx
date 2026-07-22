@@ -438,7 +438,7 @@ export default function CheckoutPage() {
                 type="button"
                 disabled={submitting}
                 onClick={goToMercadoPagoCheckout}
-                className="grid w-full min-h-[4.5rem] grid-cols-[8.5rem_1fr] items-center gap-3 rounded-xl border-2 border-brand-primary/15 bg-white px-3 py-3.5 transition-colors hover:border-brand-accent/40 hover:bg-brand-secondary/30 disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-[4.5rem] sm:grid-cols-[10.5rem_1fr] sm:gap-4 sm:px-5 sm:py-3.5"
+                className="btn-lift grid w-full min-h-[4.5rem] grid-cols-[8.5rem_1fr] items-center gap-3 rounded-xl border-2 border-brand-primary/15 bg-white px-3 py-3.5 hover:border-brand-accent/55 hover:bg-brand-accent/[0.07] hover:shadow-[0_12px_32px_-14px_rgba(176,141,87,0.45)] disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-[4.5rem] sm:grid-cols-[10.5rem_1fr] sm:gap-4 sm:px-5 sm:py-3.5"
               >
                 <span className="relative h-12 w-full translate-x-1.5 justify-self-stretch sm:translate-x-2 sm:h-14">
                   <Image
@@ -457,7 +457,7 @@ export default function CheckoutPage() {
                 type="button"
                 disabled={submitting}
                 onClick={goToStripeCheckout}
-                className="grid w-full min-h-[4.25rem] grid-cols-[8.5rem_1fr] items-center gap-3 rounded-xl border-2 border-brand-primary/15 bg-white px-3 py-3.5 transition-colors hover:border-brand-accent/40 hover:bg-brand-secondary/30 disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-[4rem] sm:grid-cols-[10.5rem_1fr] sm:gap-4 sm:px-5 sm:py-3.5"
+                className="btn-lift grid w-full min-h-[4.25rem] grid-cols-[8.5rem_1fr] items-center gap-3 rounded-xl border-2 border-brand-primary/15 bg-white px-3 py-3.5 hover:border-brand-accent/55 hover:bg-brand-accent/[0.07] hover:shadow-[0_12px_32px_-14px_rgba(176,141,87,0.45)] disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-[4rem] sm:grid-cols-[10.5rem_1fr] sm:gap-4 sm:px-5 sm:py-3.5"
               >
                 <span className="relative h-11 w-full translate-x-3 justify-self-stretch sm:translate-x-4 sm:h-12">
                   <Image

@@ -24,7 +24,7 @@ export const YouTubeIcon = () => (
 );
 
 const rowClass =
-  "text-brand-primary/50 hover:text-brand-accent transition-all hover:scale-110";
+  "text-brand-primary/50 hover:text-brand-accent transition-all duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-110 hover:-translate-y-0.5";
 
 type SiteSocialIconRowProps = {
   className?: string;

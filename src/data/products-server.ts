@@ -227,7 +227,13 @@ export async function updateProduct(id: string, updates: Partial<Product>): Prom
   const products = await getProducts();
   const idx = products.findIndex((p) => p.id === id);
   if (idx === -1) return false;
-  products[idx] = { ...products[idx], ...updates, id };
+  const next: Product = { ...products[idx], ...updates, id };
+  if ("gallery" in updates) {
+    const g = normalizeProductGallery(updates.gallery);
+    if (g.length > 0) next.gallery = g;
+    else delete next.gallery;
+  }
+  products[idx] = next;
   await saveProducts(products);
   return true;
 }

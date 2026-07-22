@@ -1,6 +1,6 @@
 import type { Product } from "@/data/products";
 
-export const PRODUCT_GALLERY_MAX = 3;
+export const PRODUCT_GALLERY_MAX = 4;
 
 /** Normaliza lista de URLs para galería (máx. 3, sin vacíos). */
 export function normalizeProductGallery(input: unknown): string[] {

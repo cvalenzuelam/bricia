@@ -59,7 +59,8 @@ export default function Header() {
   /** Hero oscuro: contacto o artículo individual de La Mesa (no el índice /la-mesa). */
   const isMesaArticlePage = /^\/la-mesa\/.+/.test(pathname);
   const isHome = pathname === "/";
-  const lightNavWhenTransparent = pathname === "/contacto" || (isMesaArticlePage && !scrolled);
+  const lightNavWhenTransparent =
+    pathname === "/contacto" || (isMesaArticlePage && !scrolled);
   const textColor = scrolled ? "text-brand-primary" : (lightNavWhenTransparent ? "text-white/90" : "text-brand-primary/80");
   const logoColor = scrolled ? "text-brand-primary" : (lightNavWhenTransparent ? "text-white" : "text-brand-primary");
   const iconColor = scrolled ? "text-brand-primary" : (lightNavWhenTransparent ? "text-white" : "text-brand-primary");
@@ -148,58 +149,62 @@ export default function Header() {
             : lightNavWhenTransparent
               ? "bg-transparent py-8 border-b border-white/[0.06]"
               : isHome
-                ? "bg-brand-secondary/90 backdrop-blur-md py-8 border-b border-brand-primary/[0.08]"
+                ? "bg-brand-secondary/95 backdrop-blur-md py-8 border-b border-brand-primary/[0.08]"
                 : "bg-transparent py-8"
         }`}
       >
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-3 items-center">
-          <nav className="hidden md:flex gap-10">
-            {leftLinks.map((link) => (
-              <Link
-                key={link.name}
-                href={link.href}
-                className={`editorial-spacing ${textColor} hover:text-brand-accent transition-colors`}
-              >
-                {link.name}
-              </Link>
-            ))}
-          </nav>
-
-          <button
-            className={`md:hidden ${isOpen ? "text-brand-primary" : iconColor} z-[70] relative`}
-            onClick={() => setIsOpen(!isOpen)}
-            aria-label={isOpen ? "Cerrar menú" : "Abrir menú"}
-          >
-            {isOpen ? <ArrowLeft size={22} strokeWidth={1.5} /> : <Menu size={20} />}
-          </button>
-
-          <div className="flex justify-center">
-            <Link
-              href="/"
-              className={`text-3xl tracking-[0.3em] ${logoColor} uppercase`}
-              style={{ fontFamily: "var(--font-aboreto)" }}
-            >
-              |BRICIA|
-            </Link>
-          </div>
-
-          <div className="flex justify-end items-center gap-8">
-            <nav className="hidden md:flex gap-10">
-              {rightLinks.map((link) => (
+          {/* Columna izquierda: links (web) O hamburguesa (móvil) — una sola celda */}
+          <div className="flex items-center justify-start min-w-0">
+            <nav className="hidden md:flex gap-10" aria-label="Navegación principal izquierda">
+              {leftLinks.map((link) => (
                 <Link
                   key={link.name}
                   href={link.href}
-                  className={`editorial-spacing ${textColor} hover:text-brand-accent transition-colors`}
+                  className={`editorial-spacing nav-link-underline ${textColor} hover:text-brand-accent transition-colors`}
                 >
                   {link.name}
                 </Link>
               ))}
             </nav>
 
-            <div className="flex gap-4 items-center">
+            <button
+              type="button"
+              className={`flex md:hidden items-center justify-center rounded-full p-[0.45rem] z-[70] relative ${isOpen ? "text-brand-primary" : iconColor} transition-colors hover:text-brand-accent hover:bg-brand-accent/10`}
+              onClick={() => setIsOpen(!isOpen)}
+              aria-label={isOpen ? "Cerrar menú" : "Abrir menú"}
+            >
+              {isOpen ? <ArrowLeft size={22} strokeWidth={1.5} /> : <Menu size={20} />}
+            </button>
+          </div>
+
+          <div className="flex justify-center">
+            <Link
+              href="/"
+              className={`text-3xl tracking-[0.3em] ${logoColor} uppercase transition-colors duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:text-brand-accent`}
+              style={{ fontFamily: "var(--font-aboreto)" }}
+            >
+              |BRICIA|
+            </Link>
+          </div>
+
+          <div className="flex justify-end items-center gap-8 min-w-0">
+            <nav className="hidden md:flex gap-10" aria-label="Navegación principal derecha">
+              {rightLinks.map((link) => (
+                <Link
+                  key={link.name}
+                  href={link.href}
+                  className={`editorial-spacing nav-link-underline ${textColor} hover:text-brand-accent transition-colors`}
+                >
+                  {link.name}
+                </Link>
+              ))}
+            </nav>
+
+            <div className="flex gap-2 md:gap-4 items-center">
               <Link
                 href="/productos"
-                className={`md:hidden ${iconColor} hover:text-brand-accent transition-colors`}
+                className={`flex md:hidden items-center justify-center rounded-full p-[0.45rem] ${iconColor} transition-colors hover:text-brand-accent hover:bg-brand-accent/10`}
                 aria-label="Ir a la tienda"
               >
                 <Store size={18} strokeWidth={1.5} />
@@ -207,7 +212,7 @@ export default function Header() {
               <button
                 type="button"
                 onClick={() => setSearchOpen(true)}
-                className={`${iconColor} hover:text-brand-accent transition-colors`}
+                className={`hidden md:flex items-center justify-center rounded-full p-[0.45rem] ${iconColor} transition-colors hover:text-brand-accent hover:bg-brand-accent/10`}
                 aria-label="Abrir búsqueda"
               >
                 <Search size={18} strokeWidth={1.5} />
@@ -215,7 +220,7 @@ export default function Header() {
               <button
                 type="button"
                 onClick={openCart}
-                className={`${iconColor} hover:text-brand-accent transition-colors relative ${shopComingSoon ? "hidden" : ""}`}
+                className={`relative flex items-center justify-center rounded-full p-[0.45rem] ${iconColor} transition-colors hover:text-brand-accent hover:bg-brand-accent/10 ${shopComingSoon ? "hidden" : ""}`}
                 aria-label="Abrir carrito"
               >
                 <ShoppingBag size={18} strokeWidth={1.5} />
@@ -268,6 +273,32 @@ export default function Header() {
                       </Link>
                     </motion.div>
                   ))}
+
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{
+                      duration: 0.6,
+                      delay: [...leftLinks, ...rightLinks].length * 0.1,
+                      ease: [0.16, 1, 0.3, 1],
+                    }}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsOpen(false);
+                        setSearchOpen(true);
+                      }}
+                      className="group block mx-auto"
+                      aria-label="Abrir búsqueda"
+                    >
+                      <span className="inline-flex items-center gap-3 text-4xl xs:text-5xl font-serif text-brand-primary uppercase tracking-[0.1em] group-hover:text-brand-accent transition-all duration-500">
+                        <Search size={28} strokeWidth={1.25} className="shrink-0 opacity-70" aria-hidden />
+                        Buscar
+                      </span>
+                      <div className="h-px w-0 group-hover:w-full bg-brand-accent/30 mx-auto mt-2 transition-all duration-500"></div>
+                    </button>
+                  </motion.div>
                 </nav>
 
                 <motion.div
@@ -278,12 +309,14 @@ export default function Header() {
                 >
                   <div className="flex flex-col items-center gap-6">
                     <div className="w-12 h-px bg-brand-accent/20"></div>
-                    <p
-                      className="text-3xl xs:text-4xl tracking-[0.2em] text-brand-primary uppercase"
+                    <Link
+                      href="/"
+                      onClick={() => setIsOpen(false)}
+                      className="text-3xl xs:text-4xl tracking-[0.2em] text-brand-primary uppercase transition-colors hover:text-brand-accent"
                       style={{ fontFamily: "var(--font-aboreto)" }}
                     >
                       |BRICIA|
-                    </p>
+                    </Link>
                     <SiteSocialIconRow />
                   </div>
                 </motion.div>
@@ -332,7 +365,7 @@ export default function Header() {
                 <button
                   type="button"
                   onClick={() => setSearchOpen(false)}
-                  className="text-brand-muted hover:text-brand-primary transition-colors"
+                  className="inline-flex icon-btn text-brand-muted"
                   aria-label="Cerrar búsqueda"
                 >
                   <X size={18} />
@@ -340,8 +373,7 @@ export default function Header() {
               </div>
 
               <p className="px-8 pt-4 pb-0 text-[11px] font-sans text-brand-muted leading-relaxed">
-                Busca por ingrediente, título de receta, tema de La Mesa o producto.
-                Las coincidencias ignoran acentos — por ejemplo <span className="italic text-brand-primary/50">limon</span> encuentra limón.
+                Recetas, mesa o tienda. Escribe al menos 2 letras — los acentos no importan.
               </p>
 
               <div className="max-h-[min(24rem,55vh)] overflow-y-auto">
@@ -397,11 +429,8 @@ export default function Header() {
                   <div className="px-8 py-6">
                     {suggestions.length > 0 ? (
                       <>
-                        <p className="text-[10px] font-sans font-bold tracking-[0.28em] text-brand-muted uppercase mb-1">
+                        <p className="text-[10px] font-sans font-bold tracking-[0.28em] text-brand-muted uppercase mb-4">
                           Por el placer de curiosear
-                        </p>
-                        <p className="text-xs font-serif italic text-brand-primary/45 mb-5">
-                          Un puñado de ideas cruzando recetas, mesa y tienda.
                         </p>
                         <div className="space-y-0">
                           {suggestions.map((hit) => (

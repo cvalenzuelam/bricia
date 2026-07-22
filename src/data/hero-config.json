@@ -18,13 +18,17 @@
   "taglineMobile": "Aquí la cocina cotidiana cobra vida a través de recetas cálidas, deliciosas y pensadas para disfrutarse en casa.",
   "taglineItalic": true,
   "description": "Celebramos esos momentos simples alrededor de la mesa y dejamos que los aromas, los sabores y los ingredientes despierten la curiosidad del paladar.",
-  "ctaText": "Descubre recetas inspiradoras cada semana",
+  "ctaText": "Ver recetas",
   "collageImages": [
     {
       "src": "/images/hero-inicio-bricia.jpg",
       "alt": "Bricia en picnic al aire libre"
     }
   ],
+  "mobileHeroImage": {
+    "src": "/images/hero-inicio-bricia.jpg",
+    "alt": "Bricia en picnic al aire libre"
+  },
   "backgroundColor": "#FAF9F4",
   "featuredSection": {
     "imageSrc": "/images/tiradito.png",

@@ -75,7 +75,8 @@ export default function CartDrawer() {
               </div>
               <button
                 onClick={closeCart}
-                className="text-brand-muted hover:text-brand-primary transition-colors"
+                className="inline-flex icon-btn text-brand-muted"
+                aria-label="Cerrar carrito"
               >
                 <X size={20} strokeWidth={1.5} />
               </button>
@@ -143,7 +144,7 @@ export default function CartDrawer() {
                           <div className="flex items-center gap-2 border border-brand-primary/10 rounded-full px-3 py-1.5">
                             <button
                               onClick={() => updateQuantity(product.id, quantity - 1)}
-                              className="text-brand-muted hover:text-brand-primary transition-colors"
+                              className="inline-flex icon-btn text-brand-muted !p-1"
                             >
                               <Minus size={12} />
                             </button>
@@ -153,7 +154,7 @@ export default function CartDrawer() {
                             <button
                               onClick={() => updateQuantity(product.id, quantity + 1)}
                               disabled={quantity >= product.stock}
-                              className="text-brand-muted hover:text-brand-primary transition-colors disabled:opacity-30"
+                              className="inline-flex icon-btn text-brand-muted !p-1 disabled:opacity-30"
                             >
                               <Plus size={12} />
                             </button>
@@ -165,7 +166,8 @@ export default function CartDrawer() {
                             </span>
                             <button
                               onClick={() => removeItem(product.id)}
-                              className="text-brand-muted hover:text-red-400 transition-colors"
+                              className="inline-flex icon-btn text-brand-muted hover:!text-red-400 hover:!bg-red-50 !p-1.5"
+                              aria-label="Quitar producto"
                             >
                               <Trash2 size={14} strokeWidth={1.5} />
                             </button>
@@ -196,7 +198,7 @@ export default function CartDrawer() {
                 <button
                   type="button"
                   onClick={handleCheckout}
-                  className="w-full bg-brand-primary text-brand-secondary py-4 rounded-xl text-xs font-sans font-bold tracking-[0.2em] uppercase hover:bg-brand-accent transition-colors flex items-center justify-center gap-2"
+                  className="btn-solid w-full py-4 rounded-xl text-xs font-sans font-bold tracking-[0.2em] uppercase flex items-center justify-center gap-2"
                 >
                   Siguiente: datos y envío
                   <ArrowRight size={13} />
@@ -204,7 +206,7 @@ export default function CartDrawer() {
 
                 <button
                   onClick={closeCart}
-                  className="w-full text-center text-[10px] font-sans text-brand-muted hover:text-brand-accent transition-colors tracking-[0.2em] uppercase"
+                  className="w-full text-center text-[10px] font-sans text-brand-muted hover:text-brand-accent tracking-[0.2em] uppercase py-2 rounded-lg hover:bg-brand-accent/[0.08] transition-colors"
                 >
                   Seguir explorando
                 </button>

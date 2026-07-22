@@ -34,10 +34,10 @@ export default function ProductDetailAddToCart({ product }: Props) {
     <button
       type="button"
       onClick={handleAdd}
-      className={`w-full py-4 rounded-xl text-[10px] font-sans font-bold tracking-[0.2em] uppercase transition-all duration-500 flex items-center justify-center gap-2 ${
+      className={`btn-solid w-full py-4 rounded-xl text-[10px] font-sans font-bold tracking-[0.2em] uppercase flex items-center justify-center gap-2 ${
         added
-          ? "bg-green-600 text-white"
-          : "bg-brand-primary text-brand-secondary hover:bg-brand-accent"
+          ? "!bg-green-600 !text-white hover:!bg-green-600 hover:!translate-y-0 hover:!shadow-none"
+          : ""
       }`}
     >
       <AnimatePresence mode="wait">

@@ -43,10 +43,21 @@ export async function generateMetadata(): Promise<Metadata> {
       ]
     : undefined;
 
+  const faviconUrl = toAbsoluteAssetUrl(meta.faviconSrc, siteUrl);
+
   return {
     metadataBase: new URL(siteUrl),
     title: meta.title,
     description: meta.description,
+    ...(faviconUrl
+      ? {
+          icons: {
+            icon: [{ url: faviconUrl }],
+            apple: [{ url: faviconUrl }],
+            shortcut: faviconUrl,
+          },
+        }
+      : {}),
     openGraph: {
       title: meta.title,
       description: meta.description,

@@ -5,7 +5,7 @@ export interface Product {
   price: number; // MXN
   description: string;
   image: string;
-  /** Hasta 3 URLs de fotos adicionales (la principal es siempre `image`). */
+  /** Hasta 4 URLs de fotos adicionales (la principal es siempre `image`). */
   gallery?: string[];
   category: string;
   stock: number;

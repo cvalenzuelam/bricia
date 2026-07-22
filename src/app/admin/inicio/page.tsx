@@ -128,6 +128,8 @@ interface HeroConfig {
   description: string;
   ctaText: string;
   collageImages: CollageImage[];
+  /** Imagen del hero solo en móvil (opcional; si falta usa la de web). */
+  mobileHeroImage: CollageImage;
   instagramImages: InstagramGridItem[];
   products: ProductItem[];
   backgroundColor: string;
@@ -155,6 +157,7 @@ export default function AdminInicioPage() {
   const [loadError, setLoadError] = useState(false);
   const [saved, setSaved] = useState(false);
   const landingInputRef = useRef<HTMLInputElement | null>(null);
+  const landingMobileInputRef = useRef<HTMLInputElement | null>(null);
   const featuredInputRef = useRef<HTMLInputElement | null>(null);
   const igInputRefs = useRef<Record<number, HTMLInputElement | null>>({});
   const productInputRefs = useRef<Record<number, HTMLInputElement | null>>({});
@@ -175,6 +178,7 @@ export default function AdminInicioPage() {
     description: "",
     ctaText: "",
     collageImages: [],
+    mobileHeroImage: { src: "", alt: "Foto principal de landing (móvil)" },
     instagramImages: normalizeInstagramSlots([]),
     products: [],
     backgroundColor: "#FAF9F4",
@@ -198,6 +202,18 @@ export default function AdminInicioPage() {
           ...data,
           taglineMobile:
             typeof data.taglineMobile === "string" ? data.taglineMobile : "",
+          mobileHeroImage:
+            data.mobileHeroImage &&
+            typeof data.mobileHeroImage === "object" &&
+            typeof (data.mobileHeroImage as CollageImage).src === "string"
+              ? {
+                  src: (data.mobileHeroImage as CollageImage).src,
+                  alt:
+                    typeof (data.mobileHeroImage as CollageImage).alt === "string"
+                      ? (data.mobileHeroImage as CollageImage).alt
+                      : "Foto principal de landing (móvil)",
+                }
+              : { src: "", alt: "Foto principal de landing (móvil)" },
           instagramImages: normalizeInstagramSlots(data.instagramImages),
           featuredSection: {
             ...DEFAULT_FEATURED_SECTION,
@@ -443,6 +459,43 @@ export default function AdminInicioPage() {
     setConfig({ ...config, collageImages: updated });
   };
 
+  const handleLandingMobileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.currentTarget;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploading(true);
+      const path = await uploadCmsImage(file, "collage");
+      if (path) {
+        setConfig({
+          ...config,
+          mobileHeroImage: {
+            src: path,
+            alt: config.mobileHeroImage?.alt || "Foto principal de landing (móvil)",
+          },
+        });
+      } else {
+        alert("Error al subir imagen");
+      }
+    } catch {
+      alert("Error al subir imagen");
+    } finally {
+      setUploading(false);
+      input.value = "";
+    }
+  };
+
+  const updateLandingMobileAlt = (alt: string) => {
+    setConfig({
+      ...config,
+      mobileHeroImage: {
+        src: config.mobileHeroImage?.src || "",
+        alt,
+      },
+    });
+  };
+
   const handleIgUpload = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.currentTarget;
     const file = input.files?.[0];
@@ -498,6 +551,10 @@ export default function AdminInicioPage() {
   };
 
   const landingImage = config.collageImages?.[0] || { src: "", alt: "Foto principal de landing" };
+  const landingMobileImage = config.mobileHeroImage || {
+    src: "",
+    alt: "Foto principal de landing (móvil)",
+  };
 
   if (loading) {
     return <AdminCmsLoading message="Cargando inicio desde el CMS…" />;
@@ -679,40 +736,87 @@ export default function AdminInicioPage() {
               <h2 className="text-lg font-serif text-brand-primary">📸 Foto de Landing</h2>
             </div>
             <p className="text-xs font-sans text-brand-muted">
-              Esta foto reemplaza el collage del landing. Puedes cambiarla cuando quieras.
+              Sube una imagen para escritorio (web) y otra para móvil. Si no hay imagen móvil, se usa la de web.
             </p>
 
-            <div className="max-w-sm space-y-2">
-              <div
-                className="relative aspect-[4/5] rounded-xl overflow-hidden border-2 border-dashed border-brand-primary/10 hover:border-brand-accent/40 transition-colors cursor-pointer bg-brand-secondary group"
-                onClick={() => landingInputRef.current?.click()}
-              >
-                {landingImage.src ? (
-                  <Image src={landingImage.src} alt={landingImage.alt} fill quality={PHOTO_IMAGE_QUALITY} className="object-cover" />
-                ) : (
-                  <div className="flex items-center justify-center h-full">
-                    <Upload size={24} className="text-brand-muted/30 group-hover:text-brand-accent transition-colors" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+              <div className="space-y-2">
+                <p className="text-[10px] font-sans font-bold tracking-[0.2em] uppercase text-brand-muted">
+                  Escritorio / Web
+                </p>
+                <div
+                  className="relative aspect-[4/5] rounded-xl overflow-hidden border-2 border-dashed border-brand-primary/10 hover:border-brand-accent/40 transition-colors cursor-pointer bg-brand-secondary group"
+                  onClick={() => landingInputRef.current?.click()}
+                >
+                  {landingImage.src ? (
+                    <Image src={landingImage.src} alt={landingImage.alt} fill quality={PHOTO_IMAGE_QUALITY} className="object-cover" />
+                  ) : (
+                    <div className="flex items-center justify-center h-full">
+                      <Upload size={24} className="text-brand-muted/30 group-hover:text-brand-accent transition-colors" />
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition flex items-center justify-center opacity-0 group-hover:opacity-100">
+                    <span className="text-white text-xs font-sans font-bold">Cambiar</span>
                   </div>
-                )}
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition flex items-center justify-center opacity-0 group-hover:opacity-100">
-                  <span className="text-white text-xs font-sans font-bold">Cambiar</span>
                 </div>
+
+                <input
+                  value={landingImage.alt}
+                  onChange={(e) => updateLandingAlt(e.target.value)}
+                  placeholder="Descripción (web)"
+                  className="w-full px-2 py-1.5 border border-brand-primary/10 rounded text-[11px] font-sans text-brand-muted focus:outline-none focus:border-brand-accent"
+                />
+
+                <input
+                  ref={landingInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleLandingUpload}
+                  className="hidden"
+                />
               </div>
 
-              <input
-                value={landingImage.alt}
-                onChange={(e) => updateLandingAlt(e.target.value)}
-                placeholder="Descripción"
-                className="w-full px-2 py-1.5 border border-brand-primary/10 rounded text-[11px] font-sans text-brand-muted focus:outline-none focus:border-brand-accent"
-              />
+              <div className="space-y-2">
+                <p className="text-[10px] font-sans font-bold tracking-[0.2em] uppercase text-brand-muted">
+                  Móvil
+                </p>
+                <div
+                  className="relative aspect-[4/5] rounded-xl overflow-hidden border-2 border-dashed border-brand-primary/10 hover:border-brand-accent/40 transition-colors cursor-pointer bg-brand-secondary group"
+                  onClick={() => landingMobileInputRef.current?.click()}
+                >
+                  {landingMobileImage.src ? (
+                    <Image
+                      src={landingMobileImage.src}
+                      alt={landingMobileImage.alt}
+                      fill
+                      quality={PHOTO_IMAGE_QUALITY}
+                      className="object-cover"
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center h-full">
+                      <Upload size={24} className="text-brand-muted/30 group-hover:text-brand-accent transition-colors" />
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition flex items-center justify-center opacity-0 group-hover:opacity-100">
+                    <span className="text-white text-xs font-sans font-bold">Cambiar</span>
+                  </div>
+                </div>
 
-              <input
-                ref={landingInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleLandingUpload}
-                className="hidden"
-              />
+                <input
+                  value={landingMobileImage.alt}
+                  onChange={(e) => updateLandingMobileAlt(e.target.value)}
+                  placeholder="Descripción (móvil)"
+                  className="w-full px-2 py-1.5 border border-brand-primary/10 rounded text-[11px] font-sans text-brand-muted focus:outline-none focus:border-brand-accent"
+                />
+
+                <input
+                  ref={landingMobileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleLandingMobileUpload}
+                  className="hidden"
+                />
+              </div>
             </div>
           </div>
 

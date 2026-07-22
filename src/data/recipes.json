@@ -35,7 +35,8 @@
       "/images/recipe_1775340916117.jpg"
     ],
     "videoUrl": "",
-    "videoThumbnail": ""
+    "videoThumbnail": "",
+    "closingPhrase": "El limón despierta lo que el mar ya sabía."
   },
   {
     "slug": "ensalada-primavera-fresas",
@@ -58,7 +59,8 @@
       "Baña con la vinagreta de balsámico y miel justo antes de servir."
     ],
     "prepTime": "10 MIN",
-    "servings": "2 PERSONAS"
+    "servings": "2 PERSONAS",
+    "closingPhrase": "La primavera llega primero a la ensaladera."
   },
   {
     "slug": "gazpacho-verano-fresco",
@@ -83,7 +85,8 @@
       "Enfría por al menos 2 horas antes de servir."
     ],
     "prepTime": "20 MIN",
-    "servings": "4 PERSONAS"
+    "servings": "4 PERSONAS",
+    "closingPhrase": "El verano, frío y rojo, en una cuchara."
   },
   {
     "slug": "volcan-chocolate-decadente",
@@ -110,7 +113,8 @@
       "Desmolda con cuidado y sirve inmediatamente con frambuesas."
     ],
     "prepTime": "30 MIN",
-    "servings": "4 UNIDADES"
+    "servings": "4 UNIDADES",
+    "closingPhrase": "Un corazón que se derrite al primer corte."
   },
   {
     "slug": "sopa-calabaza-semillas",
@@ -137,7 +141,8 @@
       "Sirve caliente y decora con las semillas tostadas."
     ],
     "prepTime": "45 MIN",
-    "servings": "6 PERSONAS"
+    "servings": "6 PERSONAS",
+    "closingPhrase": "El otoño se sirve caliente y en silencio."
   },
   {
     "slug": "estofado-res-invierno",
@@ -161,6 +166,7 @@
       "Cocina a fuego muy bajo por 3 horas o hasta que la carne esté tierna."
     ],
     "prepTime": "3 HORAS",
-    "servings": "4 PERSONAS"
+    "servings": "4 PERSONAS",
+    "closingPhrase": "Donde el fuego lento se vuelve abrazo."
   }
 ]

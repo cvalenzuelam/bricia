@@ -24,10 +24,10 @@ function AddButton({ product }: { product: Product }) {
   return (
     <button
       onClick={handleAdd}
-      className={`w-full py-3.5 rounded-xl text-[10px] font-sans font-bold tracking-[0.2em] uppercase transition-all duration-500 flex items-center justify-center gap-2 ${
+      className={`btn-solid w-full py-3.5 rounded-xl text-[10px] font-sans font-bold tracking-[0.2em] uppercase flex items-center justify-center gap-2 ${
         added
-          ? "bg-green-600 text-white"
-          : "bg-brand-primary text-brand-secondary hover:bg-brand-accent"
+          ? "!bg-green-600 !text-white hover:!bg-green-600 hover:!translate-y-0 hover:!shadow-none"
+          : ""
       }`}
     >
       <AnimatePresence mode="wait">
@@ -164,10 +164,10 @@ export default function ProductosCatalog() {
             <button
               key={cat}
               onClick={() => setFilter(cat)}
-              className={`px-5 py-2 rounded-full text-[10px] font-sans font-bold tracking-[0.2em] uppercase transition-all duration-300 ${
+              className={`chip-btn px-5 py-2 rounded-full text-[10px] font-sans font-bold tracking-[0.2em] uppercase ${
                 filter === cat
-                  ? "bg-brand-primary text-brand-secondary"
-                  : "border border-brand-primary/10 text-brand-muted hover:border-brand-accent/40 hover:text-brand-accent"
+                  ? "bg-brand-primary text-brand-secondary shadow-[0_8px_20px_-10px_rgba(29,29,27,0.45)]"
+                  : "border border-brand-primary/10 text-brand-muted hover:border-brand-accent/50 hover:text-brand-accent hover:bg-brand-accent/[0.08]"
               }`}
             >
               {cat}
@@ -244,7 +244,7 @@ export default function ProductosCatalog() {
                   aria-label="Productos anteriores"
                   onClick={() => scrollCarousel(-1)}
                   disabled={!canCarouselPrev}
-                  className="flex h-12 w-12 items-center justify-center rounded-full border border-brand-primary/15 text-brand-accent transition-opacity disabled:opacity-25"
+                  className="carousel-btn flex h-12 w-12 items-center justify-center rounded-full border border-brand-primary/15 text-brand-accent hover:border-brand-accent/50 hover:bg-brand-accent/10 disabled:opacity-25"
                 >
                   <ChevronLeft size={24} strokeWidth={1.5} aria-hidden />
                 </button>
@@ -253,7 +253,7 @@ export default function ProductosCatalog() {
                   aria-label="Siguientes productos"
                   onClick={() => scrollCarousel(1)}
                   disabled={!canCarouselNext}
-                  className="flex h-12 w-12 items-center justify-center rounded-full border border-brand-primary/15 text-brand-accent transition-opacity disabled:opacity-25"
+                  className="carousel-btn flex h-12 w-12 items-center justify-center rounded-full border border-brand-primary/15 text-brand-accent hover:border-brand-accent/50 hover:bg-brand-accent/10 disabled:opacity-25"
                 >
                   <ChevronRight size={24} strokeWidth={1.5} aria-hidden />
                 </button>
@@ -262,7 +262,7 @@ export default function ProductosCatalog() {
 
             <motion.div
               layout
-              className="hidden grid-cols-1 gap-x-10 gap-y-20 md:grid md:grid-cols-2 lg:grid-cols-3"
+              className="hidden grid-cols-1 gap-x-10 gap-y-20 md:grid md:grid-cols-2 lg:grid-cols-3 md:items-stretch"
             >
               <AnimatePresence mode="popLayout">
                 {filtered.map((product, i) => (
@@ -273,7 +273,7 @@ export default function ProductosCatalog() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.96 }}
                     transition={{ duration: 0.5, delay: i * 0.07 }}
-                    className="group flex flex-col gap-6"
+                    className="group flex h-full flex-col gap-6"
                     id={`product-${product.id}-desktop`}
                   >
                     <Link
@@ -297,11 +297,11 @@ export default function ProductosCatalog() {
                       </div>
                     </Link>
 
-                    {/* Info */}
-                    <div className="space-y-4">
+                    {/* Info: flex + mt-auto alinea precio y Agregar entre cards */}
+                    <div className="flex flex-1 flex-col gap-4">
                       <div className="space-y-1">
                         <Link href={`/productos/${product.id}`} className="block">
-                          <h3 className="font-serif text-2xl md:text-3xl text-brand-primary leading-tight group-hover:text-brand-accent transition-colors duration-400">
+                          <h3 className="font-serif text-2xl md:text-3xl text-brand-primary leading-tight line-clamp-2 min-h-[2.5em] md:min-h-[2.4em] group-hover:text-brand-accent transition-colors duration-400">
                             {product.name}
                           </h3>
                         </Link>
@@ -319,13 +319,14 @@ export default function ProductosCatalog() {
                         Ver pieza →
                       </Link>
 
-                      <div className="pt-1">
-                        <span className="font-serif text-2xl text-brand-primary">
-                          {formatPrice(product.price)}
-                        </span>
+                      <div className="mt-auto space-y-4 pt-2">
+                        <div>
+                          <span className="font-serif text-2xl text-brand-primary">
+                            {formatPrice(product.price)}
+                          </span>
+                        </div>
+                        <AddButton product={product} />
                       </div>
-
-                      <AddButton product={product} />
                     </div>
                   </motion.div>
                 ))}

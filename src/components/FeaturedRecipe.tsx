@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
+import { duration, easeOutExpo, viewportOnce } from "@/lib/motion";
 import { useEffect, useState, type CSSProperties } from "react";
 import { PHOTO_IMAGE_QUALITY } from "@/lib/image-quality";
 
@@ -168,8 +169,8 @@ export default function FeaturedRecipe({
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 1.2 }}
+          viewport={viewportOnce}
+          transition={{ duration: duration.slow, ease: easeOutExpo }}
           className="relative max-md:min-h-[38vh] md:min-h-full md:w-1/2 md:flex-shrink-0 md:basis-1/2"
           style={{ backgroundColor: panel }}
         >
@@ -199,8 +200,8 @@ export default function FeaturedRecipe({
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 1.2, delay: 0.2 }}
+          viewport={viewportOnce}
+          transition={{ duration: duration.slow, delay: 0.12, ease: easeOutExpo }}
           className="relative z-[3] flex flex-col justify-center px-8 py-16 text-left max-md:py-12 md:w-1/2 md:basis-1/2 md:px-10 md:py-20 lg:px-14 xl:px-16"
           style={{ backgroundColor: panel }}
         >
@@ -209,8 +210,8 @@ export default function FeaturedRecipe({
               <motion.p
                 initial={{ opacity: 0, y: 8 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6 }}
+                viewport={viewportOnce}
+                transition={{ duration: duration.base, ease: easeOutExpo }}
                 className="text-[10px] font-sans font-bold tracking-[0.45em] uppercase text-brand-accent"
               >
                 {eyebrow}
@@ -220,8 +221,8 @@ export default function FeaturedRecipe({
             <motion.h2
               initial={{ opacity: 0, y: 12 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.7, delay: 0.1 }}
+              viewport={viewportOnce}
+              transition={{ duration: duration.base, delay: 0.08, ease: easeOutExpo }}
               className="text-5xl md:text-6xl lg:text-7xl font-serif text-white/95 leading-[1.05] tracking-tight"
             >
               {headingPlain}
@@ -236,16 +237,16 @@ export default function FeaturedRecipe({
             <motion.div
               initial={{ scaleX: 0 }}
               whileInView={{ scaleX: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.2 }}
+              viewport={viewportOnce}
+              transition={{ duration: duration.base, delay: 0.16, ease: easeOutExpo }}
               className="w-12 h-px bg-brand-accent opacity-35 origin-left"
             />
 
             <motion.p
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.3 }}
+              viewport={viewportOnce}
+              transition={{ duration: duration.base, delay: 0.22, ease: easeOutExpo }}
               className="text-base md:text-lg font-serif text-white/70 leading-relaxed"
             >
               {featured.description}
@@ -254,16 +255,16 @@ export default function FeaturedRecipe({
             <motion.div
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.4 }}
+              viewport={viewportOnce}
+              transition={{ duration: duration.base, delay: 0.3, ease: easeOutExpo }}
               className="pt-2"
             >
               <Link
                 href={featured.ctaHref || "/recetas"}
-                className="inline-flex items-center gap-3 text-[10px] font-sans font-bold tracking-[0.35em] uppercase text-brand-accent transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/45 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-primary rounded-sm"
+                className="group inline-flex items-center gap-3 text-[10px] font-sans font-bold tracking-[0.35em] uppercase text-brand-accent transition-all duration-300 hover:text-white hover:gap-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/45 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-primary rounded-sm"
               >
                 {featured.ctaText}
-                <ArrowRight size={16} strokeWidth={1.25} aria-hidden />
+                <ArrowRight size={16} strokeWidth={1.25} className="transition-transform duration-400 group-hover:translate-x-1" aria-hidden />
               </Link>
             </motion.div>
           </div>

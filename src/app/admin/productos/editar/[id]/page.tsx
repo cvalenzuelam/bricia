@@ -308,14 +308,15 @@ export default function EditarProductoPage({
             />
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-3 rounded-2xl border border-brand-primary/10 bg-white/50 p-5">
             <label className="text-[10px] font-sans font-bold tracking-[0.2em] uppercase text-brand-muted block">
-              Fotos adicionales en la ficha (opcional, hasta {PRODUCT_GALLERY_MAX})
+              Fotos adicionales (opcional, hasta {PRODUCT_GALLERY_MAX})
             </label>
             <p className="text-[10px] font-sans text-brand-muted leading-relaxed">
-              Debajo de la foto principal en la tienda. Sustituir una foto: haz clic en el recuadro.
+              Igual que en las recetas: miniaturas en la ficha y vista en grande al hacer clic.
+              Para sustituir una foto, haz clic en el recuadro.
             </p>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {gallerySlots.map((slot, i) => {
                 const thumb = slot.preview || slot.url || null;
                 return (

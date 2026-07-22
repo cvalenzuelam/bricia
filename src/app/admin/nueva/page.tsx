@@ -37,6 +37,7 @@ export default function NuevaRecetaPage() {
     subtitle: "",
     category: "PRIMAVERA",
     history: "",
+    closingPhrase: "",
     prepTime: "",
     servings: "",
     videoUrl: "",
@@ -318,6 +319,22 @@ export default function NuevaRecetaPage() {
               rows={4}
               className="w-full px-4 py-3 border border-brand-primary/10 rounded-lg bg-white text-brand-primary font-serif leading-relaxed focus:outline-none focus:border-brand-accent transition-colors resize-none"
             />
+          </div>
+
+          {/* ── Closing phrase ────────────────────── */}
+          <div className="space-y-2">
+            <label className="text-[10px] font-sans font-bold tracking-[0.25em] text-brand-muted uppercase block">
+              Frase de cierre
+            </label>
+            <input
+              value={form.closingPhrase}
+              onChange={(e) => setForm({ ...form, closingPhrase: e.target.value })}
+              placeholder="Ej. El otoño se sirve caliente y en silencio."
+              className="w-full px-4 py-3 border border-brand-primary/10 rounded-lg bg-white text-brand-primary font-serif italic focus:outline-none focus:border-brand-accent transition-colors"
+            />
+            <p className="text-[11px] font-sans text-brand-muted leading-relaxed">
+              Una línea breve y romántica al final de la receta (ingredientes, temporada, mesa…).
+            </p>
           </div>
 
           {/* ── Video ─────────────────────────────── */}

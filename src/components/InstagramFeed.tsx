@@ -3,8 +3,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect, useMemo } from "react";
+import { motion } from "framer-motion";
 import { PHOTO_IMAGE_QUALITY } from "@/lib/image-quality";
 import ImageFrameFade from "@/components/ImageFrameFade";
+import { Reveal, SectionIntro, Stagger, StaggerItem } from "@/components/motion/Reveal";
+import { duration, easeOutExpo } from "@/lib/motion";
 
 const DEFAULT_INSTAGRAM_PROFILE_HREF =
   "https://www.instagram.com/briciaelizalde/";
@@ -45,7 +48,7 @@ const communityTileClass =
 
 function CommunityBridge() {
   return (
-    <div className="relative z-[1] w-full px-4">
+    <Reveal className="relative z-[1] w-full px-4" variant="fade">
       <svg
         className="mx-auto block h-10 w-[min(72rem,100%)] text-brand-accent/[0.09] md:h-14"
         viewBox="0 0 1200 48"
@@ -59,28 +62,6 @@ function CommunityBridge() {
         />
       </svg>
 
-      {/* Móvil: foto → /contacto (entre tienda y comunidad) */}
-      <div className="-mt-8 flex flex-col items-center md:hidden">
-        <Link
-          href="/contacto"
-          className="group flex flex-col items-center gap-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-accent"
-        >
-          <span className="relative h-[7.25rem] w-[7.25rem] overflow-hidden rounded-full border border-brand-accent/25 bg-brand-secondary shadow-[0_8px_28px_-10px_rgba(29,29,27,0.35)] ring-4 ring-brand-secondary transition-transform duration-500 ease-out group-hover:scale-[1.03] group-active:scale-[0.98]">
-            <Image
-              src="/images/bricia-contacto-original.jpg"
-              alt="Bricia — ir a contacto"
-              fill
-              sizes="116px"
-              quality={PHOTO_IMAGE_QUALITY}
-              className="object-cover object-top"
-            />
-          </span>
-          <span className="text-[10px] font-sans font-bold tracking-[0.28em] uppercase text-brand-accent transition-colors group-hover:text-brand-primary">
-            Contacto
-          </span>
-        </Link>
-      </div>
-
       {/* Desktop: puente decorativo */}
       <div
         className="-mt-6 hidden items-center justify-center gap-5 md:-mt-8 md:flex md:gap-8"
@@ -92,13 +73,12 @@ function CommunityBridge() {
         </span>
         <span className="h-px w-32 bg-gradient-to-l from-transparent to-brand-accent/35" />
       </div>
-    </div>
+    </Reveal>
   );
 }
 
 export default function InstagramFeed({
   initialInstagramImages,
-  /** true cuando el home SSR ya cargó instagramImages desde hero */
   fromServer = false,
 }: {
   initialInstagramImages?: { src: string; caption?: string; isVideo?: boolean }[];
@@ -152,22 +132,22 @@ export default function InstagramFeed({
 
       <CommunityBridge />
 
-      <div className="relative z-[1] mx-auto mb-14 max-w-7xl px-6 pt-2 text-center md:mb-16 md:pt-0">
-        <span className="editorial-spacing text-brand-accent mb-6 block">
-          Comunidad
-        </span>
-        <h2 className="mb-6 font-serif text-5xl md:text-7xl text-brand-primary lowercase tracking-tighter">
-          cocina, inspiración y{" "}
-          <span className="italic text-brand-accent">comunidad</span>
-        </h2>
-        <div className="w-16 h-px bg-brand-accent mx-auto mb-6 opacity-40" />
-        <p className="mx-auto max-w-xl font-serif text-base italic leading-relaxed text-brand-primary/60">
-          Encuéntrame en mis redes: recetas, ideas para la mesa y el día a
-          día. Comparte tus creaciones y acompáñanos en la comunidad.
-        </p>
+      <div className="relative z-[1] mx-auto mb-14 max-w-7xl px-6 pt-2 md:mb-16 md:pt-0">
+        <SectionIntro
+          eyebrow="Comunidad"
+          title={
+            <>
+              cocina, inspiración y{" "}
+              <span className="italic text-brand-accent">comunidad</span>
+            </>
+          }
+          subtitle="Encuéntrame en mis redes: recetas, ideas para la mesa y el día a día. Comparte tus creaciones y acompáñanos en la comunidad."
+          titleClassName="mb-0 font-serif text-5xl md:text-7xl text-brand-primary lowercase tracking-tighter"
+        />
       </div>
 
-      <div
+      <Stagger
+        fast
         className="mx-auto grid w-full max-w-[1600px] grid-cols-2 gap-2.5 px-4 sm:gap-3 sm:px-5 md:gap-4 md:px-8 lg:grid-cols-5 lg:gap-4 lg:px-10"
       >
         {gridImages.map((img, index) => {
@@ -210,27 +190,31 @@ export default function InstagramFeed({
               </div>
             </>
           );
-          return internal ? (
-            <Link
-              key={`${img.src}-${index}`}
-              href={hrefResolved}
-              className={tileClass}
-            >
-              {tile}
-            </Link>
-          ) : (
-            <a
-              key={`${img.src}-${index}`}
-              href={hrefResolved}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={tileClass}
-            >
-              {tile}
-            </a>
+          return (
+            <StaggerItem key={`${img.src}-${index}`}>
+              <motion.div
+                whileHover={{ y: -3 }}
+                transition={{ duration: duration.fast, ease: easeOutExpo }}
+              >
+                {internal ? (
+                  <Link href={hrefResolved} className={tileClass}>
+                    {tile}
+                  </Link>
+                ) : (
+                  <a
+                    href={hrefResolved}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={tileClass}
+                  >
+                    {tile}
+                  </a>
+                )}
+              </motion.div>
+            </StaggerItem>
           );
         })}
-      </div>
+      </Stagger>
     </section>
   );
 }

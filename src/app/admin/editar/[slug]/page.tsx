@@ -10,6 +10,7 @@ import { ArrowLeft, Upload, Plus, X, Loader2, Save, Video } from "lucide-react";
 import AdminCmsLoading from "@/components/admin/AdminCmsLoading";
 import { PHOTO_IMAGE_QUALITY } from "@/lib/image-quality";
 import type { Recipe } from "@/data/recipes";
+import { resolveRecipeClosingPhrase } from "@/data/recipe-closing";
 
 const CATEGORIES = ["PRIMAVERA", "VERANO", "OTOÑO", "INVIERNO", "POSTRES"];
 const REQUEST_TIMEOUT_MS = 20000;
@@ -242,6 +243,7 @@ export default function EditRecipePage({ params }: EditPageProps) {
     subtitle: "",
     category: "RECETA ESTRELLA",
     history: "",
+    closingPhrase: "",
     prepTime: "",
     servings: "",
     image: "",
@@ -270,6 +272,7 @@ export default function EditRecipePage({ params }: EditPageProps) {
           subtitle: recipe.subtitle,
           category: recipe.category,
           history: recipe.history,
+          closingPhrase: recipe.closingPhrase?.trim() || resolveRecipeClosingPhrase(recipe),
           prepTime: recipe.prepTime,
           servings: recipe.servings,
           image: recipe.image,
@@ -577,6 +580,22 @@ export default function EditRecipePage({ params }: EditPageProps) {
             <label className="text-[10px] font-sans font-bold tracking-[0.25em] text-brand-muted uppercase block">La Historia</label>
             <textarea value={form.history} onChange={(e) => setForm({ ...form, history: e.target.value })} rows={4}
               className="w-full px-4 py-3 border border-brand-primary/10 rounded-lg bg-white text-brand-primary font-serif leading-relaxed focus:outline-none focus:border-brand-accent transition-colors resize-none" />
+          </div>
+
+          {/* Closing phrase */}
+          <div className="space-y-2">
+            <label className="text-[10px] font-sans font-bold tracking-[0.25em] text-brand-muted uppercase block">
+              Frase de cierre
+            </label>
+            <input
+              value={form.closingPhrase}
+              onChange={(e) => setForm({ ...form, closingPhrase: e.target.value })}
+              placeholder="Ej. El limón despierta lo que el mar ya sabía."
+              className="w-full px-4 py-3 border border-brand-primary/10 rounded-lg bg-white text-brand-primary font-serif italic focus:outline-none focus:border-brand-accent transition-colors"
+            />
+            <p className="text-[11px] font-sans text-brand-muted leading-relaxed">
+              Aparece al final de la receta, en itálica dorada. Ideal: una línea breve sobre el plato, la mesa o la temporada.
+            </p>
           </div>
 
           {/* Video */}

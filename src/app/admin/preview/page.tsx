@@ -29,9 +29,11 @@ export default function AdminPreviewPage() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
+  const [uploadingOg, setUploadingOg] = useState(false);
+  const [uploadingFavicon, setUploadingFavicon] = useState(false);
   const [savedOk, setSavedOk] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const ogFileInputRef = useRef<HTMLInputElement | null>(null);
+  const faviconFileInputRef = useRef<HTMLInputElement | null>(null);
 
   const loadConfig = useCallback(() => {
     const session = sessionStorage.getItem("bricia_admin");
@@ -65,9 +67,9 @@ export default function AdminPreviewPage() {
     setSavedOk(false);
   };
 
-  const handleUpload = async (file?: File) => {
+  const handleOgUpload = async (file?: File) => {
     if (!file) return;
-    setUploading(true);
+    setUploadingOg(true);
     setSavedOk(false);
     try {
       const safeName = sanitizeFileName(file.name || `og-preview-${Date.now()}.jpg`);
@@ -77,8 +79,25 @@ export default function AdminPreviewPage() {
     } catch {
       alert("Error al subir imagen");
     } finally {
-      setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
+      setUploadingOg(false);
+      if (ogFileInputRef.current) ogFileInputRef.current.value = "";
+    }
+  };
+
+  const handleFaviconUpload = async (file?: File) => {
+    if (!file) return;
+    setUploadingFavicon(true);
+    setSavedOk(false);
+    try {
+      const safeName = sanitizeFileName(file.name || `favicon-${Date.now()}.png`);
+      const path = await uploadCmsImageFile(file, `bricia/images/favicon/${Date.now()}-${safeName}`);
+      if (path) patch({ faviconSrc: path });
+      else alert("No se pudo subir el favicon");
+    } catch {
+      alert("Error al subir favicon");
+    } finally {
+      setUploadingFavicon(false);
+      if (faviconFileInputRef.current) faviconFileInputRef.current.value = "";
     }
   };
 
@@ -129,6 +148,8 @@ export default function AdminPreviewPage() {
   }
 
   const hasImage = Boolean(config.ogImageSrc);
+  const hasFavicon = Boolean(config.faviconSrc?.trim());
+  const uploading = uploadingOg || uploadingFavicon;
 
   return (
     <div className="min-h-screen bg-brand-secondary pt-20">
@@ -138,12 +159,89 @@ export default function AdminPreviewPage() {
         </Link>
 
         <div className="space-y-2">
-          <h1 className="text-3xl font-serif text-brand-primary">Preview del link</h1>
+          <h1 className="text-3xl font-serif text-brand-primary">Preview y favicon</h1>
           <p className="text-sm font-sans text-brand-muted max-w-xl">
-            Esta es la imagen y el texto que aparecen cuando alguien comparte{" "}
-            <span className="text-brand-primary">casabricia.com</span> por WhatsApp, Instagram o Facebook.
+            Imagen al compartir el link, texto de Google/WhatsApp, y el ícono que aparece en la pestaña
+            del navegador y en los resultados de búsqueda.
           </p>
         </div>
+
+        <section className="bg-white rounded-2xl border border-brand-primary/5 p-8 space-y-6">
+          <h2 className="text-lg font-serif text-brand-primary border-b border-brand-primary/5 pb-4">
+            Favicon
+          </h2>
+
+          <p className="text-xs font-sans text-brand-muted leading-relaxed">
+            Ideal: <strong className="font-semibold text-brand-primary">cuadrado PNG</strong> de{" "}
+            <strong className="font-semibold text-brand-primary">512 × 512 px</strong> (mínimo 48 × 48).
+            También acepta SVG o ICO. Google puede tardar días en actualizar el ícono en la búsqueda.
+          </p>
+
+          <div className="flex flex-wrap items-center gap-6">
+            <div
+              className="relative w-20 h-20 rounded-2xl overflow-hidden border-2 border-dashed border-brand-primary/10 hover:border-brand-accent/40 cursor-pointer bg-brand-secondary shrink-0"
+              onClick={() => faviconFileInputRef.current?.click()}
+            >
+              {hasFavicon ? (
+                // eslint-disable-next-line @next/next/no-img-element -- favicon puede ser SVG/ICO remoto
+                <img
+                  src={config.faviconSrc}
+                  alt="Favicon actual"
+                  className="absolute inset-0 w-full h-full object-contain p-2"
+                />
+              ) : (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 text-brand-muted">
+                  <Upload size={18} strokeWidth={1.5} />
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-3 min-w-0">
+              <p className="text-sm font-sans text-brand-primary">
+                {hasFavicon ? "Favicon cargado" : "Sin favicon personalizado"}
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={() => faviconFileInputRef.current?.click()}
+                  disabled={uploadingFavicon}
+                  className="flex items-center justify-center gap-2 border border-brand-primary/10 rounded-lg px-4 py-2.5 text-xs font-sans font-bold tracking-[0.12em] uppercase hover:border-brand-accent hover:text-brand-accent disabled:opacity-60"
+                >
+                  {uploadingFavicon ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+                  {uploadingFavicon ? "Subiendo…" : hasFavicon ? "Cambiar favicon" : "Subir favicon"}
+                </button>
+                {hasFavicon && (
+                  <button
+                    type="button"
+                    onClick={() => patch({ faviconSrc: "" })}
+                    className="text-xs font-sans text-brand-muted hover:text-brand-accent px-2"
+                  >
+                    Quitar favicon
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <input
+            ref={faviconFileInputRef}
+            type="file"
+            accept="image/png,image/svg+xml,image/x-icon,image/vnd.microsoft.icon,.ico,.png,.svg"
+            className="hidden"
+            onChange={(e) => handleFaviconUpload(e.currentTarget.files?.[0])}
+          />
+
+          {hasFavicon && (
+            <div className="rounded-xl border border-brand-primary/5 bg-brand-secondary px-4 py-3 flex items-center gap-3 max-w-sm">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={config.faviconSrc} alt="" className="w-5 h-5 object-contain rounded-sm" />
+              <div className="min-w-0">
+                <p className="text-[13px] font-sans text-brand-primary truncate">casabricia.com</p>
+                <p className="text-[11px] font-sans text-brand-muted truncate">Vista en pestaña / Google</p>
+              </div>
+            </div>
+          )}
+        </section>
 
         <section className="bg-white rounded-2xl border border-brand-primary/5 p-8 space-y-6">
           <h2 className="text-lg font-serif text-brand-primary border-b border-brand-primary/5 pb-4">
@@ -157,7 +255,7 @@ export default function AdminPreviewPage() {
 
           <div
             className="relative aspect-[1.91/1] w-full rounded-xl overflow-hidden border-2 border-dashed border-brand-primary/10 hover:border-brand-accent/40 cursor-pointer bg-brand-secondary"
-            onClick={() => fileInputRef.current?.click()}
+            onClick={() => ogFileInputRef.current?.click()}
           >
             {hasImage ? (
               <Image
@@ -179,22 +277,22 @@ export default function AdminPreviewPage() {
           </div>
 
           <input
-            ref={fileInputRef}
+            ref={ogFileInputRef}
             type="file"
             accept="image/*"
             className="hidden"
-            onChange={(e) => handleUpload(e.currentTarget.files?.[0])}
+            onChange={(e) => handleOgUpload(e.currentTarget.files?.[0])}
           />
 
           <div className="flex flex-wrap gap-3">
             <button
               type="button"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploading}
+              onClick={() => ogFileInputRef.current?.click()}
+              disabled={uploadingOg}
               className="flex items-center justify-center gap-2 border border-brand-primary/10 rounded-lg px-4 py-2.5 text-xs font-sans font-bold tracking-[0.12em] uppercase hover:border-brand-accent hover:text-brand-accent disabled:opacity-60"
             >
-              {uploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
-              {uploading ? "Subiendo…" : hasImage ? "Cambiar imagen" : "Subir imagen"}
+              {uploadingOg ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+              {uploadingOg ? "Subiendo…" : hasImage ? "Cambiar imagen" : "Subir imagen"}
             </button>
             {hasImage && config.ogImageSrc !== DEFAULT_SITE_METADATA.ogImageSrc && (
               <button
@@ -278,11 +376,11 @@ export default function AdminPreviewPage() {
             className="w-full bg-brand-primary text-brand-secondary py-4 rounded-xl text-sm font-sans font-bold tracking-[0.15em] uppercase hover:bg-brand-accent disabled:opacity-60 flex items-center justify-center gap-2"
           >
             {saving || uploading ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-            {saving ? "Guardando..." : uploading ? "Subiendo imagen..." : "Guardar cambios"}
+            {saving ? "Guardando..." : uploading ? "Subiendo archivo..." : "Guardar cambios"}
           </button>
           {savedOk && (
             <p className="text-center text-xs font-sans text-brand-muted">
-              Guardado. Después del deploy, si WhatsApp sigue mostrando lo viejo, refresca el cache en{" "}
+              Guardado. El favicon en Google puede tardar en actualizarse. Para WhatsApp, refresca el cache en{" "}
               <a
                 href="https://www.opengraph.xyz/url/https%3A%2F%2Fcasabricia.com"
                 target="_blank"

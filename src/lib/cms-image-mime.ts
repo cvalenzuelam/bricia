@@ -10,6 +10,7 @@ const IMAGE_MIME_BY_EXT: Record<string, string> = {
   heif: "image/heif",
   bmp: "image/bmp",
   svg: "image/svg+xml",
+  ico: "image/x-icon",
 };
 
 const GENERIC_MIME_TYPES = new Set([

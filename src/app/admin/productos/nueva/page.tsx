@@ -267,15 +267,16 @@ export default function NuevoProductoPage() {
             />
           </div>
 
-          {/* Galería (hasta 3 fotos extra) */}
-          <div className="space-y-3">
+          {/* Galería (hasta 4 fotos extra) */}
+          <div className="space-y-3 rounded-2xl border border-brand-primary/10 bg-white/50 p-5">
             <label className="text-[10px] font-sans font-bold tracking-[0.2em] uppercase text-brand-muted block">
-              Fotos adicionales en la ficha (opcional, hasta {PRODUCT_GALLERY_MAX})
+              Fotos adicionales (opcional, hasta {PRODUCT_GALLERY_MAX})
             </label>
             <p className="text-[10px] font-sans text-brand-muted leading-relaxed">
-              Se muestran debajo de la foto principal en la tienda. Formatos: JPG, PNG, WebP.
+              Igual que en las recetas: se muestran en la ficha con miniaturas y vista en grande.
+              Formatos: JPG, PNG, WebP.
             </p>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {gallerySlots.map((slot, i) => {
                 const thumb = slot.preview;
                 return (
