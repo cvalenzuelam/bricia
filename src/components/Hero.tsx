@@ -185,13 +185,13 @@ export default function Hero({
         />
       </motion.div>
 
-      {/* Veladura suave solo donde va el texto — la foto conserva su contraste */}
+      {/* Veladura ligera solo para legibilidad del texto — sin fundido crema (se veía borroso en móvil) */}
       <div
-        className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/15"
+        className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/10"
         aria-hidden
       />
       <div
-        className="absolute inset-0 bg-gradient-to-r from-black/35 via-transparent to-transparent md:from-black/30"
+        className="absolute inset-0 bg-gradient-to-r from-black/30 via-transparent to-transparent md:from-black/25"
         aria-hidden
       />
 

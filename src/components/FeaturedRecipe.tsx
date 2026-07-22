@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { duration, easeOutExpo, viewportOnce } from "@/lib/motion";
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useState } from "react";
 import { PHOTO_IMAGE_QUALITY } from "@/lib/image-quality";
 
 /** Mismo negro editorial que `--color-brand-primary` (resto del sitio). */
@@ -58,63 +58,12 @@ function resolveHeadingParts(heading: string): { plain: string; highlight: strin
   return { plain: lines[0] ?? heading, highlight: "" };
 }
 
-function hexToRgb(hex: string): { r: number; g: number; b: number } {
-  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex.trim());
-  if (!m) return { r: 29, g: 29, b: 27 };
-  return {
-    r: parseInt(m[1], 16),
-    g: parseInt(m[2], 16),
-    b: parseInt(m[3], 16),
-  };
-}
-
-/** Costados (solo desktop): fundido muy suave hacia el panel. */
-function featuredImageEdgeStops(panelHex: string): string {
-  const { r, g, b } = hexToRgb(panelHex);
-  return [
-    `rgba(${r},${g},${b},0.42) 0%`,
-    `rgba(${r},${g},${b},0.22) 10%`,
-    `rgba(${r},${g},${b},0.10) 26%`,
-    `rgba(${r},${g},${b},0.03) 45%`,
-    `transparent 68%`,
-  ].join(", ");
-}
-/** Paradas laterales en móvil. */
-function featuredImageEdgeStopsMobile(panelHex: string): string {
-  const { r, g, b } = hexToRgb(panelHex);
-  return [
-    `rgba(${r},${g},${b},0.82) 0%`,
-    `rgba(${r},${g},${b},0.55) 7%`,
-    `rgba(${r},${g},${b},0.26) 20%`,
-    `rgba(${r},${g},${b},0.07) 38%`,
-    `transparent 70%`,
-  ].join(", ");
-}
-
-/** Desktop: viñeta superior mínima + costados sutiles. */
-function featuredImageOverlayStyle(panelHex: string): CSSProperties {
-  const { r, g, b } = hexToRgb(panelHex);
-  const stops = featuredImageEdgeStops(panelHex);
-  return {
-    background: [
-      `linear-gradient(to top, rgba(${r},${g},${b},0.02) 0%, transparent 16%)`,
-      `linear-gradient(to left, ${stops})`,
-      `linear-gradient(to right, ${stops})`,
-    ].join(", "),
-  };
-}
-
-/** Móvil: fundido superior y costados, más contenido. */
-function featuredImageMobileOverlayStyle(panelHex: string): CSSProperties {
-  const { r, g, b } = hexToRgb(panelHex);
-  const sideStops = featuredImageEdgeStopsMobile(panelHex);
-  return {
-    background: [
-      `linear-gradient(to bottom, rgba(${r},${g},${b},0.28) 0%, rgba(${r},${g},${b},0.14) 8%, rgba(${r},${g},${b},0.05) 18%, transparent 36%)`,
-      `linear-gradient(to left, ${sideStops})`,
-      `linear-gradient(to right, ${sideStops})`,
-    ].join(", "),
-  };
+function resolveFeaturedCtaLabel(raw?: string): string {
+  const label = raw?.trim().replace(/\s+/g, " ") ?? "";
+  if (!label || label.length > 22 || label.split(" ").length > 4) {
+    return DEFAULT_FEATURED.ctaText;
+  }
+  return label;
 }
 
 function mergeFeatured(raw: unknown): FeaturedSectionConfig {
@@ -128,9 +77,12 @@ function mergeFeatured(raw: unknown): FeaturedSectionConfig {
   };
 }
 
+/**
+ * Escala cercana a La Tienda en landing: franja alta, tipografía grande,
+ * foto a sangre + panel tipográfico (sin ser un segundo hero).
+ */
 export default function FeaturedRecipe({
   initialFeatured,
-  /** true en la página de inicio SSR: evita segundo fetch incluso si featured viene vacío */
   fromServer = false,
 }: {
   initialFeatured?: unknown;
@@ -153,120 +105,81 @@ export default function FeaturedRecipe({
   const { plain: headingPlain, highlight: headingHighlight } = resolveHeadingParts(
     featured.heading
   );
-  const panel = featured.panelBackgroundColor;
-  const mobileImageOverlay = featuredImageMobileOverlayStyle(panel);
-  const eyebrow = featured.eyebrow?.trim() ?? "";
+  const panel = featured.panelBackgroundColor || BRAND_DARK;
+  const eyebrow = featured.eyebrow?.trim() || "En temporada";
+  const ctaLabel = resolveFeaturedCtaLabel(featured.ctaText);
 
   return (
     <section
       id="seccion-destacada"
-      className="relative scroll-mt-24 overflow-x-hidden overflow-y-visible pb-0 pt-0 md:scroll-mt-28"
+      className="relative scroll-mt-24 md:scroll-mt-28"
       style={{ backgroundColor: panel }}
     >
-      <div className="relative z-[1] mx-auto flex min-h-0 max-w-[1600px] flex-col-reverse items-stretch md:min-h-[70vh] md:flex-row">
-
-        {/* Left: Full-bleed image */}
+      <div className="grid w-full grid-cols-1 md:grid-cols-12 md:min-h-[88vh] lg:min-h-[92vh]">
+        {/* Foto a sangre — ocupa casi toda la altura de viewport */}
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={viewportOnce}
           transition={{ duration: duration.slow, ease: easeOutExpo }}
-          className="relative max-md:min-h-[38vh] md:min-h-full md:w-1/2 md:flex-shrink-0 md:basis-1/2"
-          style={{ backgroundColor: panel }}
+          className="relative aspect-[4/5] w-full overflow-hidden sm:aspect-[16/11] md:col-span-7 md:aspect-auto md:min-h-full lg:col-span-7"
         >
           <Image
             src={featured.imageSrc}
             alt={featured.imageAlt}
             fill
-            sizes="(max-width: 767px) 100vw, 50vw"
+            sizes="(max-width: 767px) 100vw, 58vw"
             quality={PHOTO_IMAGE_QUALITY}
-            className="featured-recipe-img-mask object-cover"
-          />
-          {/* Móvil: fundido con el texto encima + ambos costados */}
-          <div
-            className="pointer-events-none absolute inset-0 z-[2] md:hidden"
-            style={mobileImageOverlay}
-            aria-hidden
-          />
-          {/* Desktop: viñeta + fundido izquierda y derecha hacia el panel */}
-          <div
-            className="pointer-events-none absolute inset-0 z-[2] hidden md:block"
-            style={featuredImageOverlayStyle(panel)}
-            aria-hidden
+            className="object-cover object-center"
+            priority={false}
           />
         </motion.div>
 
-        {/* Panel editorial — alineado a la izquierda, tipografía del sitio */}
+        {/* Panel tipográfico — escala tipo La Tienda */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={viewportOnce}
-          transition={{ duration: duration.slow, delay: 0.12, ease: easeOutExpo }}
-          className="relative z-[3] flex flex-col justify-center px-8 py-16 text-left max-md:py-12 md:w-1/2 md:basis-1/2 md:px-10 md:py-20 lg:px-14 xl:px-16"
+          transition={{ duration: duration.slow, delay: 0.08, ease: easeOutExpo }}
+          className="relative flex flex-col justify-center md:col-span-5 px-8 py-20 sm:px-12 md:px-12 md:py-24 lg:px-16 xl:px-20 lg:py-28"
           style={{ backgroundColor: panel }}
         >
-          <div className="relative z-[1] mx-auto w-full max-w-lg space-y-8 md:mx-0">
-            {eyebrow ? (
-              <motion.p
-                initial={{ opacity: 0, y: 8 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={viewportOnce}
-                transition={{ duration: duration.base, ease: easeOutExpo }}
-                className="text-[10px] font-sans font-bold tracking-[0.45em] uppercase text-brand-accent"
-              >
-                {eyebrow}
-              </motion.p>
-            ) : null}
+          <div className="mx-auto w-full max-w-lg space-y-8 md:mx-0 md:max-w-none md:space-y-10">
+            <p className="text-[11px] font-sans font-bold tracking-[0.42em] uppercase text-[#C2A878]">
+              {eyebrow}
+            </p>
 
-            <motion.h2
-              initial={{ opacity: 0, y: 12 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={viewportOnce}
-              transition={{ duration: duration.base, delay: 0.08, ease: easeOutExpo }}
-              className="text-5xl md:text-6xl lg:text-7xl font-serif text-white/95 leading-[1.05] tracking-tight"
-            >
-              {headingPlain}
+            <h2 className="font-serif text-5xl sm:text-6xl md:text-6xl lg:text-7xl leading-[1.05] tracking-tight text-white">
+              <span className="block lowercase">{headingPlain}</span>
               {headingHighlight ? (
-                <>
-                  <br />
-                  <span className="italic text-brand-accent">{headingHighlight}</span>
-                </>
+                <span className="mt-2 block italic text-[#E8D5B0] lowercase">
+                  {headingHighlight}
+                </span>
               ) : null}
-            </motion.h2>
+            </h2>
 
-            <motion.div
-              initial={{ scaleX: 0 }}
-              whileInView={{ scaleX: 1 }}
-              viewport={viewportOnce}
-              transition={{ duration: duration.base, delay: 0.16, ease: easeOutExpo }}
-              className="w-12 h-px bg-brand-accent opacity-35 origin-left"
-            />
+            <div className="w-14 h-px bg-[#C2A878]/45" aria-hidden />
 
-            <motion.p
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={viewportOnce}
-              transition={{ duration: duration.base, delay: 0.22, ease: easeOutExpo }}
-              className="text-base md:text-lg font-serif text-white/70 leading-relaxed"
-            >
+            <p className="text-base md:text-lg font-serif italic text-white/70 leading-relaxed max-w-md">
               {featured.description}
-            </motion.p>
+            </p>
 
-            <motion.div
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={viewportOnce}
-              transition={{ duration: duration.base, delay: 0.3, ease: easeOutExpo }}
-              className="pt-2"
-            >
+            <div className="pt-2">
               <Link
                 href={featured.ctaHref || "/recetas"}
-                className="group inline-flex items-center gap-3 text-[10px] font-sans font-bold tracking-[0.35em] uppercase text-brand-accent transition-all duration-300 hover:text-white hover:gap-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/45 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-primary rounded-sm"
+                className="group inline-flex items-center gap-3 rounded-full bg-white px-8 py-3.5 text-[11px] font-sans font-semibold tracking-[0.22em] uppercase text-brand-primary shadow-[0_10px_28px_rgba(0,0,0,0.25)] transition-all duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-[#E8D5B0] hover:shadow-[0_14px_32px_rgba(0,0,0,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1D1D1B]"
               >
-                {featured.ctaText}
-                <ArrowRight size={16} strokeWidth={1.25} className="transition-transform duration-400 group-hover:translate-x-1" aria-hidden />
+                <span>{ctaLabel}</span>
+                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-brand-primary/10 transition-colors group-hover:bg-brand-primary/15">
+                  <ArrowRight
+                    size={13}
+                    strokeWidth={1.75}
+                    className="transition-transform duration-400 group-hover:translate-x-0.5"
+                    aria-hidden
+                  />
+                </span>
               </Link>
-            </motion.div>
+            </div>
           </div>
         </motion.div>
       </div>

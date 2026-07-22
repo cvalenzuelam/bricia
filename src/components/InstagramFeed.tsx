@@ -6,7 +6,7 @@ import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { PHOTO_IMAGE_QUALITY } from "@/lib/image-quality";
 import ImageFrameFade from "@/components/ImageFrameFade";
-import { Reveal, SectionIntro, Stagger, StaggerItem } from "@/components/motion/Reveal";
+import { SectionIntro, Stagger, StaggerItem } from "@/components/motion/Reveal";
 import { duration, easeOutExpo } from "@/lib/motion";
 
 const DEFAULT_INSTAGRAM_PROFILE_HREF =
@@ -45,37 +45,6 @@ interface Config {
 
 const communityTileClass =
   "group relative block aspect-square overflow-hidden rounded-xl bg-brand-primary/[0.04] ring-1 ring-black/[0.04] shadow-[0_2px_16px_-6px_rgba(29,29,27,0.09)] transition-[transform,box-shadow] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:z-20 hover:-translate-y-0.5 hover:shadow-[0_14px_40px_-12px_rgba(29,29,27,0.16)] sm:rounded-2xl md:rounded-3xl";
-
-function CommunityBridge() {
-  return (
-    <Reveal className="relative z-[1] w-full px-4" variant="fade">
-      <svg
-        className="mx-auto block h-10 w-[min(72rem,100%)] text-brand-accent/[0.09] md:h-14"
-        viewBox="0 0 1200 48"
-        preserveAspectRatio="none"
-        xmlns="http://www.w3.org/2000/svg"
-        aria-hidden
-      >
-        <path
-          fill="currentColor"
-          d="M0 40c200-18 400-18 600 0s400 18 600 0V48H0V40z"
-        />
-      </svg>
-
-      {/* Desktop: puente decorativo */}
-      <div
-        className="-mt-6 hidden items-center justify-center gap-5 md:-mt-8 md:flex md:gap-8"
-        aria-hidden
-      >
-        <span className="h-px w-32 bg-gradient-to-r from-transparent to-brand-accent/35" />
-        <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-brand-accent/20 bg-brand-secondary/90 shadow-[0_1px_0_rgba(29,29,27,0.04)]">
-          <span className="block h-2 w-2 rotate-45 bg-brand-accent/55" />
-        </span>
-        <span className="h-px w-32 bg-gradient-to-l from-transparent to-brand-accent/35" />
-      </div>
-    </Reveal>
-  );
-}
 
 export default function InstagramFeed({
   initialInstagramImages,
@@ -129,8 +98,6 @@ export default function InstagramFeed({
         className="pointer-events-none absolute -right-24 bottom-32 h-72 w-72 rounded-full bg-brand-primary/[0.035] blur-3xl"
         aria-hidden
       />
-
-      <CommunityBridge />
 
       <div className="relative z-[1] mx-auto mb-14 max-w-7xl px-6 pt-2 md:mb-16 md:pt-0">
         <SectionIntro
