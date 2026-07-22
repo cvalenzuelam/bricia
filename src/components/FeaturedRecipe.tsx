@@ -122,7 +122,7 @@ export default function FeaturedRecipe({
           whileInView={{ opacity: 1 }}
           viewport={viewportOnce}
           transition={{ duration: duration.slow, ease: easeOutExpo }}
-          className="relative aspect-[4/5] w-full overflow-hidden sm:aspect-[16/11] md:col-span-7 md:aspect-auto md:min-h-full lg:col-span-7"
+          className="relative aspect-[4/3] w-full overflow-hidden sm:aspect-[16/11] md:col-span-7 md:aspect-auto md:min-h-full lg:col-span-7"
         >
           <Image
             src={featured.imageSrc}

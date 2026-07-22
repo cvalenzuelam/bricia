@@ -155,7 +155,7 @@ export default function Hero({
 
   return (
     <section
-      className="relative isolate w-full overflow-hidden max-md:min-h-[78svh] md:min-h-[100svh]"
+      className="relative isolate w-full overflow-hidden max-md:min-h-[75dvh] md:min-h-[calc(100svh-5rem)]"
       style={{ backgroundColor: bg }}
     >
       {/* Foto a sangre — web y móvil independientes (CMS) */}
@@ -172,7 +172,7 @@ export default function Hero({
           priority
           sizes="100vw"
           quality={HERO_IMAGE_QUALITY}
-          className="object-cover object-[58%_22%] md:hidden"
+          className="object-cover object-[58%_28%] md:hidden"
         />
         <Image
           src={desktopImage}
@@ -196,8 +196,8 @@ export default function Hero({
       />
 
       {/* Texto sobre la imagen */}
-      <div className="relative z-10 flex max-md:min-h-[78svh] md:min-h-[100svh] flex-col justify-end">
-        <div className="w-full max-w-7xl mx-auto px-6 md:px-10 lg:px-14 pb-10 md:pb-20 lg:pb-24 pt-[max(6.5rem,env(safe-area-inset-top,0px)+5rem)]">
+      <div className="relative z-10 flex max-md:min-h-[75dvh] md:min-h-[calc(100svh-5rem)] flex-col justify-end">
+        <div className="w-full max-w-7xl mx-auto px-6 md:px-10 lg:px-14 pb-8 md:pb-20 lg:pb-24 pt-6 md:pt-12">
           <div className="max-w-xl lg:max-w-[34rem] space-y-4 md:space-y-6">
             <motion.p
               initial={{ opacity: 0, y: 10 }}

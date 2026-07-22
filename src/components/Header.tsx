@@ -143,13 +143,15 @@ export default function Header() {
   return (
     <>
       <header
-        className={`fixed top-0 w-full z-50 transition-all duration-500 ${
-          scrolled
-            ? "bg-brand-secondary/95 backdrop-blur-sm border-b border-brand-primary/5 py-4"
-            : lightNavWhenTransparent
-              ? "bg-transparent py-8 border-b border-white/[0.06]"
-              : isHome
-                ? "bg-brand-secondary/95 backdrop-blur-md py-8 border-b border-brand-primary/[0.08]"
+        className={`${
+          isHome ? "sticky" : "fixed"
+        } top-0 w-full z-50 transition-all duration-500 ${
+          isHome
+            ? "bg-brand-secondary border-b border-brand-primary/[0.08] py-3 md:py-4"
+            : scrolled
+              ? "bg-brand-secondary/95 backdrop-blur-sm border-b border-brand-primary/5 py-4"
+              : lightNavWhenTransparent
+                ? "bg-transparent py-8 border-b border-white/[0.06]"
                 : "bg-transparent py-8"
         }`}
       >
