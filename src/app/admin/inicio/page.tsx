@@ -666,9 +666,19 @@ export default function AdminInicioPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] font-sans font-bold tracking-[0.25em] text-brand-muted uppercase">Texto del CTA</label>
-              <input value={config.ctaText} onChange={(e) => setConfig({ ...config, ctaText: e.target.value })}
-                className="w-full px-4 py-3 border border-brand-primary/10 rounded-lg bg-brand-secondary text-brand-primary font-sans text-sm focus:outline-none focus:border-brand-accent transition-colors" />
+              <label className="text-[10px] font-sans font-bold tracking-[0.25em] text-brand-muted uppercase">
+                Texto del botón (CTA)
+              </label>
+              <p className="text-xs text-brand-muted leading-relaxed">
+                Corto, tipo acción: «Ver recetas». No uses frases largas aquí — van en el tagline.
+              </p>
+              <input
+                value={config.ctaText}
+                onChange={(e) => setConfig({ ...config, ctaText: e.target.value })}
+                maxLength={22}
+                placeholder="Ver recetas"
+                className="w-full px-4 py-3 border border-brand-primary/10 rounded-lg bg-brand-secondary text-brand-primary font-sans text-sm focus:outline-none focus:border-brand-accent transition-colors"
+              />
             </div>
           </div>
 

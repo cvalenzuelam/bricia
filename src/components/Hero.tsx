@@ -51,6 +51,16 @@ const HERO_FALLBACK: HeroConfig = {
 };
 
 const DEFAULT_BG = "#FAF9F4";
+/** CTA del hero: corto (máx. ~3–4 palabras). Textos largos del CMS no deben ir en el botón. */
+const HERO_CTA_MAX_CHARS = 22;
+
+function resolveHeroCtaLabel(raw?: string): string {
+  const label = raw?.trim().replace(/\s+/g, " ") ?? "";
+  if (!label) return HERO_FALLBACK.ctaText;
+  if (label.length > HERO_CTA_MAX_CHARS) return HERO_FALLBACK.ctaText;
+  if (label.split(" ").length > 4) return HERO_FALLBACK.ctaText;
+  return label;
+}
 
 function resolveTitleParts(config: HeroConfig): {
   plain: string;
@@ -139,7 +149,7 @@ export default function Hero({
   const bg = config.backgroundColor || DEFAULT_BG;
   const { plain: titlePlain, highlight: titleHighlight } = resolveTitleParts(config);
   const eyebrow = config.eyebrow?.trim() || HERO_FALLBACK.eyebrow!;
-  const ctaLabel = config.ctaText?.trim() || HERO_FALLBACK.ctaText;
+  const ctaLabel = resolveHeroCtaLabel(config.ctaText);
   const tagline =
     config.taglineMobile?.trim() || config.tagline?.trim() || HERO_FALLBACK.tagline;
 
@@ -239,13 +249,13 @@ export default function Hero({
             >
               <Link
                 href="/recetas"
-                className="group relative inline-flex items-center gap-3 overflow-hidden rounded-md border border-white/90 bg-white/95 px-8 py-3.5 text-[11px] md:text-[12px] font-sans font-semibold tracking-[0.28em] uppercase text-brand-primary shadow-[0_10px_32px_rgba(0,0,0,0.28)] backdrop-blur-[2px] btn-lift hover:border-[#E8D5B0] hover:bg-[#E8D5B0] hover:shadow-[0_16px_40px_rgba(0,0,0,0.32)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black/40"
+                className="group relative inline-flex w-auto max-w-full items-center gap-2.5 overflow-hidden rounded-full border border-white/90 bg-white px-6 py-3 text-[11px] font-sans font-semibold tracking-[0.22em] uppercase text-brand-primary shadow-[0_10px_28px_rgba(0,0,0,0.28)] btn-lift hover:border-[#E8D5B0] hover:bg-[#E8D5B0] hover:shadow-[0_14px_32px_rgba(0,0,0,0.32)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black/40"
               >
                 <span
                   className="hero-cta-sheen pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-white/70 to-transparent"
                   aria-hidden
                 />
-                <span className="relative">{ctaLabel}</span>
+                <span className="relative truncate">{ctaLabel}</span>
                 <ArrowRight
                   size={14}
                   strokeWidth={1.75}
