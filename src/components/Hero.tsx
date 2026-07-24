@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowRight } from "lucide-react";
+import { ArrowDown, ArrowRight } from "lucide-react";
 import { useState, useEffect } from "react";
 import { HERO_IMAGE_QUALITY } from "@/lib/image-quality";
 
@@ -154,118 +154,135 @@ export default function Hero({
     config.taglineMobile?.trim() || config.tagline?.trim() || HERO_FALLBACK.tagline;
 
   return (
-    <section
-      className="relative isolate w-full overflow-hidden max-md:min-h-[75dvh] md:min-h-[calc(100svh-5rem)]"
-      style={{ backgroundColor: bg }}
-    >
-      {/* Foto a sangre — web y móvil independientes (CMS) */}
-      <motion.div
-        initial={{ scale: 1.03 }}
-        animate={{ scale: 1 }}
-        transition={{ duration: 1.8, ease: [0.16, 1, 0.3, 1] }}
-        className="absolute inset-0 overflow-hidden"
-      >
-        <Image
-          src={mobileImage}
-          alt={mobileAlt}
-          fill
-          priority
-          sizes="100vw"
-          quality={HERO_IMAGE_QUALITY}
-          className="object-cover object-[58%_28%] md:hidden"
+    <section className="relative isolate w-full" style={{ backgroundColor: bg }}>
+      <div className="relative overflow-hidden max-md:min-h-[75dvh] md:min-h-[calc(100svh-5rem)]">
+        {/* Foto a sangre — web y móvil independientes (CMS) */}
+        <motion.div
+          initial={{ scale: 1.03 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 1.8, ease: [0.16, 1, 0.3, 1] }}
+          className="absolute inset-0 overflow-hidden"
+        >
+          <Image
+            src={mobileImage}
+            alt={mobileAlt}
+            fill
+            priority
+            sizes="100vw"
+            quality={HERO_IMAGE_QUALITY}
+            className="object-cover object-[58%_28%] md:hidden"
+          />
+          <Image
+            src={desktopImage}
+            alt={desktopAlt}
+            fill
+            priority
+            sizes="100vw"
+            quality={HERO_IMAGE_QUALITY}
+            className="object-cover object-[center_30%] hidden md:block"
+          />
+        </motion.div>
+
+        {/* Veladura ligera solo para legibilidad del texto — sin fundido crema (se veía borroso en móvil) */}
+        <div
+          className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/10"
+          aria-hidden
         />
-        <Image
-          src={desktopImage}
-          alt={desktopAlt}
-          fill
-          priority
-          sizes="100vw"
-          quality={HERO_IMAGE_QUALITY}
-          className="object-cover object-[center_30%] hidden md:block"
+        <div
+          className="absolute inset-0 bg-gradient-to-r from-black/30 via-transparent to-transparent md:from-black/25"
+          aria-hidden
         />
-      </motion.div>
 
-      {/* Veladura ligera solo para legibilidad del texto — sin fundido crema (se veía borroso en móvil) */}
-      <div
-        className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/10"
-        aria-hidden
-      />
-      <div
-        className="absolute inset-0 bg-gradient-to-r from-black/30 via-transparent to-transparent md:from-black/25"
-        aria-hidden
-      />
-
-      {/* Texto sobre la imagen */}
-      <div className="relative z-10 flex max-md:min-h-[75dvh] md:min-h-[calc(100svh-5rem)] flex-col justify-end">
-        <div className="w-full max-w-7xl mx-auto px-6 md:px-10 lg:px-14 pb-8 md:pb-20 lg:pb-24 pt-6 md:pt-12">
-          <div className="max-w-xl lg:max-w-[34rem] space-y-4 md:space-y-6">
-            <motion.p
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
-              className="text-[11px] md:text-[12px] font-sans font-medium tracking-[0.42em] uppercase text-white [text-shadow:0_2px_4px_rgba(0,0,0,0.65),0_6px_24px_rgba(0,0,0,0.5)]"
-            >
-              {eyebrow}
-            </motion.p>
-
-            <motion.h1
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.75, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
-              className="font-serif text-white tracking-tight leading-[1.05] [text-shadow:0_2px_6px_rgba(0,0,0,0.7),0_10px_32px_rgba(0,0,0,0.55)]"
-            >
-              <span className="block text-[2.35rem] sm:text-[2.85rem] md:text-[3.75rem] lg:text-[4.25rem]">
-                {titlePlain}
-              </span>
-              {titleHighlight ? (
-                <span className="block text-[2.35rem] sm:text-[2.85rem] md:text-[3.75rem] lg:text-[4.25rem] italic text-[#E8D5B0] mt-1">
-                  {titleHighlight}
-                </span>
-              ) : null}
-            </motion.h1>
-
-            <motion.div
-              initial={{ scaleX: 0 }}
-              animate={{ scaleX: 1 }}
-              transition={{ duration: 0.65, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              className="w-14 h-px bg-[#E8D5B0] origin-left shadow-[0_1px_8px_rgba(0,0,0,0.45)]"
-              aria-hidden
-            />
-
-            <motion.p
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.65, delay: 0.28, ease: [0.16, 1, 0.3, 1] }}
-              className="max-w-md text-[14px] md:text-[16px] font-sans text-white leading-relaxed [text-shadow:0_2px_4px_rgba(0,0,0,0.65),0_6px_22px_rgba(0,0,0,0.5)]"
-            >
-              {tagline}
-            </motion.p>
-
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.65, delay: 0.38, ease: [0.16, 1, 0.3, 1] }}
-              className="pt-1 md:pt-2"
-            >
-              <Link
-                href="/recetas"
-                className="group relative inline-flex w-auto max-w-full items-center gap-2.5 overflow-hidden rounded-full border border-white/90 bg-white px-6 py-3 text-[11px] font-sans font-semibold tracking-[0.22em] uppercase text-brand-primary shadow-[0_10px_28px_rgba(0,0,0,0.28)] btn-lift hover:border-[#E8D5B0] hover:bg-[#E8D5B0] hover:shadow-[0_14px_32px_rgba(0,0,0,0.32)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black/40"
+        {/* Texto sobre la imagen */}
+        <div className="relative z-10 flex max-md:min-h-[75dvh] md:min-h-[calc(100svh-5rem)] flex-col justify-end">
+          <div className="w-full max-w-7xl mx-auto px-6 md:px-10 lg:px-14 pb-8 md:pb-20 lg:pb-24 pt-6 md:pt-12">
+            <div className="max-w-xl lg:max-w-[34rem] space-y-4 md:space-y-6">
+              <motion.p
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
+                className="text-[11px] md:text-[12px] font-sans font-medium tracking-[0.42em] uppercase text-white [text-shadow:0_2px_4px_rgba(0,0,0,0.65),0_6px_24px_rgba(0,0,0,0.5)]"
               >
-                <span
-                  className="hero-cta-sheen pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-white/70 to-transparent"
-                  aria-hidden
-                />
-                <span className="relative truncate">{ctaLabel}</span>
-                <ArrowRight
-                  size={14}
-                  strokeWidth={1.75}
-                  className="relative shrink-0 transition-transform duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-1"
-                  aria-hidden
-                />
-              </Link>
-            </motion.div>
+                {eyebrow}
+              </motion.p>
+
+              <motion.h1
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.75, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
+                className="font-serif text-white tracking-tight leading-[1.05] [text-shadow:0_2px_6px_rgba(0,0,0,0.7),0_10px_32px_rgba(0,0,0,0.55)]"
+              >
+                <span className="block text-[2.35rem] sm:text-[2.85rem] md:text-[3.75rem] lg:text-[4.25rem]">
+                  {titlePlain}
+                </span>
+                {titleHighlight ? (
+                  <span className="block text-[2.35rem] sm:text-[2.85rem] md:text-[3.75rem] lg:text-[4.25rem] italic text-[#E8D5B0] mt-1">
+                    {titleHighlight}
+                  </span>
+                ) : null}
+              </motion.h1>
+
+              <motion.div
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: 1 }}
+                transition={{ duration: 0.65, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                className="w-14 h-px bg-[#E8D5B0] origin-left shadow-[0_1px_8px_rgba(0,0,0,0.45)]"
+                aria-hidden
+              />
+
+              <motion.p
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.65, delay: 0.28, ease: [0.16, 1, 0.3, 1] }}
+                className="max-w-md text-[14px] md:text-[16px] font-sans text-white leading-relaxed [text-shadow:0_2px_4px_rgba(0,0,0,0.65),0_6px_22px_rgba(0,0,0,0.5)]"
+              >
+                {tagline}
+              </motion.p>
+
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.65, delay: 0.38, ease: [0.16, 1, 0.3, 1] }}
+                className="pt-1 md:pt-2"
+              >
+                <Link
+                  href="/recetas"
+                  className="group relative inline-flex w-auto max-w-full items-center gap-2.5 overflow-hidden rounded-full border border-white/90 bg-white px-6 py-3 text-[11px] font-sans font-semibold tracking-[0.22em] uppercase text-brand-primary shadow-[0_10px_28px_rgba(0,0,0,0.28)] btn-lift hover:border-[#E8D5B0] hover:bg-[#E8D5B0] hover:shadow-[0_14px_32px_rgba(0,0,0,0.32)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black/40"
+                >
+                  <span
+                    className="hero-cta-sheen pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-white/70 to-transparent"
+                    aria-hidden
+                  />
+                  <span className="relative truncate">{ctaLabel}</span>
+                  <ArrowRight
+                    size={14}
+                    strokeWidth={1.75}
+                    className="relative shrink-0 transition-transform duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-1"
+                    aria-hidden
+                  />
+                </Link>
+              </motion.div>
+            </div>
           </div>
         </div>
+      </div>
+
+      {/* Separación debajo de la foto — invita a seguir explorando */}
+      <div className="flex flex-col items-center justify-center gap-3 py-10 md:py-14">
+        <a
+          href="#seccion-destacada"
+          className="group flex flex-col items-center gap-3 text-brand-primary/70 transition-colors hover:text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/40 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-secondary rounded-sm"
+        >
+          <span className="text-[11px] font-sans font-medium tracking-[0.35em] uppercase">
+            Sigue explorando
+          </span>
+          <motion.span
+            animate={{ y: [0, 6, 0] }}
+            transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <ArrowDown size={16} strokeWidth={1.75} aria-hidden />
+          </motion.span>
+        </a>
       </div>
     </section>
   );
